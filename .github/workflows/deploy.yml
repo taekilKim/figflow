@@ -3,6 +3,8 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
+      - main
+      - master
       - claude/figma-flowchart-webapp-oV3V2
   workflow_dispatch:
 
