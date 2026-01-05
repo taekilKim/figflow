@@ -32,6 +32,93 @@ FigFlow는 디자이너와 기획자가 Figma 화면을 캡처해서 붙여넣�
 - **Flow Editor**: React Flow (@xyflow/react)
 - **Styling**: CSS
 
+## 🚀 빠른 시작 (5분 안에 시작하기)
+
+### 방법 1: 데모 데이터로 바로 체험하기
+
+프로토타입에는 이미 3개의 샘플 노드가 포함되어 있어 바로 체험할 수 있습니다.
+
+```bash
+# 1. 의존성 설치
+npm install
+
+# 2. 개발 서버 실행
+npm run dev
+
+# 3. 브라우저에서 열기
+# http://localhost:5173 자동으로 열립니다
+```
+
+**체험해볼 기능:**
+- ✅ 노드를 드래그해서 위치 변경
+- ✅ 노드를 클릭하면 우측 패널에서 속성 확인
+- ✅ 노드 핸들을 드래그해서 새로운 연결 만들기
+- ✅ 연결선을 클릭해서 라벨 편집 (우측 패널)
+- ✅ 마우스 휠로 줌 in/out
+- ✅ 캔버스를 드래그해서 팬
+- ✅ 우측 하단 미니맵으로 전체 뷰 확인
+- ✅ "저장" 버튼 클릭 (localStorage에 자동 저장)
+
+### 방법 2: 실제 Figma 프레임과 연동하기
+
+Figma API를 사용하여 실제 프레임의 썸네일을 가져올 수 있습니다.
+
+#### Step 1: Figma Personal Access Token 발급
+
+1. Figma에 로그인
+2. [Figma Settings → Account → Personal Access Tokens](https://www.figma.com/developers/api#access-tokens) 이동
+3. "Generate new token" 클릭
+4. 토큰 이름 입력 (예: "FigFlow Test")
+5. 생성된 토큰 복사 (한 번만 표시됨!)
+
+#### Step 2: FigFlow에서 Sync 버튼 클릭
+
+1. 개발 서버 실행 후 웹 브라우저에서 열기
+2. 상단 툴바의 **"Sync"** 버튼 클릭
+3. 팝업창에 복사한 Figma Access Token 입력
+4. 토큰은 브라우저 localStorage에 자동 저장됨
+5. 샘플 노드들의 썸네일이 업데이트됨 (실제 Figma 파일과 연동된 경우)
+
+#### Step 3: 자신의 Figma 프레임 추가 (현재 수동)
+
+현재 MVP에서는 코드를 직접 수정하여 프레임을 추가할 수 있습니다:
+
+`src/components/FlowCanvas.tsx` 파일의 `initialNodes` 배열에 노드 추가:
+
+```typescript
+{
+  id: '4',
+  type: 'frameNode',
+  position: { x: 100, y: 400 },
+  data: {
+    figma: {
+      fileKey: 'YOUR_FIGMA_FILE_KEY',    // Figma URL에서 추출
+      nodeId: 'YOUR_NODE_ID',             // 예: '123:456'
+      nodeUrl: 'https://www.figma.com/file/...',
+    },
+    meta: {
+      title: '내 프레임',
+      status: 'draft',
+      notes: '이것은 내 Figma 프레임입니다',
+    },
+  },
+}
+```
+
+**Figma URL에서 fileKey와 nodeId 찾는 방법:**
+
+Figma URL 예시:
+```
+https://www.figma.com/file/ABC123DEF456/MyProject?node-id=123-456
+                           ^^^^^^^^^^^^              ^^^^^^^
+                           fileKey                   node-id
+```
+
+- `fileKey`: URL에서 `/file/` 다음의 문자열
+- `node-id`: URL 파라미터 `node-id=123-456`를 `123:456`으로 변환 (하이픈을 콜론으로)
+
+> 📌 **다음 버전에서 추가될 기능**: "프레임 추가" 버튼을 통해 Figma URL만 붙여넣으면 자동으로 프레임이 추가됩니다.
+
 ## 시작하기
 
 ### 1. 설치
