@@ -1,0 +1,120 @@
+import { memo } from 'react'
+import { Handle, Position, NodeProps } from '@xyflow/react'
+import { FlowNodeData } from '../types'
+import '../styles/FrameNode.css'
+
+function FrameNode({ data, selected }: NodeProps) {
+  const { figma, meta } = data as FlowNodeData
+
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'draft':
+        return '#9e9e9e'
+      case 'review':
+        return '#ff9800'
+      case 'approved':
+        return '#4caf50'
+      case 'deprecated':
+        return '#f44336'
+      default:
+        return '#9e9e9e'
+    }
+  }
+
+  return (
+    <div className={`frame-node ${selected ? 'selected' : ''}`}>
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="frame-handle"
+      />
+
+      <div className="frame-node-header">
+        <div className="frame-node-title">{meta.title}</div>
+        {meta.status && (
+          <div
+            className="frame-node-status"
+            style={{ backgroundColor: getStatusColor(meta.status) }}
+          >
+            {meta.status}
+          </div>
+        )}
+      </div>
+
+      <div className="frame-node-thumbnail">
+        {meta.thumbnailUrl ? (
+          <img src={meta.thumbnailUrl} alt={meta.title} />
+        ) : (
+          <div className="frame-node-placeholder">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M8.5 10C9.32843 10 10 9.32843 10 8.5C10 7.67157 9.32843 7 8.5 7C7.67157 7 7 7.67157 7 8.5C7 9.32843 7.67157 10 8.5 10Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M21 15L16 10L5 21"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <p>썸네일 없음</p>
+          </div>
+        )}
+      </div>
+
+      {meta.notes && (
+        <div className="frame-node-notes">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M14 2V8H20"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span>{meta.notes.substring(0, 50)}{meta.notes.length > 50 ? '...' : ''}</span>
+        </div>
+      )}
+
+      <div className="frame-node-footer">
+        <a
+          href={figma.nodeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="frame-node-link"
+          onClick={(e) => e.stopPropagation()}
+        >
+          Figma에서 열기
+        </a>
+      </div>
+
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="frame-handle"
+      />
+    </div>
+  )
+}
+
+export default memo(FrameNode)

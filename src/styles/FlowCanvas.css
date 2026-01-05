@@ -1,0 +1,60 @@
+.flow-canvas {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* React Flow 오버라이드 */
+.react-flow {
+  flex: 1;
+}
+
+.react-flow__attribution {
+  display: none;
+}
+
+.react-flow__minimap {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.react-flow__controls {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.react-flow__controls-button {
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.react-flow__controls-button:hover {
+  background: #f5f5f5;
+}
+
+.react-flow__controls-button svg {
+  fill: #333;
+}
+
+.react-flow__edge-path {
+  stroke: #b0b0b0;
+  stroke-width: 2;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #0066ff;
+  stroke-width: 3;
+}
+
+.react-flow__edge-text {
+  font-size: 12px;
+  fill: #333;
+}
+
+.react-flow__edge-textbg {
+  fill: white;
+}

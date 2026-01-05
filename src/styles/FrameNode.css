@@ -1,0 +1,126 @@
+.frame-node {
+  width: 280px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s;
+}
+
+.frame-node:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.frame-node.selected {
+  border-color: #0066ff;
+  box-shadow: 0 4px 16px rgba(0, 102, 255, 0.2);
+}
+
+.frame-node-header {
+  padding: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.frame-node-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.frame-node-status {
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.frame-node-thumbnail {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.frame-node-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.frame-node-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #999;
+}
+
+.frame-node-placeholder p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.frame-node-notes {
+  padding: 8px 12px;
+  background: #fffbf0;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #666;
+}
+
+.frame-node-notes svg {
+  flex-shrink: 0;
+}
+
+.frame-node-notes span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.frame-node-footer {
+  padding: 8px 12px;
+  border-top: 1px solid #e0e0e0;
+  background: #fafafa;
+  border-radius: 0 0 6px 6px;
+}
+
+.frame-node-link {
+  font-size: 11px;
+  color: #0066ff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.frame-node-link:hover {
+  text-decoration: underline;
+}
+
+.frame-handle {
+  width: 12px;
+  height: 12px;
+  background: white;
+  border: 2px solid #0066ff;
+  border-radius: 50%;
+}
+
+.frame-handle:hover {
+  background: #0066ff;
+}

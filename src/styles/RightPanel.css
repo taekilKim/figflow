@@ -1,0 +1,73 @@
+.inspector-section {
+  margin-bottom: 24px;
+}
+
+.inspector-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 12px 0;
+}
+
+.inspector-field {
+  margin-bottom: 16px;
+}
+
+.inspector-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.inspector-field input[type="text"],
+.inspector-field select,
+.inspector-field textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.inspector-field input:focus,
+.inspector-field select:focus,
+.inspector-field textarea:focus {
+  border-color: #0066ff;
+}
+
+.inspector-field textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.inspector-button {
+  width: 100%;
+  padding: 8px;
+  background: #f5f5f5;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.inspector-button:hover {
+  background: #e5e5e5;
+}
+
+.inspector-button.danger {
+  color: #d32f2f;
+}
+
+.inspector-button.danger:hover {
+  background: #ffebee;
+  border-color: #d32f2f;
+}
