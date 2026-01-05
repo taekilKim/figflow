@@ -14,6 +14,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import FrameNode from './FrameNode'
+import AddFrameDialog from './AddFrameDialog'
 import { FlowNodeData, FlowEdgeData } from '../types'
 import { saveProject, loadProject } from '../utils/storage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
@@ -110,6 +111,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     loadedProject?.edges || initialEdges
   )
   const [isSyncing, setIsSyncing] = useState(false)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
   // 노드나 엣지가 변경될 때마다 자동 저장
   useEffect(() => {
@@ -274,10 +276,45 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     }
   }, [nodes, setNodes])
 
+  const handleAddFrame = useCallback((frameData: {
+    fileKey: string
+    nodeId: string
+    nodeUrl: string
+    title: string
+  }) => {
+    // 새로운 노드 생성
+    const newNode: Node<FlowNodeData> = {
+      id: `node-${Date.now()}`,
+      type: 'frameNode',
+      position: {
+        x: Math.random() * 400 + 100,
+        y: Math.random() * 400 + 100,
+      },
+      data: {
+        figma: {
+          fileKey: frameData.fileKey,
+          nodeId: frameData.nodeId,
+          nodeUrl: frameData.nodeUrl,
+        },
+        meta: {
+          title: frameData.title,
+          status: 'draft',
+        },
+      },
+    }
+
+    // 노드 추가
+    setNodes((nds) => [...nds, newNode])
+    alert(`"${frameData.title}" 프레임이 추가되었습니다!`)
+  }, [setNodes])
+
   return (
     <div className="flow-canvas">
       <div className="toolbar">
-        <button className="toolbar-button primary">
+        <button
+          className="toolbar-button primary"
+          onClick={() => setIsAddDialogOpen(true)}
+        >
           프레임 추가
         </button>
         <button
@@ -317,6 +354,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
           pannable
         />
       </ReactFlow>
+
+      <AddFrameDialog
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onAdd={handleAddFrame}
+      />
     </div>
   )
 }
