@@ -11,7 +11,10 @@ FigFlow는 디자이너와 기획자가 Figma 화면을 캡처해서 붙여넣�
 위 링크를 클릭하면 설치 없이 바로 사용할 수 있습니다!
 - npm이나 설정이 전혀 필요 없습니다
 - 웹 브라우저만 있으면 OK
-- [상세 가이드 보기 →](WEB_DEPLOYMENT.md)
+
+**⚠️ 처음 사용 시 1분 설정 필요:**
+- [GitHub Pages 활성화 가이드 보기 →](GITHUB_PAGES_SETUP.md) (1분 소요)
+- [웹 사용 가이드 보기 →](WEB_DEPLOYMENT.md)
 
 ## 핵심 개념
 
