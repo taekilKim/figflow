@@ -281,6 +281,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     nodeId: string
     nodeUrl: string
     title: string
+    thumbnailUrl: string | null
   }) => {
     // 새로운 노드 생성
     const newNode: Node<FlowNodeData> = {
@@ -299,13 +300,15 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         meta: {
           title: frameData.title,
           status: 'draft',
+          thumbnailUrl: frameData.thumbnailUrl || undefined,
+          lastSyncedAt: Date.now(),
         },
       },
     }
 
     // 노드 추가
     setNodes((nds) => [...nds, newNode])
-    alert(`"${frameData.title}" 프레임이 추가되었습니다!`)
+    alert(`"${frameData.title}" 프레임이 추가되었습니다! 썸네일과 함께 캔버스에 표시됩니다.`)
   }, [setNodes])
 
   return (

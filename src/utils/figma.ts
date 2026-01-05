@@ -86,6 +86,70 @@ export async function getFigmaFile(accessToken: string, fileKey: string) {
 }
 
 /**
+ * Figma 파일에서 특정 노드의 이름을 가져옵니다
+ */
+export async function getFigmaNodeName(
+  accessToken: string,
+  fileKey: string,
+  nodeId: string
+): Promise<string | null> {
+  try {
+    const url = `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${nodeId}`
+
+    const response = await fetch(url, {
+      headers: {
+        'X-Figma-Token': accessToken,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Figma API error: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    const node = data.nodes?.[nodeId]?.document
+
+    return node?.name || null
+  } catch (error) {
+    console.error('Failed to fetch Figma node name:', error)
+    return null
+  }
+}
+
+/**
+ * 프레임의 전체 정보를 한 번에 가져옵니다 (이름 + 썸네일)
+ */
+export async function getFigmaFrameInfo(
+  accessToken: string,
+  fileKey: string,
+  nodeId: string
+): Promise<{
+  name: string | null
+  thumbnailUrl: string | null
+  error?: string
+}> {
+  try {
+    // 병렬로 이름과 이미지 가져오기
+    const [nameResult, imageResult] = await Promise.all([
+      getFigmaNodeName(accessToken, fileKey, nodeId),
+      getFigmaImages(accessToken, { fileKey, nodeIds: [nodeId] }),
+    ])
+
+    return {
+      name: nameResult,
+      thumbnailUrl: imageResult[0]?.imageUrl || null,
+      error: imageResult[0]?.error,
+    }
+  } catch (error) {
+    return {
+      name: null,
+      thumbnailUrl: null,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+/**
  * Figma 노드 URL에서 fileKey와 nodeId를 추출합니다
  * 예: https://www.figma.com/file/ABC123/MyFile?node-id=1-2
  */
