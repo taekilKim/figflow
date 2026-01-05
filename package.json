@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "serve": "node server.cjs",
+    "start": "npm run build && npm run serve"
   },
   "dependencies": {
     "react": "^18.3.1",
