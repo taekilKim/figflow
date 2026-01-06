@@ -501,10 +501,11 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     }
 
     try {
-      // 모든 프레임의 썸네일 가져오기
+      // 모든 프레임의 썸네일 가져오기 (scale=0.5로 축소된 이미지 요청)
       const imageResults = await getFigmaImages(accessToken, {
         fileKey,
         nodeIds: selectedFrames.map(f => f.nodeId),
+        scale: 0.5, // 50% 크기의 이미지 요청
       })
 
       // 그리드 레이아웃으로 배치 (3열)
