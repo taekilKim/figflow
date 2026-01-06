@@ -232,6 +232,94 @@ export function parseFigmaUrl(url: string): { fileKey: string; nodeId: string } 
 }
 
 /**
+ * Figma 파일 URL에서 fileKey만 추출 (node-id 없는 경우)
+ */
+export function parseFigmaFileUrl(url: string): { fileKey: string } | null {
+  try {
+    const urlObj = new URL(url)
+    const pathParts = urlObj.pathname.split('/')
+    const fileKey = pathParts[2] // /file/{fileKey}/...
+
+    if (fileKey) {
+      return { fileKey }
+    }
+    return null
+  } catch (error) {
+    console.error('Failed to parse Figma file URL:', error)
+    return null
+  }
+}
+
+interface FigmaPage {
+  id: string
+  name: string
+  frames: Array<{
+    id: string
+    name: string
+    width: number
+    height: number
+  }>
+}
+
+/**
+ * Figma 파일의 페이지와 프레임 구조를 가져옵니다
+ */
+export async function getFigmaFileStructure(
+  accessToken: string,
+  fileKey: string
+): Promise<{ pages: FigmaPage[]; error?: string }> {
+  try {
+    const url = `https://api.figma.com/v1/files/${fileKey}`
+    const response = await fetch(url, {
+      headers: { 'X-Figma-Token': accessToken },
+    })
+
+    if (!response.ok) {
+      return { pages: [], error: `API Error: ${response.status}` }
+    }
+
+    const data = await response.json()
+    const pages: FigmaPage[] = []
+
+    // 문서의 각 페이지 순회
+    if (data.document && data.document.children) {
+      for (const page of data.document.children) {
+        if (page.type === 'CANVAS') {
+          const frames: FigmaPage['frames'] = []
+
+          // 페이지의 각 프레임 수집
+          if (page.children) {
+            for (const child of page.children) {
+              if (child.type === 'FRAME' && child.absoluteBoundingBox) {
+                frames.push({
+                  id: child.id,
+                  name: child.name,
+                  width: Math.round(child.absoluteBoundingBox.width),
+                  height: Math.round(child.absoluteBoundingBox.height),
+                })
+              }
+            }
+          }
+
+          pages.push({
+            id: page.id,
+            name: page.name,
+            frames,
+          })
+        }
+      }
+    }
+
+    return { pages }
+  } catch (error) {
+    return {
+      pages: [],
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+/**
  * Figma access token을 localStorage에 저장/불러오기
  */
 const FIGMA_TOKEN_KEY = 'figflow_figma_token'

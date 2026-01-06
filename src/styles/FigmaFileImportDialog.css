@@ -1,0 +1,236 @@
+.file-import-dialog {
+  width: 600px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.url-input-section {
+  margin-bottom: 20px;
+}
+
+.url-input-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+
+.url-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.url-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.url-input:focus {
+  border-color: #0066ff;
+}
+
+.btn-fetch {
+  padding: 10px 20px;
+  background: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.btn-fetch:hover:not(:disabled) {
+  background: #0052cc;
+}
+
+.btn-fetch:disabled {
+  background: #d0d0d0;
+  cursor: not-allowed;
+}
+
+.error-message {
+  padding: 12px;
+  background: #fff3f3;
+  border: 1px solid #ffcdd2;
+  border-radius: 6px;
+  color: #c62828;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.pages-section {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.pages-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.pages-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.selection-info {
+  font-size: 12px;
+  color: #666;
+  background: #e6f0ff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.pages-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.page-item {
+  margin-bottom: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #f5f5f5;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.page-header:hover {
+  background: #ececec;
+}
+
+.page-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  padding: 0;
+}
+
+.page-checkbox {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.page-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.frame-count-badge {
+  font-size: 11px;
+  color: #666;
+  background: white;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.frames-list {
+  padding: 8px 12px 12px 48px;
+  background: white;
+}
+
+.frame-item-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.frame-item-checkbox:hover {
+  background: #f5f5f5;
+}
+
+.frame-item-checkbox input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.frame-item-checkbox label {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  gap: 12px;
+}
+
+.frame-name {
+  font-size: 13px;
+  color: #333;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.frame-dimensions {
+  font-size: 11px;
+  color: #999;
+  font-family: 'Monaco', 'Menlo', monospace;
+  white-space: nowrap;
+}
+
+.btn-import {
+  padding: 10px 20px;
+  background: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-import:hover:not(:disabled) {
+  background: #0052cc;
+}
+
+.btn-import:disabled {
+  background: #d0d0d0;
+  cursor: not-allowed;
+  color: #999;
+}
