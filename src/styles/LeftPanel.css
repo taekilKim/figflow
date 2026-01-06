@@ -1,0 +1,84 @@
+.search-bar {
+  padding: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  border-color: #0066ff;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: #666;
+}
+
+.empty-state p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+
+.empty-state-hint {
+  font-size: 12px;
+  color: #999;
+  line-height: 1.5;
+}
+
+.frame-list-item {
+  padding: 12px;
+  margin-bottom: 8px;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.frame-list-item:hover {
+  background: #f0f0f0;
+  border-color: #d0d0d0;
+}
+
+.frame-list-item.selected {
+  background: #e6f0ff;
+  border-color: #0066ff;
+}
+
+.frame-thumbnail {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  background: #e0e0e0;
+}
+
+.frame-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.frame-status {
+  font-size: 11px;
+  color: #666;
+  display: inline-block;
+  padding: 2px 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+}
