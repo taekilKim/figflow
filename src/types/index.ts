@@ -33,11 +33,35 @@ export interface FlowNodeData extends Record<string, unknown> {
 export type EdgeSourceType = 'auto' | 'manual' | 'inferred';
 
 /**
+ * 엣지 스타일
+ */
+export type EdgeStyle = 'solid' | 'dashed' | 'dotted';
+
+/**
+ * 화살표 방향
+ */
+export type ArrowType = 'none' | 'forward' | 'backward' | 'both';
+
+/**
  * 플로우차트 엣지 데이터
  */
 export interface FlowEdgeData extends Record<string, unknown> {
   sourceType: EdgeSourceType;
   label?: string;
+  style?: EdgeStyle;
+  arrowType?: ArrowType;
+  color?: string;
+}
+
+/**
+ * 엣지 프리셋
+ */
+export interface EdgePreset {
+  id: string;
+  name: string;
+  style: EdgeStyle;
+  arrowType: ArrowType;
+  color: string;
 }
 
 /**

@@ -11,7 +11,6 @@ import {
   useNodesState,
   useEdgesState,
   BackgroundVariant,
-  useReactFlow,
   ConnectionLineType,
   OnConnectStart,
   OnConnectEnd,
@@ -111,13 +110,76 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(
     loadedProject?.nodes || initialNodes
   )
+
+  // 엣지 스타일 적용 헬퍼 함수
+  const getEdgeStyle = (edgeData?: FlowEdgeData) => {
+    const style: React.CSSProperties = {}
+
+    if (edgeData?.color) {
+      style.stroke = edgeData.color
+    }
+
+    if (edgeData?.style === 'dashed') {
+      style.strokeDasharray = '10,10'
+    } else if (edgeData?.style === 'dotted') {
+      style.strokeDasharray = '2,4'
+    }
+
+    return style
+  }
+
+  // 화살표 마커 ID 생성
+  const getMarkerEnd = (edgeData?: FlowEdgeData) => {
+    const arrowType = edgeData?.arrowType || 'forward'
+    if (arrowType === 'none' || arrowType === 'backward') return undefined
+    return 'url(#arrow)'
+  }
+
+  const getMarkerStart = (edgeData?: FlowEdgeData) => {
+    const arrowType = edgeData?.arrowType || 'forward'
+    if (arrowType === 'backward' || arrowType === 'both') {
+      return 'url(#arrow-reverse)'
+    }
+    return undefined
+  }
+
+  // 엣지 로드 시 label 및 스타일 속성 설정
+  const loadedEdges = loadedProject?.edges?.map((edge) => ({
+    ...edge,
+    label: edge.label,
+    type: 'smoothstep',
+    style: getEdgeStyle(edge.data),
+    markerEnd: getMarkerEnd(edge.data),
+    markerStart: getMarkerStart(edge.data),
+  })) || initialEdges
+
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge<FlowEdgeData>>(
-    loadedProject?.edges || initialEdges
+    loadedEdges
   )
   const [isSyncing, setIsSyncing] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [connectingNodeId, setConnectingNodeId] = useState<string | null>(null)
-  const { getNodes, getEdges } = useReactFlow()
+
+  // storage 이벤트 감지하여 엣지 스타일 업데이트
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const project = loadProject()
+      if (project?.edges) {
+        const styledEdges = project.edges.map((edge) => ({
+          ...edge,
+          label: edge.label,
+          type: 'smoothstep',
+          style: getEdgeStyle(edge.data),
+          markerEnd: getMarkerEnd(edge.data),
+          markerStart: getMarkerStart(edge.data),
+        }))
+        setEdges(styledEdges as Edge<FlowEdgeData>[])
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [setEdges])
 
   // 노드나 엣지가 변경될 때마다 자동 저장
   useEffect(() => {
@@ -219,7 +281,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         }
 
         // 선택된 노드들 삭제
-        const selectedNodes = getNodes().filter((node) => node.selected)
+        const selectedNodes = (nodes as Node[]).filter((node) => node.selected)
         if (selectedNodes.length > 0) {
           const nodeIdsToDelete = selectedNodes.map((node) => node.id)
           setNodes((nds) => nds.filter((node) => !nodeIdsToDelete.includes(node.id)))
@@ -239,7 +301,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         }
 
         // 선택된 엣지들 삭제
-        const selectedEdges = getEdges().filter((edge) => edge.selected)
+        const selectedEdges = (edges as Edge[]).filter((edge) => edge.selected)
         if (selectedEdges.length > 0) {
           const edgeIdsToDelete = selectedEdges.map((edge) => edge.id)
           setEdges((eds) => eds.filter((edge) => !edgeIdsToDelete.includes(edge.id)))
@@ -253,7 +315,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [getNodes, getEdges, setNodes, setEdges, onNodeSelect, onEdgeSelect])
+  }, [nodes, edges, setNodes, setEdges, onNodeSelect, onEdgeSelect])
 
   const handleSave = useCallback(() => {
     const project = {
@@ -459,11 +521,38 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
           animated: false,
         }}
         edgesReconnectable={true}
-        reconnectRadius={20}
+        reconnectRadius={30}
+        connectOnClick={false}
         fitView
         minZoom={0.1}
         maxZoom={2}
       >
+        <svg style={{ position: 'absolute', top: 0, left: 0 }}>
+          <defs>
+            <marker
+              id="arrow"
+              markerWidth="12"
+              markerHeight="12"
+              refX="11"
+              refY="6"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
+              <path d="M2,2 L10,6 L2,10 L4,6 L2,2" fill="#b0b0b0" />
+            </marker>
+            <marker
+              id="arrow-reverse"
+              markerWidth="12"
+              markerHeight="12"
+              refX="1"
+              refY="6"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
+              <path d="M10,2 L2,6 L10,10 L8,6 L10,2" fill="#b0b0b0" />
+            </marker>
+          </defs>
+        </svg>
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
         <Controls />
         <MiniMap
