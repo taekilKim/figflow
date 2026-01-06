@@ -161,6 +161,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isFileImportDialogOpen, setIsFileImportDialogOpen] = useState(false)
   const [connectingNodeId, setConnectingNodeId] = useState<string | null>(null)
+  const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null)
 
   // storage 이벤트 감지하여 엣지 스타일 업데이트
   useEffect(() => {
@@ -231,9 +232,90 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     setConnectingNodeId(params.nodeId)
   }, [])
 
-  const onConnectEnd: OnConnectEnd = useCallback(() => {
-    setConnectingNodeId(null)
-  }, [])
+  // 두 노드 사이의 가장 가까운 핸들 쌍 계산
+  const getClosestHandles = useCallback(
+    (sourceNode: Node, targetNode: Node): { sourceHandle: string; targetHandle: string } => {
+      const dx = targetNode.position.x - sourceNode.position.x
+      const dy = targetNode.position.y - sourceNode.position.y
+
+      let sourceHandle = 'source-right'
+      let targetHandle = 'target-left'
+
+      // 수평 거리가 수직 거리보다 크면 좌우 연결
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) {
+          // 타겟이 오른쪽
+          sourceHandle = 'source-right'
+          targetHandle = 'target-left'
+        } else {
+          // 타겟이 왼쪽
+          sourceHandle = 'source-left'
+          targetHandle = 'target-right'
+        }
+      } else {
+        // 수직 연결
+        if (dy > 0) {
+          // 타겟이 아래
+          sourceHandle = 'source-bottom'
+          targetHandle = 'target-top'
+        } else {
+          // 타겟이 위
+          sourceHandle = 'source-top'
+          targetHandle = 'target-bottom'
+        }
+      }
+
+      return { sourceHandle, targetHandle }
+    },
+    []
+  )
+
+  const onConnectEnd: OnConnectEnd = useCallback(
+    (event) => {
+      const targetIsPane = (event.target as HTMLElement)?.classList.contains('react-flow__pane')
+
+      if (targetIsPane && connectingNodeId) {
+        // 앵커가 아닌 곳에 드롭된 경우, 프레임 안에 드롭되었는지 확인
+        const targetElement = document.elementFromPoint(
+          (event as MouseEvent).clientX,
+          (event as MouseEvent).clientY
+        )
+
+        // 가장 가까운 frame-node 요소 찾기
+        const frameNode = targetElement?.closest('.frame-node')
+        if (frameNode) {
+          // 노드 ID 추출
+          const reactFlowNode = frameNode.closest('.react-flow__node')
+          const targetNodeId = reactFlowNode?.getAttribute('data-id')
+
+          if (targetNodeId && targetNodeId !== connectingNodeId) {
+            // 소스 노드와 타겟 노드의 위치 정보 가져오기
+            const sourceNode = nodes.find((n) => n.id === connectingNodeId)
+            const targetNode = nodes.find((n) => n.id === targetNodeId)
+
+            if (sourceNode && targetNode) {
+              // 가장 가까운 핸들 쌍 계산
+              const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
+
+              // 연결 생성
+              const newEdge: Edge<FlowEdgeData> = {
+                id: `e${connectingNodeId}-${targetNodeId}-${Date.now()}`,
+                source: connectingNodeId,
+                target: targetNodeId,
+                sourceHandle,
+                targetHandle,
+                data: { sourceType: 'manual' },
+              }
+              setEdges((eds) => addEdge(newEdge, eds))
+            }
+          }
+        }
+      }
+
+      setConnectingNodeId(null)
+    },
+    [connectingNodeId, nodes, setEdges, getClosestHandles]
+  )
 
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
@@ -494,18 +576,42 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
       height: number
     }>
   ) => {
+    console.log('handleBatchImport called', { fileKey, framesCount: selectedFrames.length })
+
     const accessToken = getFigmaToken()
     if (!accessToken) {
       alert('Figma Access Token이 설정되지 않았습니다.')
       return
     }
 
+    // 다이얼로그 닫기
+    setIsFileImportDialogOpen(false)
+
     try {
-      // 모든 프레임의 썸네일 가져오기
-      const imageResults = await getFigmaImages(accessToken, {
-        fileKey,
-        nodeIds: selectedFrames.map(f => f.nodeId),
-      })
+      // 진행도 초기화
+      setImportProgress({ current: 0, total: selectedFrames.length })
+
+      console.log('Fetching images...')
+
+      // 각 프레임을 개별적으로 처리하여 진행도 표시
+      const imageResults: Array<{ nodeId: string; imageUrl: string | null }> = []
+
+      for (let i = 0; i < selectedFrames.length; i++) {
+        const frame = selectedFrames[i]
+        setImportProgress({ current: i + 1, total: selectedFrames.length })
+
+        const result = await getFigmaImages(accessToken, {
+          fileKey,
+          nodeIds: [frame.nodeId],
+          scale: 0.5,
+        })
+
+        if (result[0]) {
+          imageResults.push(result[0])
+        }
+      }
+
+      console.log('Images fetched:', imageResults)
 
       // 그리드 레이아웃으로 배치 (3열)
       const columns = 3
@@ -550,10 +656,19 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
       })
 
       // 모든 노드 추가
-      setNodes((nds) => [...nds, ...newNodes])
+      console.log('Adding nodes:', newNodes)
+      setNodes((nds) => {
+        const updated = [...nds, ...newNodes]
+        console.log('Updated nodes:', updated)
+        return updated
+      })
+
+      // 진행도 숨기기
+      setImportProgress(null)
       alert(`${selectedFrames.length}개의 프레임이 추가되었습니다!`)
     } catch (error) {
       console.error('Batch import failed:', error)
+      setImportProgress(null)
       alert('프레임 가져오기 실패: ' + (error instanceof Error ? error.message : '알 수 없는 오류'))
     }
   }, [setNodes])
@@ -662,6 +777,25 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         onClose={() => setIsFileImportDialogOpen(false)}
         onImport={handleBatchImport}
       />
+
+      {/* 프레임 가져오기 진행도 오버레이 */}
+      {importProgress && (
+        <div className="import-progress-overlay">
+          <div className="import-progress-content">
+            <div className="import-spinner"></div>
+            <h3>프레임 불러오는 중...</h3>
+            <p className="import-progress-text">
+              {importProgress.current} / {importProgress.total}
+            </p>
+            <div className="import-progress-bar">
+              <div
+                className="import-progress-fill"
+                style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
