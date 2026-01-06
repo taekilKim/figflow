@@ -23,9 +23,29 @@ function FrameNode({ data, selected }: NodeProps) {
 
   return (
     <div className={`frame-node ${selected ? 'selected' : ''}`}>
+      {/* 4방향 Target Handles - 다른 노드에서 이 노드로 연결 가능 */}
       <Handle
         type="target"
         position={Position.Top}
+        id="target-top"
+        className="frame-handle"
+      />
+      <Handle
+        type="target"
+        position={Position.Right}
+        id="target-right"
+        className="frame-handle"
+      />
+      <Handle
+        type="target"
+        position={Position.Bottom}
+        id="target-bottom"
+        className="frame-handle"
+      />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="target-left"
         className="frame-handle"
       />
 
@@ -108,9 +128,29 @@ function FrameNode({ data, selected }: NodeProps) {
         </a>
       </div>
 
+      {/* 4방향 Source Handles - 이 노드에서 다른 노드로 연결 가능 */}
+      <Handle
+        type="source"
+        position={Position.Top}
+        id="source-top"
+        className="frame-handle"
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="source-right"
+        className="frame-handle"
+      />
       <Handle
         type="source"
         position={Position.Bottom}
+        id="source-bottom"
+        className="frame-handle"
+      />
+      <Handle
+        type="source"
+        position={Position.Left}
+        id="source-left"
         className="frame-handle"
       />
     </div>

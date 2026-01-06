@@ -120,8 +120,15 @@
   background: white;
   border: 2px solid #0066ff;
   border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.frame-node:hover .frame-handle {
+  opacity: 1;
 }
 
 .frame-handle:hover {
   background: #0066ff;
+  opacity: 1;
 }

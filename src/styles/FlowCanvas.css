@@ -58,3 +58,16 @@
 .react-flow__edge-textbg {
   fill: white;
 }
+
+/* 연결선 드래그 시 대상 노드 하이라이트 */
+.react-flow__node.connection-target .frame-node {
+  border-color: #00cc66;
+  box-shadow: 0 0 0 3px rgba(0, 204, 102, 0.2);
+  transition: all 0.2s;
+}
+
+.react-flow__node.connection-target .frame-handle {
+  opacity: 1;
+  border-color: #00cc66;
+  background: #00cc66;
+}

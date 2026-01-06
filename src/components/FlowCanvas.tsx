@@ -11,6 +11,10 @@ import {
   useNodesState,
   useEdgesState,
   BackgroundVariant,
+  useReactFlow,
+  ConnectionLineType,
+  OnConnectStart,
+  OnConnectEnd,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import FrameNode from './FrameNode'
@@ -112,6 +116,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   )
   const [isSyncing, setIsSyncing] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [connectingNodeId, setConnectingNodeId] = useState<string | null>(null)
+  const { getNodes, getEdges } = useReactFlow()
 
   // 노드나 엣지가 변경될 때마다 자동 저장
   useEffect(() => {
@@ -145,6 +151,38 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         data: { sourceType: 'manual' },
       }
       setEdges((eds) => addEdge(newEdge, eds))
+      setConnectingNodeId(null)
+    },
+    [setEdges]
+  )
+
+  const onConnectStart: OnConnectStart = useCallback((_event, params) => {
+    setConnectingNodeId(params.nodeId)
+  }, [])
+
+  const onConnectEnd: OnConnectEnd = useCallback(() => {
+    setConnectingNodeId(null)
+  }, [])
+
+  const onReconnect = useCallback(
+    (oldEdge: Edge, newConnection: Connection) => {
+      setEdges((els) => {
+        const edge = els.find((e) => e.id === oldEdge.id)
+        if (!edge) return els
+
+        return els.map((e) => {
+          if (e.id === oldEdge.id) {
+            return {
+              ...e,
+              source: newConnection.source,
+              target: newConnection.target,
+              sourceHandle: newConnection.sourceHandle,
+              targetHandle: newConnection.targetHandle,
+            }
+          }
+          return e
+        })
+      })
     },
     [setEdges]
   )
@@ -169,6 +207,53 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     onNodeSelect(null)
     onEdgeSelect(null)
   }, [onNodeSelect, onEdgeSelect])
+
+  // Delete/Backspace 키로 선택된 노드 및 엣지 삭제
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        // input이나 textarea에서는 동작하지 않도록
+        const target = event.target as HTMLElement
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+          return
+        }
+
+        // 선택된 노드들 삭제
+        const selectedNodes = getNodes().filter((node) => node.selected)
+        if (selectedNodes.length > 0) {
+          const nodeIdsToDelete = selectedNodes.map((node) => node.id)
+          setNodes((nds) => nds.filter((node) => !nodeIdsToDelete.includes(node.id)))
+
+          // 연결된 엣지도 자동으로 삭제
+          setEdges((eds) =>
+            eds.filter(
+              (edge) =>
+                !nodeIdsToDelete.includes(edge.source) &&
+                !nodeIdsToDelete.includes(edge.target)
+            )
+          )
+
+          onNodeSelect(null)
+          event.preventDefault()
+          return
+        }
+
+        // 선택된 엣지들 삭제
+        const selectedEdges = getEdges().filter((edge) => edge.selected)
+        if (selectedEdges.length > 0) {
+          const edgeIdsToDelete = selectedEdges.map((edge) => edge.id)
+          setEdges((eds) => eds.filter((edge) => !edgeIdsToDelete.includes(edge.id)))
+          onEdgeSelect(null)
+          event.preventDefault()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [getNodes, getEdges, setNodes, setEdges, onNodeSelect, onEdgeSelect])
 
   const handleSave = useCallback(() => {
     const project = {
@@ -353,15 +438,28 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
       </div>
 
       <ReactFlow
-        nodes={nodes}
+        nodes={nodes.map((node) => ({
+          ...node,
+          className: connectingNodeId && connectingNodeId !== node.id ? 'connection-target' : '',
+        }))}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onConnectStart={onConnectStart}
+        onConnectEnd={onConnectEnd}
+        onReconnect={onReconnect}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
+        connectionLineType={ConnectionLineType.SmoothStep}
+        defaultEdgeOptions={{
+          type: 'smoothstep',
+          animated: false,
+        }}
+        edgesReconnectable={true}
+        reconnectRadius={20}
         fitView
         minZoom={0.1}
         maxZoom={2}

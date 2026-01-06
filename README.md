@@ -6,11 +6,12 @@ FigFlow는 디자이너와 기획자가 Figma 화면을 캡처해서 붙여넣�
 
 ## 🌐 바로 사용해보기 (설치 불필요!)
 
-**웹 주소:** https://taekilKim.github.io/figflow/
+### 🔗 **서비스 주소: [https://taekilKim.github.io/figflow/](https://taekilKim.github.io/figflow/)**
 
 위 링크를 클릭하면 설치 없이 바로 사용할 수 있습니다!
-- npm이나 설정이 전혀 필요 없습니다
-- 웹 브라우저만 있으면 OK
+- ✅ npm이나 설정이 전혀 필요 없습니다
+- ✅ 웹 브라우저만 있으면 OK
+- ✅ Figma Personal Access Token만 있으면 즉시 시작 가능
 
 **⚠️ 처음 사용 시 1분 설정 필요:**
 - [GitHub Pages 활성화 가이드 보기 →](GITHUB_PAGES_SETUP.md) (1분 소요)
@@ -30,10 +31,12 @@ FigFlow는 디자이너와 기획자가 Figma 화면을 캡처해서 붙여넣�
 
 ## 주요 기능
 
-### MVP 기능
+### 현재 구현된 기능 (MVP)
+- ✅ **프레임 추가 다이얼로그**: Figma URL만 붙여넣으면 자동으로 썸네일, 이름, 실제 크기 가져오기
+- ✅ **실제 프레임 크기 반영**: Figma 프레임의 실제 픽셀 크기를 유지하여 정확한 비율로 표시
 - ✅ **플로우차트 편집**: 노드 드래그, 연결 생성/삭제, 줌/팬
 - ✅ **Figma 싱크**: Figma Images API를 통해 썸네일 자동 갱신
-- ✅ **로컬 저장**: localStorage 기반 프로젝트 저장/복원
+- ✅ **로컬 저장**: localStorage 기반 프로젝트 저장/복원 (새로고침해도 데이터 유지)
 - ✅ **3패널 레이아웃**: 프레임 목록 / 캔버스 / 속성 패널
 - ✅ **상태 관리**: 프레임별 상태(draft/review/approved/deprecated)
 - ✅ **메모 기능**: 각 프레임과 연결선에 메모 추가
@@ -91,45 +94,21 @@ Figma API를 사용하여 실제 프레임의 썸네일을 가져올 수 있습�
 4. 토큰은 브라우저 localStorage에 자동 저장됨
 5. 샘플 노드들의 썸네일이 업데이트됨 (실제 Figma 파일과 연동된 경우)
 
-#### Step 3: 자신의 Figma 프레임 추가 (현재 수동)
+#### Step 3: 자신의 Figma 프레임 추가하기 ✅
 
-현재 MVP에서는 코드를 직접 수정하여 프레임을 추가할 수 있습니다:
+1. 상단 툴바의 **"프레임 추가"** 버튼 클릭
+2. Figma에서 원하는 프레임 선택 → 우클릭 → **"Copy link to selection"**
+3. 복사한 URL을 다이얼로그에 붙여넣기
+4. 자동으로 프레임 이름과 썸네일이 미리보기에 표시됨
+5. 필요시 프레임 제목 수정
+6. **"추가하기"** 클릭!
 
-`src/components/FlowCanvas.tsx` 파일의 `initialNodes` 배열에 노드 추가:
-
-```typescript
-{
-  id: '4',
-  type: 'frameNode',
-  position: { x: 100, y: 400 },
-  data: {
-    figma: {
-      fileKey: 'YOUR_FIGMA_FILE_KEY',    // Figma URL에서 추출
-      nodeId: 'YOUR_NODE_ID',             // 예: '123:456'
-      nodeUrl: 'https://www.figma.com/file/...',
-    },
-    meta: {
-      title: '내 프레임',
-      status: 'draft',
-      notes: '이것은 내 Figma 프레임입니다',
-    },
-  },
-}
-```
-
-**Figma URL에서 fileKey와 nodeId 찾는 방법:**
-
-Figma URL 예시:
+**Figma URL 예시:**
 ```
 https://www.figma.com/file/ABC123DEF456/MyProject?node-id=123-456
-                           ^^^^^^^^^^^^              ^^^^^^^
-                           fileKey                   node-id
 ```
 
-- `fileKey`: URL에서 `/file/` 다음의 문자열
-- `node-id`: URL 파라미터 `node-id=123-456`를 `123:456`으로 변환 (하이픈을 콜론으로)
-
-> 📌 **다음 버전에서 추가될 기능**: "프레임 추가" 버튼을 통해 Figma URL만 붙여넣으면 자동으로 프레임이 추가됩니다.
+프레임이 추가되면 캔버스에 실제 Figma 프레임의 크기 비율을 유지한 채로 표시됩니다.
 
 ## 시작하기
 
@@ -171,12 +150,12 @@ npm run preview
 
 ### 플로우차트 만들기
 
-1. **프레임 추가** 버튼으로 Figma 프레임 추가 (구현 예정)
+1. **프레임 추가** 버튼으로 Figma URL 붙여넣기 → 자동으로 프레임 추가 ✅
 2. 캔버스에서 노드를 드래그하여 배치
 3. 노드 간 연결선을 드래그하여 생성
 4. 우측 패널에서 속성 편집 (제목, 상태, 메모)
 5. **Sync** 버튼으로 Figma 썸네일 갱신
-6. **저장** 버튼으로 프로젝트 저장
+6. **저장** 버튼으로 프로젝트 저장 (자동 저장되지만 명시적 저장도 가능)
 
 ## 프로젝트 구조
 
