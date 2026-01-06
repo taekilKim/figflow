@@ -122,6 +122,48 @@
   border-radius: 50%;
   opacity: 0;
   transition: opacity 0.2s;
+  position: relative;
+}
+
+/* 더 큰 연결 영역 (보이지 않음) */
+.frame-handle::before {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: transparent;
+  border-radius: 50%;
+}
+
+/* Top handles - 정확히 가운데 */
+.react-flow__handle-top {
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Right handles - 정확히 가운데 */
+.react-flow__handle-right {
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Bottom handles - 정확히 가운데 */
+.react-flow__handle-bottom {
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Left handles - 정확히 가운데 */
+.react-flow__handle-left {
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .frame-node:hover .frame-handle {

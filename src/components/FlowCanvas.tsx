@@ -110,8 +110,16 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(
     loadedProject?.nodes || initialNodes
   )
+
+  // 엣지 로드 시 label 속성이 제대로 설정되도록 보장
+  const loadedEdges = loadedProject?.edges?.map((edge) => ({
+    ...edge,
+    label: edge.label, // label 속성 명시적으로 포함
+    type: 'smoothstep', // 기본 타입 설정
+  })) || initialEdges
+
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge<FlowEdgeData>>(
-    loadedProject?.edges || initialEdges
+    loadedEdges
   )
   const [isSyncing, setIsSyncing] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -457,7 +465,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
           animated: false,
         }}
         edgesReconnectable={true}
-        reconnectRadius={20}
+        reconnectRadius={30}
+        connectOnClick={false}
         fitView
         minZoom={0.1}
         maxZoom={2}
