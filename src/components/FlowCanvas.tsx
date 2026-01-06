@@ -494,6 +494,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
       height: number
     }>
   ) => {
+    console.log('handleBatchImport called', { fileKey, framesCount: selectedFrames.length })
+
     const accessToken = getFigmaToken()
     if (!accessToken) {
       alert('Figma Access Token이 설정되지 않았습니다.')
@@ -501,12 +503,14 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     }
 
     try {
+      console.log('Fetching images...')
       // 모든 프레임의 썸네일 가져오기 (scale=0.5로 축소된 이미지 요청)
       const imageResults = await getFigmaImages(accessToken, {
         fileKey,
         nodeIds: selectedFrames.map(f => f.nodeId),
         scale: 0.5, // 50% 크기의 이미지 요청
       })
+      console.log('Images fetched:', imageResults)
 
       // 그리드 레이아웃으로 배치 (3열)
       const columns = 3
@@ -551,7 +555,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
       })
 
       // 모든 노드 추가
-      setNodes((nds) => [...nds, ...newNodes])
+      console.log('Adding nodes:', newNodes)
+      setNodes((nds) => {
+        const updated = [...nds, ...newNodes]
+        console.log('Updated nodes:', updated)
+        return updated
+      })
       alert(`${selectedFrames.length}개의 프레임이 추가되었습니다!`)
     } catch (error) {
       console.error('Batch import failed:', error)
