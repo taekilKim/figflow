@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { loadProject, saveProject } from '../utils/storage'
 import { EdgeStyle, ArrowType, FlowEdgeData } from '../types'
+import { loadPresets, addPreset, deletePreset } from '../utils/edgePresets'
 import '../styles/RightPanel.css'
 
 interface RightPanelProps {
@@ -11,6 +12,8 @@ interface RightPanelProps {
 function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
   const [edgeData, setEdgeData] = useState<FlowEdgeData | null>(null)
   const [edgeLabel, setEdgeLabel] = useState('')
+  const [presets, setPresets] = useState(loadPresets())
+  const [newPresetName, setNewPresetName] = useState('')
 
   // 선택된 엣지의 데이터 로드
   useEffect(() => {
@@ -28,6 +31,43 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
       }
     }
   }, [selectedEdgeId])
+
+  // 프리셋 적용
+  const applyPreset = (presetId: string) => {
+    const preset = presets.find((p) => p.id === presetId)
+    if (preset) {
+      updateEdge({
+        style: preset.style,
+        arrowType: preset.arrowType,
+        color: preset.color,
+      })
+    }
+  }
+
+  // 현재 스타일을 프리셋으로 저장
+  const saveAsPreset = () => {
+    if (!newPresetName.trim() || !edgeData) return
+
+    const newPreset = {
+      id: `preset-${Date.now()}`,
+      name: newPresetName.trim(),
+      style: edgeData.style || 'solid',
+      arrowType: edgeData.arrowType || 'forward',
+      color: edgeData.color || '#b0b0b0',
+    }
+
+    addPreset(newPreset)
+    setPresets(loadPresets())
+    setNewPresetName('')
+  }
+
+  // 프리셋 삭제
+  const handleDeletePreset = (presetId: string) => {
+    if (confirm('이 프리셋을 삭제하시겠습니까?')) {
+      deletePreset(presetId)
+      setPresets(loadPresets())
+    }
+  }
 
   // 엣지 속성 업데이트
   const updateEdge = (updates: Partial<FlowEdgeData> | { label?: string }) => {
@@ -174,6 +214,63 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
                 <option value="inferred">추론</option>
                 <option value="manual">수동</option>
               </select>
+            </div>
+
+            <div className="inspector-divider" />
+
+            <h3 className="inspector-title">프리셋</h3>
+
+            <div className="preset-grid">
+              {presets.map((preset) => (
+                <div
+                  key={preset.id}
+                  className="preset-item"
+                  onClick={() => applyPreset(preset.id)}
+                >
+                  <div className="preset-preview">
+                    <div
+                      className="preset-line"
+                      style={{
+                        borderTop: `3px ${preset.style} ${preset.color}`,
+                      }}
+                    />
+                  </div>
+                  <div className="preset-name">{preset.name}</div>
+                  {!preset.id.startsWith('default') && !preset.id.startsWith('success') &&
+                   !preset.id.startsWith('error') && !preset.id.startsWith('bidirectional') &&
+                   !preset.id.startsWith('optional') && (
+                    <button
+                      className="preset-delete"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeletePreset(preset.id)
+                      }}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="inspector-field">
+              <label>현재 스타일 저장</label>
+              <div className="preset-save-group">
+                <input
+                  type="text"
+                  value={newPresetName}
+                  onChange={(e) => setNewPresetName(e.target.value)}
+                  placeholder="프리셋 이름"
+                  className="preset-name-input"
+                />
+                <button
+                  className="btn-save-preset"
+                  onClick={saveAsPreset}
+                  disabled={!newPresetName.trim()}
+                >
+                  저장
+                </button>
+              </div>
             </div>
           </div>
         )}

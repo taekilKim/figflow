@@ -18,6 +18,7 @@ import {
 import '@xyflow/react/dist/style.css'
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
+import FigmaFileImportDialog from './FigmaFileImportDialog'
 import { FlowNodeData, FlowEdgeData } from '../types'
 import { saveProject, loadProject } from '../utils/storage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
@@ -158,6 +159,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   )
   const [isSyncing, setIsSyncing] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isFileImportDialogOpen, setIsFileImportDialogOpen] = useState(false)
   const [connectingNodeId, setConnectingNodeId] = useState<string | null>(null)
 
   // storage 이벤트 감지하여 엣지 스타일 업데이트
@@ -165,15 +167,22 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     const handleStorageChange = () => {
       const project = loadProject()
       if (project?.edges) {
-        const styledEdges = project.edges.map((edge) => ({
-          ...edge,
-          label: edge.label,
-          type: 'smoothstep',
-          style: getEdgeStyle(edge.data),
-          markerEnd: getMarkerEnd(edge.data),
-          markerStart: getMarkerStart(edge.data),
-        }))
-        setEdges(styledEdges as Edge<FlowEdgeData>[])
+        setEdges((currentEdges) => {
+          return currentEdges.map((currentEdge) => {
+            const updatedEdge = project.edges.find((e) => e.id === currentEdge.id)
+            if (updatedEdge) {
+              return {
+                ...currentEdge,
+                label: updatedEdge.label,
+                data: updatedEdge.data,
+                style: getEdgeStyle(updatedEdge.data),
+                markerEnd: getMarkerEnd(updatedEdge.data),
+                markerStart: getMarkerStart(updatedEdge.data),
+              }
+            }
+            return currentEdge
+          })
+        })
       }
     }
 
@@ -475,6 +484,80 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     alert(`"${frameData.title}" 프레임이 추가되었습니다! 썸네일과 함께 캔버스에 표시됩니다.`)
   }, [setNodes])
 
+  // 배치 프레임 가져오기 (파일 전체 import)
+  const handleBatchImport = useCallback(async (
+    fileKey: string,
+    selectedFrames: Array<{
+      nodeId: string
+      name: string
+      width: number
+      height: number
+    }>
+  ) => {
+    const accessToken = getFigmaToken()
+    if (!accessToken) {
+      alert('Figma Access Token이 설정되지 않았습니다.')
+      return
+    }
+
+    try {
+      // 모든 프레임의 썸네일 가져오기
+      const imageResults = await getFigmaImages(accessToken, {
+        fileKey,
+        nodeIds: selectedFrames.map(f => f.nodeId),
+      })
+
+      // 그리드 레이아웃으로 배치 (3열)
+      const columns = 3
+      const spacing = 50
+      const startX = 100
+      const startY = 100
+
+      const newNodes: Node<FlowNodeData>[] = selectedFrames.map((frame, index) => {
+        const row = Math.floor(index / columns)
+        const col = index % columns
+
+        // 프레임 크기 스케일링 (50%)
+        const scaleFactor = 0.5
+        const nodeWidth = frame.width * scaleFactor
+
+        // 그리드 위치 계산 (각 셀의 크기는 가장 큰 프레임 기준)
+        const x = startX + col * (400 + spacing)
+        const y = startY + row * (300 + spacing)
+
+        const thumbnailUrl = imageResults.find(r => r.nodeId === frame.nodeId)?.imageUrl
+
+        return {
+          id: `node-${Date.now()}-${index}`,
+          type: 'frameNode',
+          position: { x, y },
+          style: { width: nodeWidth, height: 'auto' },
+          data: {
+            figma: {
+              fileKey,
+              nodeId: frame.nodeId,
+              nodeUrl: `https://www.figma.com/file/${fileKey}?node-id=${frame.nodeId.replace(/:/g, '-')}`,
+            },
+            meta: {
+              title: frame.name,
+              status: 'draft',
+              thumbnailUrl: thumbnailUrl || undefined,
+              lastSyncedAt: Date.now(),
+              dimensions: { width: frame.width, height: frame.height },
+            },
+          },
+        }
+      })
+
+      // 모든 노드 추가
+      setNodes((nds) => [...nds, ...newNodes])
+      alert(`${selectedFrames.length}개의 프레임이 추가되었습니다!`)
+    } catch (error) {
+      console.error('Batch import failed:', error)
+      alert('프레임 가져오기 실패: ' + (error instanceof Error ? error.message : '알 수 없는 오류'))
+    }
+  }, [setNodes])
+
   return (
     <div className="flow-canvas">
       <div className="toolbar">
@@ -483,6 +566,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
           onClick={() => setIsAddDialogOpen(true)}
         >
           프레임 추가
+        </button>
+        <button
+          className="toolbar-button primary"
+          onClick={() => setIsFileImportDialogOpen(true)}
+        >
+          파일 가져오기
         </button>
         <button
           className="toolbar-button"
@@ -566,6 +655,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
         onAdd={handleAddFrame}
+      />
+
+      <FigmaFileImportDialog
+        isOpen={isFileImportDialogOpen}
+        onClose={() => setIsFileImportDialogOpen(false)}
+        onImport={handleBatchImport}
       />
     </div>
   )
