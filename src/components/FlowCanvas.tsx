@@ -11,7 +11,6 @@ import {
   useNodesState,
   useEdgesState,
   BackgroundVariant,
-  useReactFlow,
   ConnectionLineType,
   OnConnectStart,
   OnConnectEnd,
@@ -117,7 +116,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   const [isSyncing, setIsSyncing] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [connectingNodeId, setConnectingNodeId] = useState<string | null>(null)
-  const { getNodes, getEdges } = useReactFlow()
 
   // 노드나 엣지가 변경될 때마다 자동 저장
   useEffect(() => {
@@ -219,7 +217,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         }
 
         // 선택된 노드들 삭제
-        const selectedNodes = getNodes().filter((node) => node.selected)
+        const selectedNodes = (nodes as Node[]).filter((node) => node.selected)
         if (selectedNodes.length > 0) {
           const nodeIdsToDelete = selectedNodes.map((node) => node.id)
           setNodes((nds) => nds.filter((node) => !nodeIdsToDelete.includes(node.id)))
@@ -239,7 +237,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         }
 
         // 선택된 엣지들 삭제
-        const selectedEdges = getEdges().filter((edge) => edge.selected)
+        const selectedEdges = (edges as Edge[]).filter((edge) => edge.selected)
         if (selectedEdges.length > 0) {
           const edgeIdsToDelete = selectedEdges.map((edge) => edge.id)
           setEdges((eds) => eds.filter((edge) => !edgeIdsToDelete.includes(edge.id)))
@@ -253,7 +251,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [getNodes, getEdges, setNodes, setEdges, onNodeSelect, onEdgeSelect])
+  }, [nodes, edges, setNodes, setEdges, onNodeSelect, onEdgeSelect])
 
   const handleSave = useCallback(() => {
     const project = {
