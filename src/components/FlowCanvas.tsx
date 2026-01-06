@@ -120,6 +120,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
       name: loadedProject?.name || 'FigFlow Project',
       nodes: nodes.map((node) => ({
         id: node.id,
+        type: node.type || 'frameNode',
         position: node.position,
         data: node.data as FlowNodeData,
       })),
@@ -175,6 +176,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
       name: loadedProject?.name || 'FigFlow Project',
       nodes: nodes.map((node) => ({
         id: node.id,
+        type: node.type || 'frameNode',
         position: node.position,
         data: node.data as FlowNodeData,
       })),
@@ -282,7 +284,20 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     nodeUrl: string
     title: string
     thumbnailUrl: string | null
+    dimensions: { width: number; height: number } | null
   }) => {
+    // 실제 프레임 크기를 캔버스에 맞게 스케일링
+    // 일반적으로 Figma 프레임은 실제 디바이스 크기(예: 375x812)이므로
+    // 캔버스에 표시하기 위해 적절히 축소 (약 1/2 스케일)
+    let nodeWidth: number | undefined
+    let nodeHeight: number | undefined
+
+    if (frameData.dimensions) {
+      const scaleFactor = 0.5 // 실제 크기의 50%로 표시
+      nodeWidth = frameData.dimensions.width * scaleFactor
+      nodeHeight = frameData.dimensions.height * scaleFactor
+    }
+
     // 새로운 노드 생성
     const newNode: Node<FlowNodeData> = {
       id: `node-${Date.now()}`,
@@ -291,6 +306,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         x: Math.random() * 400 + 100,
         y: Math.random() * 400 + 100,
       },
+      style: nodeWidth && nodeHeight ? { width: nodeWidth, height: 'auto' } : undefined,
       data: {
         figma: {
           fileKey: frameData.fileKey,
@@ -302,6 +318,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
           status: 'draft',
           thumbnailUrl: frameData.thumbnailUrl || undefined,
           lastSyncedAt: Date.now(),
+          dimensions: frameData.dimensions || undefined,
         },
       },
     }

@@ -11,6 +11,7 @@ interface AddFrameDialogProps {
     nodeUrl: string
     title: string
     thumbnailUrl: string | null
+    dimensions: { width: number; height: number } | null
   }) => void
 }
 
@@ -22,6 +23,7 @@ function AddFrameDialog({ isOpen, onClose, onAdd }: AddFrameDialogProps) {
   const [previewData, setPreviewData] = useState<{
     name: string | null
     thumbnailUrl: string | null
+    dimensions: { width: number; height: number } | null
   } | null>(null)
 
   const handleUrlBlur = async () => {
@@ -63,6 +65,7 @@ function AddFrameDialog({ isOpen, onClose, onAdd }: AddFrameDialogProps) {
       setPreviewData({
         name: frameInfo.name,
         thumbnailUrl: frameInfo.thumbnailUrl,
+        dimensions: frameInfo.dimensions,
       })
 
       // 프레임 이름 자동 채우기
@@ -101,6 +104,7 @@ function AddFrameDialog({ isOpen, onClose, onAdd }: AddFrameDialogProps) {
       nodeUrl: figmaUrl,
       title: title || previewData.name || 'New Frame',
       thumbnailUrl: previewData.thumbnailUrl,
+      dimensions: previewData.dimensions,
     })
 
     // 폼 초기화
@@ -169,6 +173,11 @@ function AddFrameDialog({ isOpen, onClose, onAdd }: AddFrameDialogProps) {
               )}
               {previewData.name && (
                 <p className="preview-name">프레임 이름: <strong>{previewData.name}</strong></p>
+              )}
+              {previewData.dimensions && (
+                <p className="preview-dimensions">
+                  실제 크기: <strong>{Math.round(previewData.dimensions.width)} × {Math.round(previewData.dimensions.height)}px</strong>
+                </p>
               )}
             </div>
           )}

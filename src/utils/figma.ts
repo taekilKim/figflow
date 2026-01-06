@@ -117,7 +117,46 @@ export async function getFigmaNodeName(
 }
 
 /**
- * 프레임의 전체 정보를 한 번에 가져옵니다 (이름 + 썸네일)
+ * Figma 노드의 실제 크기를 가져옵니다
+ */
+export async function getFigmaNodeDimensions(
+  accessToken: string,
+  fileKey: string,
+  nodeId: string
+): Promise<{ width: number; height: number } | null> {
+  try {
+    const url = `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${nodeId}`
+
+    const response = await fetch(url, {
+      headers: {
+        'X-Figma-Token': accessToken,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Figma API error: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    const node = data.nodes?.[nodeId]?.document
+    const bounds = node?.absoluteBoundingBox
+
+    if (!bounds) {
+      return null
+    }
+
+    return {
+      width: bounds.width,
+      height: bounds.height,
+    }
+  } catch (error) {
+    console.error('Failed to fetch Figma node dimensions:', error)
+    return null
+  }
+}
+
+/**
+ * 프레임의 전체 정보를 한 번에 가져옵니다 (이름 + 썸네일 + 크기)
  */
 export async function getFigmaFrameInfo(
   accessToken: string,
@@ -126,24 +165,41 @@ export async function getFigmaFrameInfo(
 ): Promise<{
   name: string | null
   thumbnailUrl: string | null
+  dimensions: { width: number; height: number } | null
   error?: string
 }> {
   try {
-    // 병렬로 이름과 이미지 가져오기
-    const [nameResult, imageResult] = await Promise.all([
-      getFigmaNodeName(accessToken, fileKey, nodeId),
+    // 병렬로 이름+크기와 이미지 가져오기
+    const [nodeInfo, imageResult] = await Promise.all([
+      (async () => {
+        const url = `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${nodeId}`
+        const response = await fetch(url, {
+          headers: { 'X-Figma-Token': accessToken },
+        })
+        if (!response.ok) return null
+        const data = await response.json()
+        const node = data.nodes?.[nodeId]?.document
+        return {
+          name: node?.name || null,
+          dimensions: node?.absoluteBoundingBox
+            ? { width: node.absoluteBoundingBox.width, height: node.absoluteBoundingBox.height }
+            : null,
+        }
+      })(),
       getFigmaImages(accessToken, { fileKey, nodeIds: [nodeId] }),
     ])
 
     return {
-      name: nameResult,
+      name: nodeInfo?.name || null,
       thumbnailUrl: imageResult[0]?.imageUrl || null,
+      dimensions: nodeInfo?.dimensions || null,
       error: imageResult[0]?.error,
     }
   } catch (error) {
     return {
       name: null,
       thumbnailUrl: null,
+      dimensions: null,
       error: error instanceof Error ? error.message : 'Unknown error',
     }
   }

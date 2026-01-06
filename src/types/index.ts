@@ -16,6 +16,7 @@ export interface FrameMeta {
   notes?: string;
   thumbnailUrl?: string;
   lastSyncedAt?: number;
+  dimensions?: { width: number; height: number };
 }
 
 /**
@@ -47,6 +48,7 @@ export interface ProjectData {
   name: string;
   nodes: Array<{
     id: string;
+    type?: string;
     position: { x: number; y: number };
     data: FlowNodeData;
   }>;
