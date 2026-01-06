@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react'
+import { loadProject, saveProject } from '../utils/storage'
+import { EdgeStyle, ArrowType, FlowEdgeData } from '../types'
 import '../styles/RightPanel.css'
 
 interface RightPanelProps {
@@ -6,6 +9,55 @@ interface RightPanelProps {
 }
 
 function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
+  const [edgeData, setEdgeData] = useState<FlowEdgeData | null>(null)
+  const [edgeLabel, setEdgeLabel] = useState('')
+
+  // 선택된 엣지의 데이터 로드
+  useEffect(() => {
+    if (!selectedEdgeId) {
+      setEdgeData(null)
+      return
+    }
+
+    const project = loadProject()
+    if (project?.edges) {
+      const edge = project.edges.find((e) => e.id === selectedEdgeId)
+      if (edge) {
+        setEdgeData(edge.data || { sourceType: 'manual' })
+        setEdgeLabel(edge.label || '')
+      }
+    }
+  }, [selectedEdgeId])
+
+  // 엣지 속성 업데이트
+  const updateEdge = (updates: Partial<FlowEdgeData> | { label?: string }) => {
+    if (!selectedEdgeId) return
+
+    const project = loadProject()
+    if (!project) return
+
+    const edgeIndex = project.edges.findIndex((e) => e.id === selectedEdgeId)
+    if (edgeIndex === -1) return
+
+    const updatedEdges = [...project.edges]
+    const edge = updatedEdges[edgeIndex]
+
+    if ('label' in updates) {
+      updatedEdges[edgeIndex] = { ...edge, label: updates.label }
+      setEdgeLabel(updates.label || '')
+    } else {
+      updatedEdges[edgeIndex] = {
+        ...edge,
+        data: { ...edge.data, ...updates },
+      }
+      setEdgeData({ ...edge.data, ...updates })
+    }
+
+    saveProject({ ...project, edges: updatedEdges, updatedAt: Date.now() })
+
+    // 변경사항을 즉시 반영하기 위해 storage 이벤트 발생
+    window.dispatchEvent(new Event('storage'))
+  }
   if (!selectedNodeId && !selectedEdgeId) {
     return (
       <div className="right-panel">
@@ -54,16 +106,70 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
           </div>
         )}
 
-        {selectedEdgeId && (
+        {selectedEdgeId && edgeData && (
           <div className="inspector-section">
             <h3 className="inspector-title">연결선 정보</h3>
+
             <div className="inspector-field">
               <label>라벨</label>
-              <input type="text" placeholder="연결선 라벨" />
+              <input
+                type="text"
+                placeholder="연결선 라벨"
+                value={edgeLabel}
+                onChange={(e) => updateEdge({ label: e.target.value })}
+              />
             </div>
+
+            <div className="inspector-field">
+              <label>스타일</label>
+              <select
+                value={edgeData.style || 'solid'}
+                onChange={(e) => updateEdge({ style: e.target.value as EdgeStyle })}
+              >
+                <option value="solid">실선 (Solid)</option>
+                <option value="dashed">대시 (Dashed)</option>
+                <option value="dotted">점선 (Dotted)</option>
+              </select>
+            </div>
+
+            <div className="inspector-field">
+              <label>화살표</label>
+              <select
+                value={edgeData.arrowType || 'forward'}
+                onChange={(e) => updateEdge({ arrowType: e.target.value as ArrowType })}
+              >
+                <option value="none">없음</option>
+                <option value="forward">앞으로 (→)</option>
+                <option value="backward">뒤로 (←)</option>
+                <option value="both">양방향 (↔)</option>
+              </select>
+            </div>
+
+            <div className="inspector-field">
+              <label>색상</label>
+              <div className="color-picker-group">
+                <input
+                  type="color"
+                  value={edgeData.color || '#b0b0b0'}
+                  onChange={(e) => updateEdge({ color: e.target.value })}
+                  className="color-picker"
+                />
+                <input
+                  type="text"
+                  value={edgeData.color || '#b0b0b0'}
+                  onChange={(e) => updateEdge({ color: e.target.value })}
+                  placeholder="#b0b0b0"
+                  className="color-input"
+                />
+              </div>
+            </div>
+
             <div className="inspector-field">
               <label>소스 타입</label>
-              <select>
+              <select
+                value={edgeData.sourceType || 'manual'}
+                onChange={(e) => updateEdge({ sourceType: e.target.value as any })}
+              >
                 <option value="auto">자동 (Figma 프로토타입)</option>
                 <option value="inferred">추론</option>
                 <option value="manual">수동</option>
