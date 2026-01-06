@@ -232,9 +232,90 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     setConnectingNodeId(params.nodeId)
   }, [])
 
-  const onConnectEnd: OnConnectEnd = useCallback(() => {
-    setConnectingNodeId(null)
-  }, [])
+  // 두 노드 사이의 가장 가까운 핸들 쌍 계산
+  const getClosestHandles = useCallback(
+    (sourceNode: Node, targetNode: Node): { sourceHandle: string; targetHandle: string } => {
+      const dx = targetNode.position.x - sourceNode.position.x
+      const dy = targetNode.position.y - sourceNode.position.y
+
+      let sourceHandle = 'source-right'
+      let targetHandle = 'target-left'
+
+      // 수평 거리가 수직 거리보다 크면 좌우 연결
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) {
+          // 타겟이 오른쪽
+          sourceHandle = 'source-right'
+          targetHandle = 'target-left'
+        } else {
+          // 타겟이 왼쪽
+          sourceHandle = 'source-left'
+          targetHandle = 'target-right'
+        }
+      } else {
+        // 수직 연결
+        if (dy > 0) {
+          // 타겟이 아래
+          sourceHandle = 'source-bottom'
+          targetHandle = 'target-top'
+        } else {
+          // 타겟이 위
+          sourceHandle = 'source-top'
+          targetHandle = 'target-bottom'
+        }
+      }
+
+      return { sourceHandle, targetHandle }
+    },
+    []
+  )
+
+  const onConnectEnd: OnConnectEnd = useCallback(
+    (event) => {
+      const targetIsPane = (event.target as HTMLElement)?.classList.contains('react-flow__pane')
+
+      if (targetIsPane && connectingNodeId) {
+        // 앵커가 아닌 곳에 드롭된 경우, 프레임 안에 드롭되었는지 확인
+        const targetElement = document.elementFromPoint(
+          (event as MouseEvent).clientX,
+          (event as MouseEvent).clientY
+        )
+
+        // 가장 가까운 frame-node 요소 찾기
+        const frameNode = targetElement?.closest('.frame-node')
+        if (frameNode) {
+          // 노드 ID 추출
+          const reactFlowNode = frameNode.closest('.react-flow__node')
+          const targetNodeId = reactFlowNode?.getAttribute('data-id')
+
+          if (targetNodeId && targetNodeId !== connectingNodeId) {
+            // 소스 노드와 타겟 노드의 위치 정보 가져오기
+            const sourceNode = nodes.find((n) => n.id === connectingNodeId)
+            const targetNode = nodes.find((n) => n.id === targetNodeId)
+
+            if (sourceNode && targetNode) {
+              // 가장 가까운 핸들 쌍 계산
+              const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
+
+              // 연결 생성
+              const newEdge: Edge<FlowEdgeData> = {
+                id: `e${connectingNodeId}-${targetNodeId}-${Date.now()}`,
+                source: connectingNodeId,
+                target: targetNodeId,
+                sourceHandle,
+                targetHandle,
+                data: { sourceType: 'manual' },
+              }
+              setEdges((eds) => addEdge(newEdge, eds))
+            }
+          }
+        }
+      }
+
+      setConnectingNodeId(null)
+    },
+    [connectingNodeId, nodes, setEdges, getClosestHandles]
+  )
 
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
