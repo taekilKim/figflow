@@ -123,16 +123,36 @@ optgroup {
   transition: stroke 0.2s, stroke-width 0.2s;
 }
 
-/* 5. 노드 핸들 (앵커 포인트) - Hierarchy Level 3: Micro Size (1px) */
+/* TDS Typography - Edge Labels */
+.react-flow__edge-text {
+  font-family: 'Pretendard Variable', Pretendard, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  fill: #333D4B !important; /* TDS Grey 800 */
+  letter-spacing: 0 !important; /* TDS Requirement */
+}
+
+.react-flow__edge-text-bg {
+  fill: #F2F4F6 !important; /* TDS Background Base */
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* 5. 노드 핸들 (앵커 포인트) - Dynamic Sizing with Minimums */
 .react-flow__handle {
-  width: calc(1px * var(--zoom-scale, 1)) !important;
-  height: calc(1px * var(--zoom-scale, 1)) !important;
-  background: var(--blue-500);
-  border: calc(0.5px * var(--zoom-scale, 1)) solid #fff !important;
+  /* Dynamic sizing: 줌 아웃 시 화면상 크기 유지 */
+  width: calc(10px * var(--zoom-scale, 1)) !important;
+  height: calc(10px * var(--zoom-scale, 1)) !important;
+  /* 최소 크기 보장 - 절대 사라지지 않게 */
+  min-width: 6px !important;
+  min-height: 6px !important;
+
+  background: #3182F6 !important; /* TDS Blue 500 */
+  border: calc(2px * var(--zoom-scale, 1)) solid #fff !important;
   border-radius: 50%;
   /* 크기가 커져도 센터가 맞도록 transform 활용 */
   transform: translate(-50%, -50%);
-  z-index: 9999 !important; /* 무조건 최상위 - 이미지에 가려지지 않게 */
+  z-index: 99999 !important; /* 무조건 최상위 - 이미지에 가려지지 않게 */
   opacity: 0; /* 평소엔 숨김 */
   transition: opacity 0.1s;
 }
@@ -143,22 +163,22 @@ optgroup {
   opacity: 1;
 }
 
-/* 6. 엣지 재연결 핸들 - Hierarchy Level 3: Micro Size (0.5px) */
+/* 6. 엣지 재연결 핸들 - Visible Size */
 .react-flow__edgeupdater {
   /* 히트박스(클릭 영역)는 여전히 크게 유지 */
   stroke-width: calc(20px * var(--zoom-scale, 1)) !important;
   opacity: 0;
   transition: opacity 0.2s;
-  z-index: 10000 !important; /* 핸들보다 더 위 */
+  z-index: 99999 !important; /* 핸들과 동일한 최상위 */
 }
 
-/* 시각적으로 보이는 점 (Circle) - Micro Handle */
+/* 시각적으로 보이는 점 (Circle) - Functional Size */
 .react-flow__edge.selected .react-flow__edgeupdater {
   opacity: 1;
   fill: #fff;
-  stroke: var(--blue-500);
-  stroke-width: calc(0.5px * var(--zoom-scale, 1)); /* 테두리 두께 최소화 */
-  r: calc(0.5px * var(--zoom-scale, 1)); /* 반지름 Micro Size */
+  stroke: #3182F6; /* TDS Blue */
+  stroke-width: calc(1px * var(--zoom-scale, 1));
+  r: calc(4px * var(--zoom-scale, 1)); /* 충분히 보이는 크기 */
 }
 
 .react-flow__edge.selected .react-flow__edgeupdater:hover {
@@ -186,6 +206,41 @@ optgroup {
   will-change: transform;
   /* 하드웨어 가속 힌트 */
   transform: translateZ(0);
+}
+
+/* 9. TDS Status Tags (Badges) */
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+  letter-spacing: 0 !important; /* TDS Requirement */
+  line-height: 1;
+}
+
+/* TDS Status Colors */
+.status-tag.ready,
+.status-tag.approved {
+  background-color: #E8F3FF; /* TDS Blue 100 */
+  color: #3182F6; /* TDS Blue 500 */
+}
+
+.status-tag.draft {
+  background-color: #F2F4F6; /* TDS Grey 200 */
+  color: #6B7684; /* TDS Grey 600 */
+}
+
+.status-tag.review {
+  background-color: #FFF4E6; /* Orange tint */
+  color: #F76B15; /* Orange */
+}
+
+.status-tag.deprecated {
+  background-color: #FFEBEE; /* Red tint */
+  color: #E03E3E; /* Red */
 }
 
 /* 스크롤바 커스텀 (미니멀하게) */

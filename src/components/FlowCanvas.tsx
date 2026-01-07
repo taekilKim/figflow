@@ -362,6 +362,38 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     setEdges,
   })
 
+  // 🔧 Real-time Debugging Tool (Console Backdoor)
+  useEffect(() => {
+    // @ts-ignore - Intentional global debug tool
+    window.flowDebug = {
+      setPadding: (padding: number) => {
+        setEdges((currentEdges) =>
+          currentEdges.map(edge => ({
+            ...edge,
+            data: {
+              ...edge.data,
+              smartEdge: {
+                ...(edge.data?.smartEdge || {}),
+                nodePadding: padding
+              }
+            }
+          } as Edge<FlowEdgeData>))
+        )
+        console.log(`✅ Edge padding updated to ${padding}px`)
+      },
+      getEdges: () => {
+        console.log('Current edges:', edges)
+        return edges
+      },
+      getNodes: () => {
+        console.log('Current nodes:', nodes)
+        return nodes
+      }
+    }
+
+    console.log('🔧 Debug tool ready! Use window.flowDebug.setPadding(80) to adjust edge spacing')
+  }, [setEdges, edges, nodes])
+
   // storage 이벤트 감지하여 노드 및 엣지 업데이트
   useEffect(() => {
     const handleStorageChange = () => {
