@@ -290,11 +290,10 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         return
       }
 
-      // 프레임 안에 드롭했는지 확인
-      const frameNode = targetElement?.closest('.frame-node')
-      if (frameNode) {
-        const reactFlowNode = frameNode.closest('.react-flow__node')
-        const targetNodeId = reactFlowNode?.getAttribute('data-id')
+      // React Flow 노드 안에 드롭했는지 확인 (.react-flow__node를 직접 찾음)
+      const reactFlowNode = targetElement?.closest('.react-flow__node')
+      if (reactFlowNode) {
+        const targetNodeId = reactFlowNode.getAttribute('data-id')
 
         if (targetNodeId && targetNodeId !== connectingNodeId) {
           const sourceNode = nodes.find((n) => n.id === connectingNodeId)
@@ -696,7 +695,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
           ...node,
           className: connectingNodeId && connectingNodeId !== node.id ? 'connection-target' : '',
         }))}
-        edges={edges}
+        edges={edges.map((edge) => ({
+          ...edge,
+          style: getEdgeStyle(edge.data),
+          markerEnd: getMarkerEnd(edge.data),
+          markerStart: getMarkerStart(edge.data),
+        }))}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}

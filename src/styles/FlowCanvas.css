@@ -141,3 +141,27 @@
   border-radius: 4px;
   transition: width 0.3s ease-out;
 }
+
+/* Edge reconnection handles - only show when edge is selected */
+.react-flow__edge:not(.selected) .react-flow__edgeupdater {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.react-flow__edge.selected .react-flow__edgeupdater {
+  opacity: 1;
+  pointer-events: all;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #0066ff;
+  background: white;
+  border-radius: 50%;
+  cursor: grab;
+  transition: opacity 0.2s;
+}
+
+.react-flow__edge.selected .react-flow__edgeupdater:hover {
+  width: 16px;
+  height: 16px;
+  background: #e6f0ff;
+}
