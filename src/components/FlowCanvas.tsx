@@ -14,6 +14,7 @@ import {
   ConnectionLineType,
   OnConnectStart,
   OnConnectEnd,
+  MarkerType,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import FrameNode from './FrameNode'
@@ -129,11 +130,16 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     return style
   }
 
-  // 화살표 마커 ID 생성 - 항상 값 반환
+  // 화살표 마커 설정 - React Flow 내장 MarkerType 사용
   const getMarkerEnd = (edgeData?: FlowEdgeData) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'forward' || arrowType === 'both') {
-      return 'url(#arrow)'
+      return {
+        type: MarkerType.Arrow,
+        width: 20,
+        height: 20,
+        color: edgeData?.color || '#555555',
+      }
     }
     return undefined
   }
@@ -141,7 +147,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   const getMarkerStart = (edgeData?: FlowEdgeData) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'backward' || arrowType === 'both') {
-      return 'url(#arrow-reverse)'
+      return {
+        type: MarkerType.Arrow,
+        width: 20,
+        height: 20,
+        color: edgeData?.color || '#555555',
+      }
     }
     return undefined
   }
@@ -294,53 +305,45 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
 
   const onConnectEnd: OnConnectEnd = useCallback(
     (event, connectionState) => {
-      try {
-        if (!connectingNodeId) {
-          return
-        }
-
-        // connectionState가 있으면 이미 연결됨 (handle에 드롭)
-        if (connectionState.isValid) {
-          return
-        }
-
-        // 프레임 내부에 드롭한 경우 수동으로 연결 생성
-        const targetElement = document.elementFromPoint(
-          (event as MouseEvent).clientX,
-          (event as MouseEvent).clientY
-        )
-
-        // 모든 노드 요소들을 찾아서 확인
-        let currentElement: Element | null = targetElement
-        while (currentElement) {
-          if (currentElement.classList.contains('react-flow__node')) {
-            const targetNodeId = currentElement.getAttribute('data-id')
-
-            if (targetNodeId && targetNodeId !== connectingNodeId) {
-              const sourceNode = nodes.find((n) => n.id === connectingNodeId)
-              const targetNode = nodes.find((n) => n.id === targetNodeId)
-
-              if (sourceNode && targetNode) {
-                const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
-
-                const newEdge: Edge<FlowEdgeData> = {
-                  id: `e${connectingNodeId}-${targetNodeId}-${Date.now()}`,
-                  source: connectingNodeId,
-                  target: targetNodeId,
-                  sourceHandle,
-                  targetHandle,
-                  data: { sourceType: 'manual' },
-                }
-                setEdges((eds) => addEdge(newEdge, eds))
-                break
-              }
-            }
-          }
-          currentElement = currentElement.parentElement
-        }
-      } finally {
+      if (!connectingNodeId) {
         setConnectingNodeId(null)
+        return
       }
+
+      // connectionState가 있으면 이미 연결됨 (handle에 드롭)
+      if (connectionState.isValid) {
+        setConnectingNodeId(null)
+        return
+      }
+
+      // 프레임 내부 어디든 드롭한 경우 수동으로 연결 생성
+      const target = event.target as HTMLElement
+      const targetNodeElement = target.closest('.react-flow__node')
+
+      if (targetNodeElement) {
+        const targetNodeId = targetNodeElement.getAttribute('data-id')
+
+        if (targetNodeId && targetNodeId !== connectingNodeId) {
+          const sourceNode = nodes.find((n) => n.id === connectingNodeId)
+          const targetNode = nodes.find((n) => n.id === targetNodeId)
+
+          if (sourceNode && targetNode) {
+            const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
+
+            const newEdge: Edge<FlowEdgeData> = {
+              id: `e${connectingNodeId}-${targetNodeId}-${Date.now()}`,
+              source: connectingNodeId,
+              target: targetNodeId,
+              sourceHandle,
+              targetHandle,
+              data: { sourceType: 'manual' },
+            }
+            setEdges((eds) => addEdge(newEdge, eds))
+          }
+        }
+      }
+
+      setConnectingNodeId(null)
     },
     [connectingNodeId, nodes, setEdges, getClosestHandles]
   )
@@ -689,34 +692,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
 
   return (
     <div className="flow-canvas">
-      {/* SVG 마커 정의 - ReactFlow 외부에 배치 */}
-      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
-        <defs>
-          <marker
-            id="arrow"
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="5"
-            markerWidth="6"
-            markerHeight="6"
-            orient="auto"
-          >
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#555" />
-          </marker>
-          <marker
-            id="arrow-reverse"
-            viewBox="0 0 10 10"
-            refX="1"
-            refY="5"
-            markerWidth="6"
-            markerHeight="6"
-            orient="auto"
-          >
-            <path d="M 10 0 L 0 5 L 10 10 z" fill="#555" />
-          </marker>
-        </defs>
-      </svg>
-
       <div className="toolbar">
         <button
           className="toolbar-button primary"
@@ -771,6 +746,13 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         defaultEdgeOptions={{
           type: 'smoothstep',
           animated: false,
+          style: { strokeWidth: 2, stroke: '#555555' },
+          markerEnd: {
+            type: MarkerType.Arrow,
+            color: '#555555',
+            width: 20,
+            height: 20,
+          },
         }}
         edgesReconnectable={true}
         reconnectRadius={30}
