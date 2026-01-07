@@ -118,6 +118,13 @@
   background: transparent;
 }
 
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--grey-300);
+  margin: 0 4px;
+}
+
 /* Tonal Button Style */
 .btn-tonal {
   background-color: var(--blue-100);
