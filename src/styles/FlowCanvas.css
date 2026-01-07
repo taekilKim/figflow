@@ -46,8 +46,9 @@
 }
 
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: #0066ff;
+  stroke: #2f80ed !important;
   stroke-width: 3;
+  filter: drop-shadow(0 0 2px rgba(47, 128, 237, 0.4));
 }
 
 .react-flow__edge-text {
@@ -142,31 +143,28 @@
   transition: width 0.3s ease-out;
 }
 
-/* Edge reconnection handles - only show when edge is selected */
+/* Edge reconnection handles - SVG circle 요소이므로 r 속성 사용 */
 .react-flow__edgeupdater {
-  opacity: 0 !important;
-  pointer-events: none !important;
-  width: 10px;
-  height: 10px;
-  border: 2px solid #999;
-  background: white;
-  border-radius: 50%;
-  cursor: grab;
+  r: 0;
+  stroke: transparent;
+  fill: transparent;
   transition: all 0.2s;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .react-flow__edge.selected .react-flow__edgeupdater {
-  opacity: 1 !important;
-  pointer-events: all !important;
-  width: 14px;
-  height: 14px;
-  border: 3px solid #0066ff;
-  background: white;
+  r: 5;
+  opacity: 1;
+  pointer-events: all;
+  fill: #ffffff;
+  stroke: #2f80ed;
+  stroke-width: 2px;
 }
 
 .react-flow__edge.selected .react-flow__edgeupdater:hover {
-  width: 18px;
-  height: 18px;
-  background: #e6f0ff;
-  border-color: #0052cc;
+  r: 6;
+  fill: #2f80ed;
+  stroke: #fff;
+  cursor: grab;
 }
