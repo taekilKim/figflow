@@ -206,6 +206,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         id: edge.id,
         source: edge.source,
         target: edge.target,
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
         label: typeof edge.label === 'string' ? edge.label : undefined,
         data: edge.data || { sourceType: 'manual' as const },
       })),
@@ -277,20 +279,17 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         return
       }
 
-      // 드롭 위치의 요소 확인
       const targetElement = document.elementFromPoint(
         (event as MouseEvent).clientX,
         (event as MouseEvent).clientY
       )
 
-      // Handle에 정확히 드롭한 경우는 기본 동작(onConnect)에 맡김
-      const isHandle = targetElement?.classList.contains('react-flow__handle')
-      if (isHandle) {
-        setConnectingNodeId(null)
+      // Handle에 드롭한 경우는 onConnect가 처리하므로 여기서는 건너뜀
+      if (targetElement?.classList.contains('react-flow__handle')) {
         return
       }
 
-      // React Flow 노드 안에 드롭했는지 확인 (.react-flow__node를 직접 찾음)
+      // 프레임 내부에 드롭
       const reactFlowNode = targetElement?.closest('.react-flow__node')
       if (reactFlowNode) {
         const targetNodeId = reactFlowNode.getAttribute('data-id')
@@ -425,6 +424,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         id: edge.id,
         source: edge.source,
         target: edge.target,
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
         label: typeof edge.label === 'string' ? edge.label : undefined,
         data: edge.data || { sourceType: 'manual' as const },
       })),
@@ -723,29 +724,29 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         minZoom={0.1}
         maxZoom={2}
       >
-        <svg style={{ position: 'absolute', top: 0, left: 0 }}>
+        <svg style={{ position: 'absolute', width: 0, height: 0 }}>
           <defs>
             <marker
               id="arrow"
-              markerWidth="12"
-              markerHeight="12"
-              refX="11"
-              refY="6"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
               orient="auto"
-              markerUnits="strokeWidth"
             >
-              <path d="M2,2 L10,6 L2,10 L4,6 L2,2" fill="#b0b0b0" />
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#555" />
             </marker>
             <marker
               id="arrow-reverse"
-              markerWidth="12"
-              markerHeight="12"
+              viewBox="0 0 10 10"
               refX="1"
-              refY="6"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
               orient="auto"
-              markerUnits="strokeWidth"
             >
-              <path d="M10,2 L2,6 L10,10 L8,6 L10,2" fill="#b0b0b0" />
+              <path d="M 10 0 L 0 5 L 10 10 z" fill="#555" />
             </marker>
           </defs>
         </svg>
