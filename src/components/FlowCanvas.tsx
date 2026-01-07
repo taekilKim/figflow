@@ -1041,7 +1041,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           },
           data: {
             smartEdge: {
-              nodePadding: 40,   // 노드 주변 여백을 확보하여 연결선이 노드에 너무 붙지 않게
+              nodePadding: 45,   // 노드 주변 여백을 최대한 확보하여 연결선이 노드에 너무 붙지 않게
               gridRatio: 10,     // 격자 계산 비율
               lessCorners: true, // 불필요한 코너 최소화
             }
