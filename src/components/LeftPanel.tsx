@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react'
 import { MagnifyingGlass, FrameCorners } from '@phosphor-icons/react'
+import { useReactFlow } from '@xyflow/react'
 import { loadProject } from '../utils/storage'
 import { FlowNodeData } from '../types'
 import '../styles/LeftPanel.css'
 
-function LeftPanel() {
+interface LeftPanelProps {
+  selectedNodeIds: string[]
+}
+
+function LeftPanel({ selectedNodeIds }: LeftPanelProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [nodes, setNodes] = useState<Array<{ id: string; data: FlowNodeData }>>([])
+  const { setNodes: setFlowNodes } = useReactFlow()
 
   // localStorage에서 노드 목록 불러오기
   useEffect(() => {
@@ -31,6 +37,21 @@ function LeftPanel() {
       clearInterval(interval)
     }
   }, [])
+
+  // 패널에서 노드 클릭 시 캔버스의 선택 상태 업데이트
+  const handleSelectNode = (nodeId: string, event: React.MouseEvent) => {
+    const isMulti = event.metaKey || event.ctrlKey || event.shiftKey
+
+    setFlowNodes((prevNodes) =>
+      prevNodes.map((node) => {
+        if (node.id === nodeId) {
+          return { ...node, selected: true }
+        }
+        // 다중 선택이 아니면 나머지는 선택 해제
+        return isMulti ? node : { ...node, selected: false }
+      })
+    )
+  }
 
   const filteredNodes = nodes.filter((node) =>
     node.data.meta.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -84,7 +105,15 @@ function LeftPanel() {
         ) : (
           <div className="frame-list">
             {filteredNodes.map((node) => (
-              <div key={node.id} className="frame-item">
+              <div
+                key={node.id}
+                className="frame-item"
+                onClick={(e) => handleSelectNode(node.id, e)}
+                style={{
+                  background: selectedNodeIds.includes(node.id) ? 'var(--blue-100)' : 'transparent',
+                  borderLeft: selectedNodeIds.includes(node.id) ? '3px solid var(--blue-500)' : '3px solid transparent'
+                }}
+              >
                 {node.data.meta.thumbnailUrl ? (
                   <div className="frame-item-thumbnail">
                     <img src={node.data.meta.thumbnailUrl} alt={node.data.meta.title} />

@@ -8,14 +8,16 @@ import './styles/App.css'
 function App() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
+  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([])
 
   return (
     <ReactFlowProvider>
       <div className="app-container">
-        <LeftPanel />
+        <LeftPanel selectedNodeIds={selectedNodeIds} />
         <FlowCanvas
           onNodeSelect={setSelectedNodeId}
           onEdgeSelect={setSelectedEdgeId}
+          onSelectionChange={setSelectedNodeIds}
         />
         <RightPanel
           selectedNodeId={selectedNodeId}
