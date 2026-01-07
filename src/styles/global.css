@@ -109,25 +109,31 @@ optgroup {
 }
 
 /* 4. 선택된 노드 테두리 - box-shadow로 동적 스케일링 적용 */
+/* Hierarchy Level 1: 가장 굵게 (3px) - 선택이 최우선 정보 */
 .react-flow__node.selected {
-  /* outline 대신 box-shadow 사용으로 더 부드러운 렌더링 */
   box-shadow: 0 0 0 calc(3px * var(--zoom-scale, 1)) var(--blue-500) !important;
   border-radius: 4px;
   z-index: 9999 !important;
 }
 
-/* 5. 노드 핸들 (앵커 포인트) - 동적 크기 조절 */
+/* Hierarchy Level 2: 연결선 (2px) - 테두리보다 얇지만 명확히 보임 */
+.react-flow__edge-path {
+  stroke-width: calc(2px * var(--zoom-scale, 1)) !important;
+  stroke: #555555 !important; /* 진한 회색으로 부드럽게 */
+}
+
+/* 5. 노드 핸들 (앵커 포인트) - Hierarchy Level 3: Micro Size (1px) */
 .react-flow__handle {
-  width: calc(10px * var(--zoom-scale, 1)) !important;
-  height: calc(10px * var(--zoom-scale, 1)) !important;
+  width: calc(1px * var(--zoom-scale, 1)) !important;
+  height: calc(1px * var(--zoom-scale, 1)) !important;
   background: var(--blue-500);
-  border: calc(2px * var(--zoom-scale, 1)) solid #fff !important;
+  border: calc(0.5px * var(--zoom-scale, 1)) solid #fff !important;
   border-radius: 50%;
   /* 크기가 커져도 센터가 맞도록 transform 활용 */
   transform: translate(-50%, -50%);
   z-index: 1001; /* 노드보다 위에 오도록 */
   opacity: 0; /* 평소엔 숨김 */
-  transition: opacity 0.2s;
+  transition: opacity 0.1s;
 }
 
 /* 연결 시도 중이거나 노드 선택 시 핸들 보이기 */
@@ -136,21 +142,21 @@ optgroup {
   opacity: 1;
 }
 
-/* 6. 엣지 재연결 핸들 - 동적 크기 조절 (크기 축소) */
+/* 6. 엣지 재연결 핸들 - Hierarchy Level 3: Micro Size (0.5px) */
 .react-flow__edgeupdater {
   /* 히트박스(클릭 영역)는 여전히 크게 유지 */
-  stroke-width: calc(15px * var(--zoom-scale, 1)) !important;
+  stroke-width: calc(20px * var(--zoom-scale, 1)) !important;
   opacity: 0;
   transition: opacity 0.2s;
 }
 
-/* 시각적으로 보이는 점 (Circle) - 기존보다 작게 조정 */
+/* 시각적으로 보이는 점 (Circle) - Micro Handle */
 .react-flow__edge.selected .react-flow__edgeupdater {
   opacity: 1;
   fill: #fff;
   stroke: var(--blue-500);
-  stroke-width: calc(1.5px * var(--zoom-scale, 1)); /* 테두리 두께 축소 */
-  r: calc(3.5px * var(--zoom-scale, 1)); /* 반지름을 최종 3.5px로 축소 */
+  stroke-width: calc(0.5px * var(--zoom-scale, 1)); /* 테두리 두께 최소화 */
+  r: calc(0.5px * var(--zoom-scale, 1)); /* 반지름 Micro Size */
 }
 
 .react-flow__edge.selected .react-flow__edgeupdater:hover {
