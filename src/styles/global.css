@@ -74,6 +74,34 @@ body {
   stroke-width: 3;
 }
 
+/* Figma-style 인터랙션 */
+/* 1. 기본 캔버스 커서 (선택 모드) */
+.react-flow__pane {
+  cursor: default !important;
+}
+
+/* 2. 패닝 모드 커서 */
+.react-flow__pane.panning {
+  cursor: grab !important;
+}
+
+.react-flow__pane.panning:active {
+  cursor: grabbing !important;
+}
+
+/* 3. 선택 박스 스타일 (Toss Blue) */
+.react-flow__selection {
+  background: rgba(49, 130, 246, 0.08);
+  border: 2px solid var(--blue-500);
+  border-radius: 4px;
+}
+
+/* 4. 선택된 노드 테두리 */
+.react-flow__node.selected {
+  outline: 2px solid var(--blue-500);
+  outline-offset: 2px;
+}
+
 /* 스크롤바 커스텀 (미니멀하게) */
 ::-webkit-scrollbar {
   width: 8px;
