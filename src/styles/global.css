@@ -51,6 +51,18 @@ body {
   overflow: hidden;
 }
 
+/* 폼 요소 폰트 상속 (브라우저 기본 스타일 오버라이드) */
+button,
+input,
+select,
+textarea,
+optgroup {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
 #root {
   width: 100vw;
   height: 100vh;
