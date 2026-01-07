@@ -14,6 +14,29 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
   const [edgeLabel, setEdgeLabel] = useState('')
   const [presets, setPresets] = useState(loadPresets())
   const [newPresetName, setNewPresetName] = useState('')
+  const [nodeTitle, setNodeTitle] = useState('')
+  const [nodeStatus, setNodeStatus] = useState('draft')
+  const [nodeNotes, setNodeNotes] = useState('')
+
+  // 선택된 노드의 데이터 로드
+  useEffect(() => {
+    if (!selectedNodeId) {
+      setNodeTitle('')
+      setNodeStatus('draft')
+      setNodeNotes('')
+      return
+    }
+
+    const project = loadProject()
+    if (project?.nodes) {
+      const node = project.nodes.find((n) => n.id === selectedNodeId)
+      if (node && node.data?.meta) {
+        setNodeTitle(node.data.meta.title || '')
+        setNodeStatus(node.data.meta.status || 'draft')
+        setNodeNotes(node.data.meta.notes || '')
+      }
+    }
+  }, [selectedNodeId])
 
   // 선택된 엣지의 데이터 로드
   useEffect(() => {
@@ -31,6 +54,42 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
       }
     }
   }, [selectedEdgeId])
+
+  // 노드 속성 업데이트
+  const updateNode = (updates: {
+    title?: string
+    status?: 'draft' | 'review' | 'approved' | 'deprecated'
+    notes?: string
+  }) => {
+    if (!selectedNodeId) return
+
+    const project = loadProject()
+    if (!project) return
+
+    const nodeIndex = project.nodes.findIndex((n) => n.id === selectedNodeId)
+    if (nodeIndex === -1) return
+
+    const updatedNodes = [...project.nodes]
+    const node = updatedNodes[nodeIndex]
+
+    updatedNodes[nodeIndex] = {
+      ...node,
+      data: {
+        ...node.data,
+        meta: {
+          ...node.data.meta,
+          ...updates,
+        },
+      },
+    }
+
+    saveProject({ ...project, nodes: updatedNodes, updatedAt: Date.now() })
+    window.dispatchEvent(new Event('storage'))
+
+    if (updates.title !== undefined) setNodeTitle(updates.title)
+    if (updates.status !== undefined) setNodeStatus(updates.status)
+    if (updates.notes !== undefined) setNodeNotes(updates.notes)
+  }
 
   // 프리셋 적용
   const applyPreset = (presetId: string) => {
@@ -128,11 +187,23 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
             <h3 className="inspector-title">노드 정보</h3>
             <div className="inspector-field">
               <label>제목</label>
-              <input type="text" placeholder="프레임 제목" />
+              <input
+                type="text"
+                placeholder="프레임 제목"
+                value={nodeTitle}
+                onChange={(e) => updateNode({ title: e.target.value })}
+              />
             </div>
             <div className="inspector-field">
               <label>상태</label>
-              <select>
+              <select
+                value={nodeStatus}
+                onChange={(e) =>
+                  updateNode({
+                    status: e.target.value as 'draft' | 'review' | 'approved' | 'deprecated',
+                  })
+                }
+              >
                 <option value="draft">초안</option>
                 <option value="review">검토 중</option>
                 <option value="approved">승인됨</option>
@@ -141,7 +212,12 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
             </div>
             <div className="inspector-field">
               <label>메모</label>
-              <textarea rows={4} placeholder="메모를 입력하세요..." />
+              <textarea
+                rows={4}
+                placeholder="메모를 입력하세요..."
+                value={nodeNotes}
+                onChange={(e) => updateNode({ notes: e.target.value })}
+              />
             </div>
           </div>
         )}
