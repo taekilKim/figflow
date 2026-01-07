@@ -19,10 +19,11 @@ import {
   SelectionMode,
   useViewport,
   useOnSelectionChange,
+  useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { SmartBezierEdge } from '@tisoap/react-flow-smart-edge'
-import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export } from '@phosphor-icons/react'
+import { SmartStepEdge } from '@tisoap/react-flow-smart-edge'
+import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
 import FigmaFileImportDialog from './FigmaFileImportDialog'
@@ -31,9 +32,9 @@ import { saveProject, loadProject } from '../utils/storage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
 import '../styles/FlowCanvas.css'
 
-// 스마트 엣지 타입 등록
+// 스마트 엣지 타입 등록 (직각 우회)
 const edgeTypes = {
-  smart: SmartBezierEdge,
+  smart: SmartStepEdge,
 }
 
 // 커스텀 노드 타입 등록
@@ -117,14 +118,96 @@ const initialEdges: Edge<FlowEdgeData>[] = [
   },
 ]
 
+// 정렬 툴바 컴포넌트 (선택된 노드가 2개 이상일 때 표시)
+const AlignmentToolbar = ({ selectedNodeIds }: { selectedNodeIds: string[] }) => {
+  const { setNodes } = useReactFlow()
+
+  const alignNodes = (direction: string) => {
+    setNodes((nodes) => {
+      const selectedNodes = nodes.filter((n) => selectedNodeIds.includes(n.id))
+      if (selectedNodes.length < 2) return nodes
+
+      // 기준점 계산
+      let targetValue = 0
+      switch (direction) {
+        case 'left':
+          targetValue = Math.min(...selectedNodes.map(n => n.position.x))
+          break
+        case 'right': {
+          const rightEdges = selectedNodes.map(n => n.position.x + ((n as any).measured?.width || 300))
+          targetValue = Math.max(...rightEdges)
+          break
+        }
+        case 'top':
+          targetValue = Math.min(...selectedNodes.map(n => n.position.y))
+          break
+        case 'bottom': {
+          const bottomEdges = selectedNodes.map(n => n.position.y + ((n as any).measured?.height || 400))
+          targetValue = Math.max(...bottomEdges)
+          break
+        }
+        case 'centerH': {
+          // 수평 중앙
+          const centerX = selectedNodes.reduce((acc, n) => acc + n.position.x + (((n as any).measured?.width || 300) / 2), 0) / selectedNodes.length
+          targetValue = centerX
+          break
+        }
+        case 'centerV': {
+          // 수직 중앙
+          const centerY = selectedNodes.reduce((acc, n) => acc + n.position.y + (((n as any).measured?.height || 400) / 2), 0) / selectedNodes.length
+          targetValue = centerY
+          break
+        }
+      }
+
+      return nodes.map((n) => {
+        if (!selectedNodeIds.includes(n.id)) return n
+        const width = ((n as any).measured?.width || 300)
+        const height = ((n as any).measured?.height || 400)
+
+        let newPos = { ...n.position }
+
+        switch (direction) {
+          case 'left': newPos.x = targetValue; break
+          case 'right': newPos.x = targetValue - width; break
+          case 'centerH': newPos.x = targetValue - width / 2; break
+          case 'top': newPos.y = targetValue; break
+          case 'bottom': newPos.y = targetValue - height; break
+          case 'centerV': newPos.y = targetValue - height / 2; break
+        }
+        return { ...n, position: newPos }
+      })
+    })
+  }
+
+  if (selectedNodeIds.length < 2) return null
+
+  return (
+    <div className="alignment-toolbar">
+      <button onClick={() => alignNodes('left')} title="왼쪽 정렬"><AlignLeft size={20} weight="bold" /></button>
+      <button onClick={() => alignNodes('centerH')} title="수평 중앙 정렬"><AlignCenterHorizontal size={20} weight="bold" /></button>
+      <button onClick={() => alignNodes('right')} title="오른쪽 정렬"><AlignRight size={20} weight="bold" /></button>
+      <div className="divider" />
+      <button onClick={() => alignNodes('top')} title="위쪽 정렬"><AlignTop size={20} weight="bold" /></button>
+      <button onClick={() => alignNodes('centerV')} title="수직 중앙 정렬"><AlignCenterVertical size={20} weight="bold" /></button>
+      <button onClick={() => alignNodes('bottom')} title="아래쪽 정렬"><AlignBottom size={20} weight="bold" /></button>
+    </div>
+  )
+}
+
 // 줌 레벨 감지 래퍼 (동적 스타일링용)
 const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPanning: boolean }) => {
   const { zoom } = useViewport()
+
+  // 줌이 작을수록 스케일을 키워서 UI 요소가 화면상 일정 크기 유지
+  // 줌이 0.1(멀리 봄)이면 scale은 10이 되어야 화면상 1px 크기가 유지됨
+  const dynamicScale = zoom < 0.2 ? 5 : (1 / zoom)
+
   return (
     <div
       className={`flow-canvas ${isPanning ? 'panning' : ''}`}
       style={{
-        '--zoom-scale': `${1 / zoom}`
+        '--zoom-scale': `${dynamicScale}`
       } as React.CSSProperties}
     >
       {children}
@@ -142,8 +225,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   // Figma-style 인터랙션: 스페이스바로 패닝 모드 전환
   const [isPanning, setIsPanning] = useState(false)
 
-  // 선택된 노드 ID 추적 (좌측 패널 동기화용 - 추후 사용 예정)
-  const [, setSelectedNodeIds] = useState<string[]>([])
+  // 선택된 노드 ID 추적 (정렬 툴바 및 좌측 패널 동기화용)
+  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([])
 
   // 선택 변경 시 상태 업데이트
   useOnSelectionChange({
@@ -880,6 +963,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
           zoomable
           pannable
         />
+        <AlignmentToolbar selectedNodeIds={selectedNodeIds} />
       </ReactFlow>
       </FlowWrapper>
 

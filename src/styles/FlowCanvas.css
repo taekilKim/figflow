@@ -169,3 +169,73 @@
   stroke: #fff;
   cursor: grab;
 }
+
+/* --- 커서 (Cursor) 강제 적용 --- */
+/* React Flow의 인라인 스타일을 덮어쓰기 위해 !important 사용 */
+.flow-canvas .react-flow__pane,
+.flow-canvas .react-flow__node {
+  cursor: default !important;
+}
+
+/* 스페이스바 홀드 시 (패닝 모드) */
+.flow-canvas.panning .react-flow__pane,
+.flow-canvas.panning .react-flow__viewport,
+.flow-canvas.panning .react-flow__node,
+.flow-canvas.panning .react-flow__edge {
+  cursor: grab !important;
+  pointer-events: all !important;
+}
+
+.flow-canvas.panning:active .react-flow__pane {
+  cursor: grabbing !important;
+}
+
+/* --- 동적 시각화 (Dynamic Visuals) --- */
+/* --zoom-scale 변수를 활용해 화면 축소 시(Zoom Out) 테두리를 키움 */
+
+/* 선택된 노드 하이라이트 */
+.react-flow__node.selected {
+  outline: calc(2.5px * var(--zoom-scale, 1)) solid var(--blue-500) !important;
+  outline-offset: calc(2px * var(--zoom-scale, 1));
+  border-radius: 4px;
+  z-index: 1000;
+}
+
+/* --- 정렬 툴바 (Alignment Toolbar) --- */
+.alignment-toolbar {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  gap: 4px;
+  z-index: 50;
+}
+
+.alignment-toolbar button {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 8px;
+  color: var(--grey-700, #6B7684);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.alignment-toolbar button:hover {
+  background: var(--bg-base, #F2F4F6);
+  color: var(--grey-900, #191F28);
+}
+
+.alignment-toolbar .divider {
+  width: 1px;
+  background: var(--grey-300, #C9CDD2);
+  margin: 0 4px;
+}
