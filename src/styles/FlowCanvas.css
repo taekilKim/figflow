@@ -52,7 +52,7 @@
 }
 
 .react-flow__edge-text {
-  font-size: 12px;
+  font-size: calc(12px * var(--zoom-scale, 1));
   fill: #333;
 }
 
@@ -144,6 +144,7 @@
 }
 
 /* Edge reconnection handles - SVG circle 요소이므로 r 속성 사용 */
+/* 동적 줌 스케일링: 줌 레벨과 무관하게 일정한 크기 유지 */
 .react-flow__edgeupdater {
   r: 0;
   stroke: transparent;
@@ -154,16 +155,16 @@
 }
 
 .react-flow__edge.selected .react-flow__edgeupdater {
-  r: 5;
+  r: calc(5 * var(--zoom-scale, 1));
   opacity: 1;
   pointer-events: all;
   fill: #ffffff;
   stroke: #2f80ed;
-  stroke-width: 2px;
+  stroke-width: calc(2px * var(--zoom-scale, 1));
 }
 
 .react-flow__edge.selected .react-flow__edgeupdater:hover {
-  r: 6;
+  r: calc(6 * var(--zoom-scale, 1));
   fill: #2f80ed;
   stroke: #fff;
   cursor: grab;

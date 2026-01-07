@@ -17,8 +17,11 @@ import {
   OnConnectEnd,
   MarkerType,
   SelectionMode,
+  useViewport,
+  useOnSelectionChange,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
+import { SmartBezierEdge } from '@tisoap/react-flow-smart-edge'
 import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
@@ -27,6 +30,11 @@ import { FlowNodeData, FlowEdgeData } from '../types'
 import { saveProject, loadProject } from '../utils/storage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
 import '../styles/FlowCanvas.css'
+
+// 스마트 엣지 타입 등록
+const edgeTypes = {
+  smart: SmartBezierEdge,
+}
 
 // 커스텀 노드 타입 등록
 const nodeTypes = {
@@ -109,6 +117,21 @@ const initialEdges: Edge<FlowEdgeData>[] = [
   },
 ]
 
+// 줌 레벨 감지 래퍼 (동적 스타일링용)
+const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPanning: boolean }) => {
+  const { zoom } = useViewport()
+  return (
+    <div
+      className={`flow-canvas ${isPanning ? 'panning' : ''}`}
+      style={{
+        '--zoom-scale': `${1 / zoom}`
+      } as React.CSSProperties}
+    >
+      {children}
+    </div>
+  )
+}
+
 function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   // 초기 로드 시 localStorage에서 데이터 복원
   const loadedProject = loadProject()
@@ -118,6 +141,16 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
 
   // Figma-style 인터랙션: 스페이스바로 패닝 모드 전환
   const [isPanning, setIsPanning] = useState(false)
+
+  // 선택된 노드 ID 추적 (좌측 패널 동기화용 - 추후 사용 예정)
+  const [, setSelectedNodeIds] = useState<string[]>([])
+
+  // 선택 변경 시 상태 업데이트
+  useOnSelectionChange({
+    onChange: ({ nodes: selectedNodes }) => {
+      setSelectedNodeIds(selectedNodes.map(n => n.id))
+    },
+  })
 
   // 엣지 스타일 적용 헬퍼 함수
   const getEdgeStyle = (edgeData?: FlowEdgeData) => {
@@ -754,7 +787,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   }, [setNodes])
 
   return (
-    <div className="flow-canvas">
+    <>
       <div className="toolbar">
         <button
           className="toolbar-button primary"
@@ -788,17 +821,19 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         </button>
       </div>
 
-      <ReactFlow
+      <FlowWrapper isPanning={isPanning}>
+        <ReactFlow
         nodes={nodes.map((node) => ({
           ...node,
           className: connectingNodeId.current && connectingNodeId.current !== node.id ? 'connection-target' : '',
         }))}
         edges={edges.map((edge) => ({
           ...edge,
+          type: 'smart',
+          updatable: 'target',
           style: getEdgeStyle(edge.data),
           markerEnd: getMarkerEnd(edge.data),
           markerStart: getMarkerStart(edge.data),
-          updatable: true,
         }))}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -811,9 +846,10 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         connectionLineType={ConnectionLineType.SmoothStep}
         defaultEdgeOptions={{
-          type: 'smoothstep',
+          type: 'smart',
           animated: false,
           style: { strokeWidth: 2, stroke: '#555555' },
           markerEnd: {
@@ -845,6 +881,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
           pannable
         />
       </ReactFlow>
+      </FlowWrapper>
 
       <AddFrameDialog
         isOpen={isAddDialogOpen}
@@ -876,7 +913,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
 
