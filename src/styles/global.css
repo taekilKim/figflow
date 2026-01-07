@@ -119,7 +119,8 @@ optgroup {
 /* Hierarchy Level 2: 연결선 (2px) - 테두리보다 얇지만 명확히 보임 */
 .react-flow__edge-path {
   stroke-width: calc(2px * var(--zoom-scale, 1)) !important;
-  stroke: #555555 !important; /* 진한 회색으로 부드럽게 */
+  /* 색상 강제를 제거하여 React Component의 동적 색상이 적용되도록 함 */
+  transition: stroke 0.2s, stroke-width 0.2s;
 }
 
 /* 5. 노드 핸들 (앵커 포인트) - Hierarchy Level 3: Micro Size (1px) */
@@ -131,7 +132,7 @@ optgroup {
   border-radius: 50%;
   /* 크기가 커져도 센터가 맞도록 transform 활용 */
   transform: translate(-50%, -50%);
-  z-index: 1001; /* 노드보다 위에 오도록 */
+  z-index: 9999 !important; /* 무조건 최상위 - 이미지에 가려지지 않게 */
   opacity: 0; /* 평소엔 숨김 */
   transition: opacity 0.1s;
 }
@@ -148,6 +149,7 @@ optgroup {
   stroke-width: calc(20px * var(--zoom-scale, 1)) !important;
   opacity: 0;
   transition: opacity 0.2s;
+  z-index: 10000 !important; /* 핸들보다 더 위 */
 }
 
 /* 시각적으로 보이는 점 (Circle) - Micro Handle */
