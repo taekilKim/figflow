@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import {
   ReactFlow,
   Background,
@@ -15,6 +15,7 @@ import {
   OnConnectStart,
   OnConnectEnd,
   MarkerType,
+  useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import FrameNode from './FrameNode'
@@ -112,6 +113,10 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(
     loadedProject?.nodes || initialNodes
   )
+
+  // React Flow 인스턴스 및 ref
+  const reactFlowWrapper = useRef<HTMLDivElement>(null)
+  const { screenToFlowPosition, getNodes } = useReactFlow()
 
   // 엣지 스타일 적용 헬퍼 함수
   const getEdgeStyle = (edgeData?: FlowEdgeData) => {
@@ -305,7 +310,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
 
   const onConnectEnd: OnConnectEnd = useCallback(
     (event, connectionState) => {
-      if (!connectingNodeId) {
+      if (!connectingNodeId || !reactFlowWrapper.current) {
         setConnectingNodeId(null)
         return
       }
@@ -316,36 +321,45 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         return
       }
 
-      // 프레임 내부 어디든 드롭한 경우 수동으로 연결 생성
-      const target = event.target as HTMLElement
-      const targetNodeElement = target.closest('.react-flow__node')
+      // 마우스 좌표를 이용한 프레임 내부 드롭 감지
+      // 마우스 위치를 React Flow 내부 좌표로 변환
+      const position = screenToFlowPosition({
+        x: (event as MouseEvent).clientX,
+        y: (event as MouseEvent).clientY,
+      })
 
-      if (targetNodeElement) {
-        const targetNodeId = targetNodeElement.getAttribute('data-id')
+      // 마우스 위치에 있는 노드를 찾음 (충돌 감지)
+      const targetNode = getNodes().find(
+        (node) =>
+          node.width && node.height &&
+          position.x >= node.position.x &&
+          position.x <= node.position.x + node.width &&
+          position.y >= node.position.y &&
+          position.y <= node.position.y + node.height
+      )
 
-        if (targetNodeId && targetNodeId !== connectingNodeId) {
-          const sourceNode = nodes.find((n) => n.id === connectingNodeId)
-          const targetNode = nodes.find((n) => n.id === targetNodeId)
+      // 타겟 노드를 찾았고, 시작 노드와 다를 경우에만 연결 생성
+      if (targetNode && targetNode.id !== connectingNodeId) {
+        const sourceNode = nodes.find((n) => n.id === connectingNodeId)
 
-          if (sourceNode && targetNode) {
-            const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
+        if (sourceNode) {
+          const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
 
-            const newEdge: Edge<FlowEdgeData> = {
-              id: `e${connectingNodeId}-${targetNodeId}-${Date.now()}`,
-              source: connectingNodeId,
-              target: targetNodeId,
-              sourceHandle,
-              targetHandle,
-              data: { sourceType: 'manual' },
-            }
-            setEdges((eds) => addEdge(newEdge, eds))
+          const newEdge: Edge<FlowEdgeData> = {
+            id: `e${connectingNodeId}-${targetNode.id}-${Date.now()}`,
+            source: connectingNodeId,
+            target: targetNode.id,
+            sourceHandle,
+            targetHandle,
+            data: { sourceType: 'manual' },
           }
+          setEdges((eds) => addEdge(newEdge, eds))
         }
       }
 
       setConnectingNodeId(null)
     },
-    [connectingNodeId, nodes, setEdges, getClosestHandles]
+    [connectingNodeId, nodes, setEdges, getClosestHandles, screenToFlowPosition, getNodes]
   )
 
   const onReconnect = useCallback(
@@ -691,7 +705,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   }, [setNodes])
 
   return (
-    <div className="flow-canvas">
+    <div className="flow-canvas" ref={reactFlowWrapper}>
       <div className="toolbar">
         <button
           className="toolbar-button primary"
