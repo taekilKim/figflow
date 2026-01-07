@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { MagnifyingGlass, FrameCorners } from '@phosphor-icons/react'
 import { loadProject } from '../utils/storage'
 import { FlowNodeData } from '../types'
 import '../styles/LeftPanel.css'
@@ -43,13 +44,28 @@ function LeftPanel() {
       </div>
 
       <div className="search-bar">
-        <input
-          type="text"
-          placeholder="프레임 검색..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="search-input"
-        />
+        <div style={{ position: 'relative' }}>
+          <MagnifyingGlass
+            size={20}
+            weight="bold"
+            style={{
+              position: 'absolute',
+              left: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--grey-600)',
+              pointerEvents: 'none'
+            }}
+          />
+          <input
+            type="text"
+            placeholder="프레임 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+            style={{ paddingLeft: '40px' }}
+          />
+        </div>
       </div>
 
       <div className="panel-content">
@@ -69,9 +85,13 @@ function LeftPanel() {
           <div className="frame-list">
             {filteredNodes.map((node) => (
               <div key={node.id} className="frame-item">
-                {node.data.meta.thumbnailUrl && (
+                {node.data.meta.thumbnailUrl ? (
                   <div className="frame-item-thumbnail">
                     <img src={node.data.meta.thumbnailUrl} alt={node.data.meta.title} />
+                  </div>
+                ) : (
+                  <div className="frame-item-thumbnail" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FrameCorners size={24} weight="bold" color="var(--grey-500)" />
                   </div>
                 )}
                 <div className="frame-item-content">

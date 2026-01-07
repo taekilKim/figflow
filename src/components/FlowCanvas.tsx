@@ -17,6 +17,7 @@ import {
   MarkerType,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
+import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
 import FigmaFileImportDialog from './FigmaFileImportDialog'
@@ -708,12 +709,14 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
           className="toolbar-button primary"
           onClick={() => setIsAddDialogOpen(true)}
         >
+          <Plus size={20} weight="bold" />
           프레임 추가
         </button>
         <button
           className="toolbar-button primary"
           onClick={() => setIsFileImportDialogOpen(true)}
         >
+          <FileArrowDown size={20} weight="bold" />
           파일 가져오기
         </button>
         <button
@@ -721,12 +724,15 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
           onClick={handleSync}
           disabled={isSyncing}
         >
+          <ArrowsClockwise size={20} weight="bold" />
           {isSyncing ? '싱크 중...' : 'Sync'}
         </button>
         <button className="toolbar-button" onClick={handleSave}>
+          <FloppyDisk size={20} weight="bold" />
           저장
         </button>
         <button className="toolbar-button">
+          <Export size={20} weight="bold" />
           Export
         </button>
       </div>
