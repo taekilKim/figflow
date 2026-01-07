@@ -1041,8 +1041,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           },
           data: {
             smartEdge: {
-              nodePadding: 45,   // 노드 주변 여백을 최대한 확보하여 연결선이 노드에 너무 붙지 않게
-              gridRatio: 10,     // 격자 계산 비율
+              nodePadding: 80,   // 간격 3배 확대 - 충분한 여백 확보
+              gridRatio: 15,     // 격자 계산 비율 (간격에 맞춰 조정)
               lessCorners: true, // 불필요한 코너 최소화
             }
           }
@@ -1053,6 +1053,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         selectionOnDrag={!isPanning}
         panOnScroll={true}
         selectionMode={SelectionMode.Partial}
+        multiSelectionKeyCode="Shift"
+        selectionKeyCode="Shift"
         connectOnClick={false}
         fitView
         minZoom={0.1}
