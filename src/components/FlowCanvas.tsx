@@ -46,6 +46,7 @@ const nodeTypes = {
 interface FlowCanvasProps {
   onNodeSelect: (nodeId: string | null) => void
   onEdgeSelect: (edgeId: string | null) => void
+  onSelectionChange?: (nodeIds: string[]) => void
 }
 
 // 초기 데모 데이터
@@ -184,6 +185,43 @@ const AlignmentToolbar = ({ selectedNodeIds, takeSnapshot }: { selectedNodeIds: 
     })
   }
 
+  const distributeNodes = (direction: 'horizontal' | 'vertical') => {
+    // 분배 전에 스냅샷 저장
+    takeSnapshot()
+
+    setNodes((nodes) => {
+      const selectedNodes = nodes.filter((n) => selectedNodeIds.includes(n.id))
+      if (selectedNodes.length < 3) return nodes // 3개 이상이어야 간격 조정 의미 있음
+
+      // 1. 위치 기준으로 정렬
+      const sorted = [...selectedNodes].sort((a, b) => {
+        return direction === 'horizontal' ? a.position.x - b.position.x : a.position.y - b.position.y
+      })
+
+      // 2. 양끝 노드는 고정하고, 그 사이를 균등 분할
+      const first = sorted[0]
+      const last = sorted[sorted.length - 1]
+      const startPos = direction === 'horizontal' ? first.position.x : first.position.y
+      const endPos = direction === 'horizontal' ? last.position.x : last.position.y
+      const totalDistance = endPos - startPos
+      const interval = totalDistance / (sorted.length - 1)
+
+      return nodes.map((n) => {
+        const index = sorted.findIndex((s) => s.id === n.id)
+        if (index === -1) return n // 선택 안 된 노드
+        if (index === 0 || index === sorted.length - 1) return n // 양끝은 고정
+
+        const newPos = { ...n.position }
+        if (direction === 'horizontal') {
+          newPos.x = startPos + (interval * index)
+        } else {
+          newPos.y = startPos + (interval * index)
+        }
+        return { ...n, position: newPos }
+      })
+    })
+  }
+
   if (selectedNodeIds.length < 2) return null
 
   return (
@@ -195,6 +233,13 @@ const AlignmentToolbar = ({ selectedNodeIds, takeSnapshot }: { selectedNodeIds: 
       <button onClick={() => alignNodes('top')} title="위쪽 정렬"><AlignTop size={20} weight="bold" /></button>
       <button onClick={() => alignNodes('centerV')} title="수직 중앙 정렬"><AlignCenterVertical size={20} weight="bold" /></button>
       <button onClick={() => alignNodes('bottom')} title="아래쪽 정렬"><AlignBottom size={20} weight="bold" /></button>
+      {selectedNodeIds.length >= 3 && (
+        <>
+          <div className="divider" />
+          <button onClick={() => distributeNodes('horizontal')} title="수평 균등 분배">H</button>
+          <button onClick={() => distributeNodes('vertical')} title="수직 균등 분배">V</button>
+        </>
+      )}
     </div>
   )
 }
@@ -204,14 +249,16 @@ const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPan
   const { zoom } = useViewport()
 
   // 줌이 작을수록 스케일을 키워서 UI 요소가 화면상 일정 크기 유지
-  // 줌이 0.1(멀리 봄)이면 scale은 10이 되어야 화면상 1px 크기가 유지됨
-  const dynamicScale = zoom < 0.2 ? 5 : (1 / zoom)
+  // 최소값/최대값 제한(clamp)을 두어 너무 거대해지거나 작아지는 것 방지
+  const scale = Math.min(Math.max(1 / zoom, 1), 20)
 
   return (
     <div
       className={`flow-canvas ${isPanning ? 'panning' : ''}`}
       style={{
-        '--zoom-scale': `${dynamicScale}`
+        width: '100%',
+        height: '100%',
+        '--zoom-scale': scale
       } as React.CSSProperties}
     >
       {children}
@@ -219,7 +266,7 @@ const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPan
   )
 }
 
-function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
+function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanvasProps) {
   // 초기 로드 시 localStorage에서 데이터 복원
   const loadedProject = loadProject()
   const [nodes, setNodes, onNodesChange] = useNodesState(
@@ -235,7 +282,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   // 선택 변경 시 상태 업데이트
   useOnSelectionChange({
     onChange: ({ nodes: selectedNodes }) => {
-      setSelectedNodeIds(selectedNodes.map(n => n.id))
+      const ids = selectedNodes.map(n => n.id)
+      setSelectedNodeIds(ids)
+      // 상위 컴포넌트에도 알림 (LeftPanel 동기화용)
+      if (onSelectionChange) {
+        onSelectionChange(ids)
+      }
     },
   })
 
@@ -975,13 +1027,14 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        connectionLineType={ConnectionLineType.SmoothStep}
+        connectionLineType={ConnectionLineType.Step}
         defaultEdgeOptions={{
           type: 'smart',
           animated: false,
+          focusable: true,
           style: { strokeWidth: 2, stroke: '#555555' },
           markerEnd: {
-            type: MarkerType.Arrow,
+            type: MarkerType.ArrowClosed,
             color: '#555555',
             width: 20,
             height: 20,
