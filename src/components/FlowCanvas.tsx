@@ -129,11 +129,13 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     return style
   }
 
-  // 화살표 마커 ID 생성
+  // 화살표 마커 ID 생성 - 항상 값 반환
   const getMarkerEnd = (edgeData?: FlowEdgeData) => {
     const arrowType = edgeData?.arrowType || 'forward'
-    if (arrowType === 'none' || arrowType === 'backward') return undefined
-    return 'url(#arrow)'
+    if (arrowType === 'forward' || arrowType === 'both') {
+      return 'url(#arrow)'
+    }
+    return undefined
   }
 
   const getMarkerStart = (edgeData?: FlowEdgeData) => {
@@ -291,48 +293,52 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   )
 
   const onConnectEnd: OnConnectEnd = useCallback(
-    (event) => {
+    (event, connectionState) => {
       try {
         if (!connectingNodeId) {
           return
         }
 
+        // connectionState가 있으면 이미 연결됨 (handle에 드롭)
+        if (connectionState.isValid) {
+          return
+        }
+
+        // 프레임 내부에 드롭한 경우 수동으로 연결 생성
         const targetElement = document.elementFromPoint(
           (event as MouseEvent).clientX,
           (event as MouseEvent).clientY
         )
 
-        // Handle에 드롭한 경우는 onConnect가 처리
-        if (targetElement?.classList.contains('react-flow__handle')) {
-          return
-        }
+        // 모든 노드 요소들을 찾아서 확인
+        let currentElement: Element | null = targetElement
+        while (currentElement) {
+          if (currentElement.classList.contains('react-flow__node')) {
+            const targetNodeId = currentElement.getAttribute('data-id')
 
-        // 프레임 내부에 드롭한 경우 자동 연결
-        const reactFlowNode = targetElement?.closest('.react-flow__node')
-        if (reactFlowNode) {
-          const targetNodeId = reactFlowNode.getAttribute('data-id')
+            if (targetNodeId && targetNodeId !== connectingNodeId) {
+              const sourceNode = nodes.find((n) => n.id === connectingNodeId)
+              const targetNode = nodes.find((n) => n.id === targetNodeId)
 
-          if (targetNodeId && targetNodeId !== connectingNodeId) {
-            const sourceNode = nodes.find((n) => n.id === connectingNodeId)
-            const targetNode = nodes.find((n) => n.id === targetNodeId)
+              if (sourceNode && targetNode) {
+                const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
 
-            if (sourceNode && targetNode) {
-              const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
-
-              const newEdge: Edge<FlowEdgeData> = {
-                id: `e${connectingNodeId}-${targetNodeId}-${Date.now()}`,
-                source: connectingNodeId,
-                target: targetNodeId,
-                sourceHandle,
-                targetHandle,
-                data: { sourceType: 'manual' },
+                const newEdge: Edge<FlowEdgeData> = {
+                  id: `e${connectingNodeId}-${targetNodeId}-${Date.now()}`,
+                  source: connectingNodeId,
+                  target: targetNodeId,
+                  sourceHandle,
+                  targetHandle,
+                  data: { sourceType: 'manual' },
+                }
+                setEdges((eds) => addEdge(newEdge, eds))
+                break
               }
-              setEdges((eds) => addEdge(newEdge, eds))
             }
           }
+          currentElement = currentElement.parentElement
         }
       } finally {
-        // 항상 연결 상태 초기화
         setConnectingNodeId(null)
       }
     },
