@@ -1036,8 +1036,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           markerEnd: {
             type: MarkerType.ArrowClosed,
             color: '#555555',
-            width: 20,
-            height: 20,
+            width: 30,
+            height: 30,
           },
           data: {
             smartEdge: {
