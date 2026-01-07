@@ -8,6 +8,7 @@ import {
   Edge,
   Connection,
   addEdge,
+  reconnectEdge,
   useNodesState,
   useEdgesState,
   BackgroundVariant,
@@ -15,6 +16,7 @@ import {
   OnConnectStart,
   OnConnectEnd,
   MarkerType,
+  SelectionMode,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export } from '@phosphor-icons/react'
@@ -114,6 +116,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     loadedProject?.nodes || initialNodes
   )
 
+  // Figma-style 인터랙션: 스페이스바로 패닝 모드 전환
+  const [isPanning, setIsPanning] = useState(false)
 
   // 엣지 스타일 적용 헬퍼 함수
   const getEdgeStyle = (edgeData?: FlowEdgeData) => {
@@ -223,6 +227,30 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [setEdges, setNodes])
+
+  // Figma-style 스페이스바 패닝 모드
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !e.repeat) {
+        e.preventDefault() // 스크롤 방지
+        setIsPanning(true)
+      }
+    }
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        setIsPanning(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [])
 
   // 노드나 엣지가 변경될 때마다 자동 저장
   useEffect(() => {
@@ -360,27 +388,50 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     [nodes, setEdges, getClosestHandles]
   )
 
+  // 엣지 재연결 - React Flow의 reconnectEdge 헬퍼 사용
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
-      setEdges((els) => {
-        const edge = els.find((e) => e.id === oldEdge.id)
-        if (!edge) return els
-
-        return els.map((e) => {
-          if (e.id === oldEdge.id) {
-            return {
-              ...e,
-              source: newConnection.source,
-              target: newConnection.target,
-              sourceHandle: newConnection.sourceHandle,
-              targetHandle: newConnection.targetHandle,
-            }
-          }
-          return e
-        })
-      })
+      setEdges((els) => reconnectEdge(oldEdge, newConnection, els) as Edge<FlowEdgeData>[])
     },
     [setEdges]
+  )
+
+  // 엣지 재연결 종료 시 - 노드 바디에 드롭했을 때 처리 (Figma-like)
+  const onReconnectEnd = useCallback(
+    (event: MouseEvent | TouchEvent, edge: Edge, handleType: 'source' | 'target') => {
+      const clientX = (event as MouseEvent).clientX || (event as TouchEvent).changedTouches?.[0]?.clientX
+      const clientY = (event as MouseEvent).clientY || (event as TouchEvent).changedTouches?.[0]?.clientY
+
+      if (!clientX || !clientY) return
+
+      // 좌표 아래 요소 탐색 (elementsFromPoint 사용)
+      const elements = document.elementsFromPoint(clientX, clientY)
+      const nodeElement = elements.find((el) => el.classList.contains('react-flow__node'))
+
+      if (nodeElement) {
+        const targetNodeId = nodeElement.getAttribute('data-id')
+
+        // 유효한 노드이고 기존 연결과 다를 경우 재연결
+        if (targetNodeId && targetNodeId !== edge.source && targetNodeId !== edge.target) {
+          const sourceNode = nodes.find((n) => n.id === (handleType === 'source' ? targetNodeId : edge.source))
+          const targetNode = nodes.find((n) => n.id === (handleType === 'target' ? targetNodeId : edge.target))
+
+          if (sourceNode && targetNode) {
+            const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
+
+            const newConnection: Connection = {
+              source: handleType === 'source' ? targetNodeId : edge.source,
+              target: handleType === 'target' ? targetNodeId : edge.target,
+              sourceHandle: handleType === 'source' ? sourceHandle : (edge.sourceHandle || null),
+              targetHandle: handleType === 'target' ? targetHandle : (edge.targetHandle || null),
+            }
+
+            setEdges((els) => reconnectEdge(edge, newConnection, els) as Edge<FlowEdgeData>[])
+          }
+        }
+      }
+    },
+    [nodes, setEdges, getClosestHandles]
   )
 
   const onNodeClick = useCallback(
@@ -755,6 +806,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
         onReconnect={onReconnect}
+        onReconnectEnd={onReconnectEnd}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
@@ -773,10 +825,17 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         }}
         edgesReconnectable={true}
         reconnectRadius={30}
+        panOnDrag={isPanning}
+        selectionOnDrag={!isPanning}
+        panOnScroll={true}
+        selectionMode={SelectionMode.Partial}
         connectOnClick={false}
         fitView
         minZoom={0.1}
         maxZoom={2}
+        style={{
+          cursor: isPanning ? 'grab' : 'default',
+        }}
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
         <Controls />
