@@ -163,10 +163,28 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
   const [connectingNodeId, setConnectingNodeId] = useState<string | null>(null)
   const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null)
 
-  // storage 이벤트 감지하여 엣지 스타일 업데이트
+  // storage 이벤트 감지하여 노드 및 엣지 업데이트
   useEffect(() => {
     const handleStorageChange = () => {
       const project = loadProject()
+
+      // 노드 업데이트
+      if (project?.nodes) {
+        setNodes((currentNodes) => {
+          return currentNodes.map((currentNode) => {
+            const updatedNode = project.nodes.find((n) => n.id === currentNode.id)
+            if (updatedNode) {
+              return {
+                ...currentNode,
+                data: updatedNode.data,
+              }
+            }
+            return currentNode
+          })
+        })
+      }
+
+      // 엣지 업데이트
       if (project?.edges) {
         setEdges((currentEdges) => {
           return currentEdges.map((currentEdge) => {
@@ -189,7 +207,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
 
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
-  }, [setEdges])
+  }, [setEdges, setNodes])
 
   // 노드나 엣지가 변경될 때마다 자동 저장
   useEffect(() => {
@@ -274,47 +292,49 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
 
   const onConnectEnd: OnConnectEnd = useCallback(
     (event) => {
-      if (!connectingNodeId) {
-        setConnectingNodeId(null)
-        return
-      }
+      try {
+        if (!connectingNodeId) {
+          return
+        }
 
-      const targetElement = document.elementFromPoint(
-        (event as MouseEvent).clientX,
-        (event as MouseEvent).clientY
-      )
+        const targetElement = document.elementFromPoint(
+          (event as MouseEvent).clientX,
+          (event as MouseEvent).clientY
+        )
 
-      // Handle에 드롭한 경우는 onConnect가 처리하므로 여기서는 건너뜀
-      if (targetElement?.classList.contains('react-flow__handle')) {
-        return
-      }
+        // Handle에 드롭한 경우는 onConnect가 처리
+        if (targetElement?.classList.contains('react-flow__handle')) {
+          return
+        }
 
-      // 프레임 내부에 드롭
-      const reactFlowNode = targetElement?.closest('.react-flow__node')
-      if (reactFlowNode) {
-        const targetNodeId = reactFlowNode.getAttribute('data-id')
+        // 프레임 내부에 드롭한 경우 자동 연결
+        const reactFlowNode = targetElement?.closest('.react-flow__node')
+        if (reactFlowNode) {
+          const targetNodeId = reactFlowNode.getAttribute('data-id')
 
-        if (targetNodeId && targetNodeId !== connectingNodeId) {
-          const sourceNode = nodes.find((n) => n.id === connectingNodeId)
-          const targetNode = nodes.find((n) => n.id === targetNodeId)
+          if (targetNodeId && targetNodeId !== connectingNodeId) {
+            const sourceNode = nodes.find((n) => n.id === connectingNodeId)
+            const targetNode = nodes.find((n) => n.id === targetNodeId)
 
-          if (sourceNode && targetNode) {
-            const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
+            if (sourceNode && targetNode) {
+              const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
 
-            const newEdge: Edge<FlowEdgeData> = {
-              id: `e${connectingNodeId}-${targetNodeId}-${Date.now()}`,
-              source: connectingNodeId,
-              target: targetNodeId,
-              sourceHandle,
-              targetHandle,
-              data: { sourceType: 'manual' },
+              const newEdge: Edge<FlowEdgeData> = {
+                id: `e${connectingNodeId}-${targetNodeId}-${Date.now()}`,
+                source: connectingNodeId,
+                target: targetNodeId,
+                sourceHandle,
+                targetHandle,
+                data: { sourceType: 'manual' },
+              }
+              setEdges((eds) => addEdge(newEdge, eds))
             }
-            setEdges((eds) => addEdge(newEdge, eds))
           }
         }
+      } finally {
+        // 항상 연결 상태 초기화
+        setConnectingNodeId(null)
       }
-
-      setConnectingNodeId(null)
     },
     [connectingNodeId, nodes, setEdges, getClosestHandles]
   )
@@ -663,6 +683,34 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
 
   return (
     <div className="flow-canvas">
+      {/* SVG 마커 정의 - ReactFlow 외부에 배치 */}
+      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+        <defs>
+          <marker
+            id="arrow"
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="5"
+            markerWidth="6"
+            markerHeight="6"
+            orient="auto"
+          >
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#555" />
+          </marker>
+          <marker
+            id="arrow-reverse"
+            viewBox="0 0 10 10"
+            refX="1"
+            refY="5"
+            markerWidth="6"
+            markerHeight="6"
+            orient="auto"
+          >
+            <path d="M 10 0 L 0 5 L 10 10 z" fill="#555" />
+          </marker>
+        </defs>
+      </svg>
+
       <div className="toolbar">
         <button
           className="toolbar-button primary"
@@ -701,6 +749,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
           style: getEdgeStyle(edge.data),
           markerEnd: getMarkerEnd(edge.data),
           markerStart: getMarkerStart(edge.data),
+          updatable: true,
         }))}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -724,32 +773,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         minZoom={0.1}
         maxZoom={2}
       >
-        <svg style={{ position: 'absolute', width: 0, height: 0 }}>
-          <defs>
-            <marker
-              id="arrow"
-              viewBox="0 0 10 10"
-              refX="9"
-              refY="5"
-              markerWidth="6"
-              markerHeight="6"
-              orient="auto"
-            >
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#555" />
-            </marker>
-            <marker
-              id="arrow-reverse"
-              viewBox="0 0 10 10"
-              refX="1"
-              refY="5"
-              markerWidth="6"
-              markerHeight="6"
-              orient="auto"
-            >
-              <path d="M 10 0 L 0 5 L 10 10 z" fill="#555" />
-            </marker>
-          </defs>
-        </svg>
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
         <Controls />
         <MiniMap
