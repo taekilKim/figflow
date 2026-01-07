@@ -272,42 +272,46 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
 
   const onConnectEnd: OnConnectEnd = useCallback(
     (event) => {
-      const targetIsPane = (event.target as HTMLElement)?.classList.contains('react-flow__pane')
+      if (!connectingNodeId) {
+        setConnectingNodeId(null)
+        return
+      }
 
-      if (targetIsPane && connectingNodeId) {
-        // 앵커가 아닌 곳에 드롭된 경우, 프레임 안에 드롭되었는지 확인
-        const targetElement = document.elementFromPoint(
-          (event as MouseEvent).clientX,
-          (event as MouseEvent).clientY
-        )
+      // 드롭 위치의 요소 확인
+      const targetElement = document.elementFromPoint(
+        (event as MouseEvent).clientX,
+        (event as MouseEvent).clientY
+      )
 
-        // 가장 가까운 frame-node 요소 찾기
-        const frameNode = targetElement?.closest('.frame-node')
-        if (frameNode) {
-          // 노드 ID 추출
-          const reactFlowNode = frameNode.closest('.react-flow__node')
-          const targetNodeId = reactFlowNode?.getAttribute('data-id')
+      // Handle에 정확히 드롭한 경우는 기본 동작(onConnect)에 맡김
+      const isHandle = targetElement?.classList.contains('react-flow__handle')
+      if (isHandle) {
+        setConnectingNodeId(null)
+        return
+      }
 
-          if (targetNodeId && targetNodeId !== connectingNodeId) {
-            // 소스 노드와 타겟 노드의 위치 정보 가져오기
-            const sourceNode = nodes.find((n) => n.id === connectingNodeId)
-            const targetNode = nodes.find((n) => n.id === targetNodeId)
+      // 프레임 안에 드롭했는지 확인
+      const frameNode = targetElement?.closest('.frame-node')
+      if (frameNode) {
+        const reactFlowNode = frameNode.closest('.react-flow__node')
+        const targetNodeId = reactFlowNode?.getAttribute('data-id')
 
-            if (sourceNode && targetNode) {
-              // 가장 가까운 핸들 쌍 계산
-              const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
+        if (targetNodeId && targetNodeId !== connectingNodeId) {
+          const sourceNode = nodes.find((n) => n.id === connectingNodeId)
+          const targetNode = nodes.find((n) => n.id === targetNodeId)
 
-              // 연결 생성
-              const newEdge: Edge<FlowEdgeData> = {
-                id: `e${connectingNodeId}-${targetNodeId}-${Date.now()}`,
-                source: connectingNodeId,
-                target: targetNodeId,
-                sourceHandle,
-                targetHandle,
-                data: { sourceType: 'manual' },
-              }
-              setEdges((eds) => addEdge(newEdge, eds))
+          if (sourceNode && targetNode) {
+            const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
+
+            const newEdge: Edge<FlowEdgeData> = {
+              id: `e${connectingNodeId}-${targetNodeId}-${Date.now()}`,
+              source: connectingNodeId,
+              target: targetNodeId,
+              sourceHandle,
+              targetHandle,
+              data: { sourceType: 'manual' },
             }
+            setEdges((eds) => addEdge(newEdge, eds))
           }
         }
       }
@@ -524,19 +528,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
     thumbnailUrl: string | null
     dimensions: { width: number; height: number } | null
   }) => {
-    // 실제 프레임 크기를 캔버스에 맞게 스케일링
-    // 일반적으로 Figma 프레임은 실제 디바이스 크기(예: 375x812)이므로
-    // 캔버스에 표시하기 위해 적절히 축소 (약 1/2 스케일)
-    let nodeWidth: number | undefined
-    let nodeHeight: number | undefined
-
-    if (frameData.dimensions) {
-      const scaleFactor = 0.5 // 실제 크기의 50%로 표시
-      nodeWidth = frameData.dimensions.width * scaleFactor
-      nodeHeight = frameData.dimensions.height * scaleFactor
-    }
-
-    // 새로운 노드 생성
+    // 새로운 노드 생성 - Figma 원본 크기 그대로 사용
     const newNode: Node<FlowNodeData> = {
       id: `node-${Date.now()}`,
       type: 'frameNode',
@@ -544,7 +536,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         x: Math.random() * 400 + 100,
         y: Math.random() * 400 + 100,
       },
-      style: nodeWidth && nodeHeight ? { width: nodeWidth, height: 'auto' } : undefined,
+      style: frameData.dimensions ? { width: frameData.dimensions.width, height: 'auto' } : undefined,
       data: {
         figma: {
           fileKey: frameData.fileKey,
@@ -603,7 +595,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         const result = await getFigmaImages(accessToken, {
           fileKey,
           nodeIds: [frame.nodeId],
-          scale: 0.5,
+          scale: 1,
         })
 
         if (result[0]) {
@@ -623,13 +615,9 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
         const row = Math.floor(index / columns)
         const col = index % columns
 
-        // 프레임 크기 스케일링 (50%)
-        const scaleFactor = 0.5
-        const nodeWidth = frame.width * scaleFactor
-
-        // 그리드 위치 계산 (각 셀의 크기는 가장 큰 프레임 기준)
-        const x = startX + col * (400 + spacing)
-        const y = startY + row * (300 + spacing)
+        // 그리드 위치 계산
+        const x = startX + col * (450 + spacing)
+        const y = startY + row * (900 + spacing)
 
         const thumbnailUrl = imageResults.find(r => r.nodeId === frame.nodeId)?.imageUrl
 
@@ -637,7 +625,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect }: FlowCanvasProps) {
           id: `node-${Date.now()}-${index}`,
           type: 'frameNode',
           position: { x, y },
-          style: { width: nodeWidth, height: 'auto' },
+          style: { width: frame.width, height: 'auto' },
           data: {
             figma: {
               fileKey,
