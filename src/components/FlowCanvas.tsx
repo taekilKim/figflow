@@ -22,7 +22,7 @@ import {
   useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { SmartStepEdge } from '@tisoap/react-flow-smart-edge'
+// SmartStepEdge 제거 - 네이티브 StepEdge 사용
 import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom, ArrowCounterClockwise, ArrowClockwise } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
@@ -32,11 +32,6 @@ import { saveProject, loadProject } from '../utils/storage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
 import { useFlowHistory } from '../hooks/useFlowHistory'
 import '../styles/FlowCanvas.css'
-
-// 스마트 엣지 타입 등록 (직각 우회)
-const edgeTypes = {
-  smart: SmartStepEdge,
-}
 
 // 커스텀 노드 타입 등록
 const nodeTypes = {
@@ -1079,12 +1074,18 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         }))}
         edges={edges.map((edge) => ({
           ...edge,
-          type: 'smart',
+          type: 'step', // 명시적으로 step 타입 지정
           updatable: 'target',
           style: getEdgeStyle(edge.data),
           markerEnd: getMarkerEnd(edge.data),
           markerStart: getMarkerStart(edge.data),
-        }))}
+          // 🔥 각 edge에 pathOptions 설정
+          data: {
+            ...edge.data,
+            offset: 60,        // Figma-like breakout
+            borderRadius: 20,  // 둥근 모서리
+          }
+        } as Edge<FlowEdgeData>))}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -1096,10 +1097,9 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
         connectionLineType={ConnectionLineType.Step}
         defaultEdgeOptions={{
-          type: 'smart',
+          type: 'step', // 네이티브 StepEdge 사용 (SmartStepEdge 대신)
           animated: false,
           focusable: true,
           style: { strokeWidth: 2, stroke: '#555555' },
@@ -1109,13 +1109,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             width: 30,
             height: 30,
           },
-          data: {
-            smartEdge: {
-              nodePadding: 80,   // 간격 3배 확대 - 충분한 여백 확보
-              gridRatio: 15,     // 격자 계산 비율 (간격에 맞춰 조정)
-              lessCorners: true, // 불필요한 코너 최소화
-            }
-          }
         }}
         edgesReconnectable={true}
         reconnectRadius={30}

@@ -46,6 +46,7 @@ body {
   font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
   background-color: var(--bg-base);
   color: var(--grey-900);
+  letter-spacing: 0 !important; /* TDS 자간 0 강제 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
@@ -127,7 +128,7 @@ optgroup {
 .react-flow__edge-text {
   font-family: 'Pretendard Variable', Pretendard, sans-serif !important;
   font-size: 13px !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important; /* TDS 강조 */
   fill: #333D4B !important; /* TDS Grey 800 */
   letter-spacing: 0 !important; /* TDS Requirement */
 }
@@ -212,13 +213,15 @@ optgroup {
 .status-tag {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700; /* TDS 강조 */
   font-family: 'Pretendard Variable', Pretendard, sans-serif;
   letter-spacing: 0 !important; /* TDS Requirement */
   line-height: 1;
+  margin-right: 6px;
 }
 
 /* TDS Status Colors */
@@ -241,6 +244,17 @@ optgroup {
 .status-tag.deprecated {
   background-color: #FFEBEE; /* Red tint */
   color: #E03E3E; /* Red */
+}
+
+/* 10. Node Label Styling */
+.node-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #191F28; /* TDS Grey 900 */
+  letter-spacing: 0 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 스크롤바 커스텀 (미니멀하게) */
