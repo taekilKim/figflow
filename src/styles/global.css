@@ -137,10 +137,11 @@ optgroup {
   transition: stroke 0.2s, stroke-width 0.2s;
 }
 
-/* TDS Typography - Edge Labels */
+/* TDS Typography - Edge Labels with Dynamic Scaling */
 .react-flow__edge-text {
   font-family: 'Pretendard Variable', Pretendard, sans-serif !important;
-  font-size: 13px !important;
+  /* 🔥 Clamped Dynamic Scaling: 12px → 최대 18px (줌 아웃 시 가독성 확보) */
+  font-size: clamp(12px, calc(12px + (var(--zoom-scale, 1) - 1) * 2px), 18px) !important;
   font-weight: 600 !important; /* TDS 강조 */
   fill: #333D4B !important; /* TDS Grey 800 */
   letter-spacing: 0 !important; /* TDS Requirement */
@@ -222,14 +223,17 @@ optgroup {
   transform: translateZ(0);
 }
 
-/* 9. TDS Status Tags (Badges) */
+/* 9. TDS Status Tags (Badges) with Dynamic Scaling */
 .status-tag {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 8px;
+  /* 🔥 Clamped Dynamic Padding: 너무 커지지 않게 보수적으로 키움 */
+  padding: clamp(4px, calc(4px * var(--zoom-scale, 1) * 0.5), 8px)
+           clamp(8px, calc(8px * var(--zoom-scale, 1) * 0.5), 12px);
   border-radius: 6px;
-  font-size: 11px;
+  /* 🔥 Clamped Dynamic Font Size: 11px → 최대 14px */
+  font-size: clamp(11px, calc(11px + (var(--zoom-scale, 1) - 1) * 1px), 14px);
   font-weight: 700; /* TDS 강조 */
   font-family: 'Pretendard Variable', Pretendard, sans-serif;
   letter-spacing: 0 !important; /* TDS Requirement */
@@ -259,15 +263,22 @@ optgroup {
   color: #E03E3E; /* Red */
 }
 
-/* 10. Node Label Styling */
+/* 10. Node Label Styling with Dynamic Scaling */
 .node-label {
-  font-size: 14px;
+  /* 🔥 Clamped Dynamic Font Size: 14px → 최대 24px (줌 아웃 시 가독성 확보) */
+  font-size: clamp(14px, calc(14px + (var(--zoom-scale, 1) - 1) * 3px), 24px);
   font-weight: 600;
   color: #191F28; /* TDS Grey 900 */
   letter-spacing: 0 !important;
+
+  /* 레이아웃 방어: 글자가 커져도 줄바꿈되지 않고 말줄임표 처리 */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  /* 🔥 중요: 폰트가 커질 때 컨테이너 폭을 넘지 않도록 max-width 제어 */
+  max-width: 100%;
+  display: block;
 }
 
 /* 스크롤바 커스텀 (미니멀하게) */

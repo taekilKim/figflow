@@ -6,21 +6,6 @@ import '../styles/FrameNode.css'
 function FrameNode({ data, selected }: NodeProps) {
   const { figma, meta } = data as FlowNodeData
 
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case 'draft':
-        return '#9e9e9e'
-      case 'review':
-        return '#ff9800'
-      case 'approved':
-        return '#4caf50'
-      case 'deprecated':
-        return '#f44336'
-      default:
-        return '#9e9e9e'
-    }
-  }
-
   return (
     <div
       style={{
@@ -30,19 +15,34 @@ function FrameNode({ data, selected }: NodeProps) {
         overflow: 'visible',
       }}
     >
+      {/* Header Area: 폰트가 커져도 프레임을 밀어내지 않도록 absolute 배치 */}
+      <div
+        style={{
+          position: 'absolute',
+          top: -40, // 여유 있게 위로 배치
+          left: 0,
+          width: '150%', // 🔥 중요: 폰트가 커졌을 때 잘리지 않도록 너비를 프레임보다 넓게 확보
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          transformOrigin: 'bottom left', // 커질 때 위/오른쪽으로 커짐
+          zIndex: 1, // 프레임 내용 위에 표시
+        }}
+      >
+        {meta.status && (
+          <span
+            className={`status-tag ${meta.status.toLowerCase()}`}
+          >
+            {meta.status.toUpperCase()}
+          </span>
+        )}
+        <span className="node-label" style={{ flex: 1 }}>
+          {meta.title}
+        </span>
+      </div>
+
       {/* Frame content wrapper */}
       <div className={`frame-node ${selected ? 'selected' : ''}`}>
-        <div className="frame-node-header">
-          <div className="frame-node-title">{meta.title}</div>
-          {meta.status && (
-            <div
-              className="frame-node-status"
-              style={{ backgroundColor: getStatusColor(meta.status) }}
-            >
-              {meta.status}
-            </div>
-          )}
-        </div>
 
         <div className="frame-node-thumbnail">
           {meta.thumbnailUrl ? (
