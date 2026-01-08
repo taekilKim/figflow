@@ -1,22 +1,20 @@
-import { memo } from 'react'
+import { memo, useState, useEffect } from 'react'
 import {
   BaseEdge,
   EdgeLabelRenderer,
   EdgeProps,
   useNodes,
-  useViewport,
   getSmoothStepPath,
 } from '@xyflow/react'
 import { getSmartEdge } from '@tisoap/react-flow-smart-edge'
 
 /**
- * CustomSmartEdge: Smart Routing with Path Patching
+ * CustomSmartEdge: The Bridge Strategy
  *
- * 전략:
- * 1. getSmartEdge로 장애물 회피 경로 계산 (nodePadding 적용)
- * 2. Path Patching으로 핸들-경로 간 갭 제거
- * 3. EdgeLabelRenderer로 HTML 라벨 렌더링 (TDS 스타일)
- * 4. 동적 줌 스케일 적용으로 라벨 가시성 유지
+ * 핵심 전략:
+ * 1. nodePadding: 80으로 장애물 회피 경로 계산 (갭 발생)
+ * 2. Path Patching으로 핸들-경로 간 갭을 직선(Bridge)으로 연결
+ * 3. 결과: 딱 붙음 + 80px 직진 + 회피
  */
 function CustomSmartEdge(props: EdgeProps) {
   const {
@@ -31,212 +29,124 @@ function CustomSmartEdge(props: EdgeProps) {
     markerEnd,
     markerStart,
     label,
-    data,
   } = props
 
   const nodes = useNodes()
-  const { zoom } = useViewport()
+  const [edgePath, setEdgePath] = useState('')
+  const [labelPos, setLabelPos] = useState({ x: 0, y: 0 })
 
-  // 줌 아웃 시 라벨 크기 증가 (화면상 크기 유지)
-  const labelScale = zoom < 1 ? 1 / zoom : 1
+  useEffect(() => {
+    let isMounted = true
 
-  // 🔥 라벨 스타일링 로직 (프리셋 적용)
-  // 기본: 흰색 배경 / 회색 텍스트
-  // 커스텀 색상: 선 색상 배경 / 흰색 텍스트
+    // 1. 노드 치수 보정 (Dimension Injection)
+    // 회피가 안 되는 이유: width/height가 0이면 투명인간 취급
+    // 기본값 강제 할당으로 회피 구역 생성
+    const nodesWithDims = nodes.map((node) => ({
+      ...node,
+      width: node.measured?.width ?? node.width ?? 375,
+      height: node.measured?.height ?? node.height ?? 600,
+      position: node.position,
+    }))
+
+    const calculatePath = async () => {
+      try {
+        const smartResult = await getSmartEdge({
+          sourceX,
+          sourceY,
+          targetX,
+          targetY,
+          sourcePosition,
+          targetPosition,
+          nodes: nodesWithDims,
+          options: {
+            nodePadding: 80, // 회피 거리 겸 오프셋 거리
+            gridRatio: 10,
+          } as any,
+        })
+
+        if (!isMounted) return
+
+        if (smartResult && !(smartResult instanceof Error)) {
+          const { svgPath, edgeCenterX, edgeCenterY } = smartResult as any
+
+          // 🔥 [핵심 로직] Path Patching (The Bridge)
+          // svgPath는 "M startX,startY ..."로 시작 (핸들과 떨어져 있음)
+          // 이를 "M sourceX,sourceY L startX,startY ..."로 개조하여 갭을 직선으로 이음
+
+          // SVG path에서 첫 M 명령의 좌표 추출
+          const pathMatch = svgPath.match(/^M\s*([\d.]+)[,\s]+([\d.]+)/)
+          let patchedPath = svgPath
+
+          if (pathMatch) {
+            const pathStartX = parseFloat(pathMatch[1])
+            const pathStartY = parseFloat(pathMatch[2])
+
+            // 핸들에서 경로 시작점까지 직선 연결
+            patchedPath = `M ${sourceX},${sourceY} L ${pathStartX},${pathStartY}` + svgPath.substring(pathMatch[0].length)
+          }
+
+          setEdgePath(patchedPath)
+          setLabelPos({ x: edgeCenterX, y: edgeCenterY })
+        } else {
+          throw new Error('No path found')
+        }
+      } catch (e) {
+        if (!isMounted) return
+
+        // Fallback: 내장 Step 경로
+        const [fallbackPath, lx, ly] = getSmoothStepPath({
+          sourceX,
+          sourceY,
+          sourcePosition,
+          targetX,
+          targetY,
+          targetPosition,
+          borderRadius: 0,
+          offset: 50,
+        })
+        setEdgePath(fallbackPath)
+        setLabelPos({ x: lx, y: ly })
+      }
+    }
+
+    calculatePath()
+
+    return () => {
+      isMounted = false
+    }
+  }, [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, nodes])
+
+  // 초기 렌더링 시 깜빡임 방지를 위한 Fallback
+  if (!edgePath) {
+    const [tempPath] = getSmoothStepPath({
+      sourceX,
+      sourceY,
+      sourcePosition,
+      targetX,
+      targetY,
+      targetPosition,
+      borderRadius: 0,
+      offset: 50,
+    })
+    return <BaseEdge id={id} path={tempPath} markerEnd={markerEnd} style={style} />
+  }
+
+  // 라벨 색상 로직 (프리셋 적용)
   const edgeColor = style?.stroke as string | undefined
   const isDefaultColor = !edgeColor || edgeColor === '#555555' || edgeColor === '#555'
   const labelBg = isDefaultColor ? '#FFFFFF' : edgeColor
   const labelColor = isDefaultColor ? '#333D4B' : '#FFFFFF'
   const labelBorder = isDefaultColor ? '1px solid #E5E8EB' : 'none'
 
-  // 🔥 CRITICAL: Fallback Path (직각 경로, 절대 직선 금지)
-  // 스마트 라우팅 실패 시 React Flow 내장 Step 경로 사용
-  const [fallbackPath, fallbackLabelX, fallbackLabelY] = getSmoothStepPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-    borderRadius: 0,  // 완전 직각
-    offset: 50,       // 최소 오프셋
-  })
-
-  // 1. 스마트 경로 계산 (장애물 회피)
-  const edgeData = data as any
-
-  // 🔥 CRITICAL: Node Dimension Injection (장애물 회피 기능 복원)
-  // getSmartEdge가 노드 크기를 인식할 수 있도록 measured 데이터에서 width/height 주입
-  // 크기가 0이면 기본 크기(375x500, 일반적인 모바일 프레임 크기)를 강제 할당
-  const nodesWithDimensions = nodes.map((node) => {
-    const w = node.measured?.width ?? node.width ?? 0
-    const h = node.measured?.height ?? node.height ?? 0
-
-    return {
-      ...node,
-      // 🔥 너비/높이가 0이면 기본 크기 강제 할당 (투명인간 방지)
-      width: w > 0 ? w : 375,
-      height: h > 0 ? h : 500,
-      position: node.position,
-    }
-  })
-
-  const smartEdgeResult = getSmartEdge({
-    sourcePosition,
-    targetPosition,
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    nodes: nodesWithDimensions, // 🔥 치수가 주입된 노드 배열 전달
-    options: {
-      nodePadding: edgeData?.smartEdge?.nodePadding || 80,
-      gridRatio: edgeData?.smartEdge?.gridRatio || 10,
-    } as any,
-  })
-
-  // getSmartEdge가 경로를 찾지 못한 경우 (드물지만 가능)
-  // Error 객체이거나 결과가 없거나 svgPath가 없는 경우 폴백
-  if (!smartEdgeResult || smartEdgeResult instanceof Error || !(smartEdgeResult as any).svgPath) {
-    // 🔥 Fallback: 직각 경로 (절대 직선 아님!)
-    return (
-      <>
-        <BaseEdge
-          id={id}
-          path={fallbackPath}
-          markerEnd={markerEnd}
-          markerStart={markerStart}
-          style={style}
-        />
-        {label && (
-          <EdgeLabelRenderer>
-            <div
-              style={{
-                position: 'absolute',
-                transform: `translate(-50%, -50%) translate(${fallbackLabelX}px, ${fallbackLabelY}px) scale(${labelScale})`,
-                transformOrigin: 'center',
-                pointerEvents: 'all',
-                zIndex: 1000,
-              }}
-              className="nodrag nopan"
-            >
-              <div
-                style={{
-                  backgroundColor: labelBg,
-                  color: labelColor,
-                  border: labelBorder,
-                  padding: '4px 8px',
-                  borderRadius: '6px',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  letterSpacing: 0,
-                  fontFamily: "'Pretendard Variable', Pretendard, sans-serif",
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                  transition: 'all 0.2s',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {label}
-              </div>
-            </div>
-          </EdgeLabelRenderer>
-        )}
-      </>
-    )
-  }
-
-  const { svgPath, edgeCenterX, edgeCenterY } = smartEdgeResult as any
-
-  // 2. Path Patching: 핸들-경로 간 갭 제거
-  // SVG path는 "M x,y L x2,y2 ..." 형식
-  // svgPath의 시작점이 sourceX, sourceY와 다르면 연결선 추가
-
-  // 🔥 안전성 검사: svgPath가 문자열인지 확인
-  if (!svgPath || typeof svgPath !== 'string') {
-    // 🔥 Fallback: 직각 경로 (절대 직선 아님!)
-    return (
-      <>
-        <BaseEdge
-          id={id}
-          path={fallbackPath}
-          markerEnd={markerEnd}
-          markerStart={markerStart}
-          style={style}
-        />
-        {label && (
-          <EdgeLabelRenderer>
-            <div
-              style={{
-                position: 'absolute',
-                transform: `translate(-50%, -50%) translate(${fallbackLabelX}px, ${fallbackLabelY}px) scale(${labelScale})`,
-                transformOrigin: 'center',
-                pointerEvents: 'all',
-                zIndex: 1000,
-              }}
-              className="nodrag nopan"
-            >
-              <div
-                style={{
-                  backgroundColor: labelBg,
-                  color: labelColor,
-                  border: labelBorder,
-                  padding: '4px 8px',
-                  borderRadius: '6px',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  letterSpacing: 0,
-                  fontFamily: "'Pretendard Variable', Pretendard, sans-serif",
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                  transition: 'all 0.2s',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {label}
-              </div>
-            </div>
-          </EdgeLabelRenderer>
-        )}
-      </>
-    )
-  }
-
-  // SVG path에서 시작점 추출
-  const pathMatch = svgPath.match(/^M\s*([\d.]+)[,\s]+([\d.]+)/)
-  let patchedPath = svgPath
-
-  if (pathMatch) {
-    const pathStartX = parseFloat(pathMatch[1])
-    const pathStartY = parseFloat(pathMatch[2])
-
-    // 시작점이 핸들 위치와 다르면 (5px 이상 차이) 연결선 추가
-    const startGap = Math.hypot(pathStartX - sourceX, pathStartY - sourceY)
-    if (startGap > 5) {
-      // "M sourceX,sourceY L pathStartX,pathStartY" + 나머지 경로
-      patchedPath = `M ${sourceX},${sourceY} L ${pathStartX},${pathStartY} ` + svgPath.substring(pathMatch[0].length)
-    }
-
-    // 끝점 패칭은 복잡하므로 (path 끝부분 파싱 필요), 시작점만 패치
-    // 대부분의 경우 시작점 패칭만으로도 충분함 (nodePadding이 양쪽에 적용되므로)
-  }
-
   return (
     <>
-      {/* 엣지 경로 렌더링 */}
-      <BaseEdge
-        id={id}
-        path={patchedPath}
-        markerEnd={markerEnd}
-        markerStart={markerStart}
-        style={style}
-      />
-
-      {/* 라벨 렌더링 (HTML + TDS 스타일 + 동적 스케일 + 프리셋 색상) */}
+      <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} markerStart={markerStart} style={style} />
       {label && (
         <EdgeLabelRenderer>
           <div
             style={{
               position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${edgeCenterX}px, ${edgeCenterY}px) scale(${labelScale})`,
+              transform: `translate(-50%, -50%) translate(${labelPos.x}px, ${labelPos.y}px)`,
               transformOrigin: 'center',
               pointerEvents: 'all',
               zIndex: 1000,

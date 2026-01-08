@@ -1198,9 +1198,9 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           nodeStrokeWidth={3}
           zoomable
           pannable
-          style={{ height: 120, bottom: 20, right: 320 }}
+          style={{ height: 120, bottom: 20, right: 330 }}
         />
-        <Panel position="top-right" style={{ marginRight: '310px', marginTop: '10px' }}>
+        <Panel position="top-right" style={{ marginRight: '320px', marginTop: '0px' }}>
           <ZoomIndicator />
         </Panel>
         <AlignmentToolbar selectedNodeIds={selectedNodeIds} />
