@@ -245,6 +245,17 @@ const AlignmentToolbar = ({ selectedNodeIds, takeSnapshot }: { selectedNodeIds: 
   )
 }
 
+// 줌 레벨 인디케이터 (우측 상단 표시)
+const ZoomIndicator = () => {
+  const { zoom } = useViewport()
+
+  return (
+    <div className="zoom-indicator">
+      {Math.round(zoom * 100)}%
+    </div>
+  )
+}
+
 // 줌 레벨 감지 래퍼 (동적 스타일링용)
 const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPanning: boolean }) => {
   const { zoom } = useViewport()
@@ -269,8 +280,8 @@ const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPan
 }
 
 function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanvasProps) {
-  // React Flow 훅 (getEdges 추가 - 디버깅 툴에서 사용)
-  const { getEdges } = useReactFlow()
+  // React Flow 훅 (단축키 및 디버깅용)
+  const { getEdges, zoomTo, fitView, getNodes } = useReactFlow()
 
   // 초기 로드 시 localStorage에서 데이터 복원
   const loadedProject = loadProject()
@@ -818,6 +829,31 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     }
   }, [nodes, edges, setNodes, setEdges, onNodeSelect, onEdgeSelect, takeSnapshot])
 
+  // 줌 단축키: Ctrl+1 (100%), Ctrl+2 (선택 요소 핏)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key === '1') {
+          event.preventDefault()
+          zoomTo(1, { duration: 800 }) // 100% 줌
+        }
+        if (event.key === '2') {
+          event.preventDefault()
+          const selectedNodes = getNodes().filter((n) => n.selected)
+          if (selectedNodes.length > 0) {
+            // 선택된 노드들로 핏 (padding 0.2)
+            fitView({ nodes: selectedNodes, padding: 0.2, duration: 800 })
+          }
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [zoomTo, fitView, getNodes])
+
   const handleSave = useCallback(() => {
     const project = {
       id: loadedProject?.id || 'default-project',
@@ -1206,6 +1242,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           zoomable
           pannable
         />
+        <ZoomIndicator />
         <AlignmentToolbar selectedNodeIds={selectedNodeIds} takeSnapshot={takeSnapshot} />
       </ReactFlow>
       </FlowWrapper>

@@ -225,17 +225,16 @@ optgroup {
   transform: translateZ(0);
 }
 
-/* 9. TDS Status Tags (Badges) with EXTREME Scaling for Visibility */
+/* 9. TDS Status Tags (Badges) with Balanced Dynamic Scaling */
 .status-tag {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* 🔥🔥🔥 EXTREME Padding: em 단위로 폰트와 비례 */
   padding: 0.3em 0.6em !important;
   border-radius: 6px;
-  /* 🔥🔥🔥 EXTREME Font Size: 11px → 최대 30px */
-  /* 계산식: 11px + (zoom-scale - 1) * 10px, 줌 아웃 시 10px씩 증가 */
-  font-size: clamp(11px, calc(11px + (var(--zoom-scale, 1) - 1) * 10px), 30px) !important;
+  /* 🔥 BALANCED Font Size: 11px → 최대 24px (적당한 가독성) */
+  /* 계산식: 11px + (zoom-scale - 1) * 4px, 줌 아웃 시 4px씩 증가 */
+  font-size: clamp(11px, calc(11px + (var(--zoom-scale, 1) - 1) * 4px), 24px) !important;
   font-weight: 700; /* TDS 강조 */
   font-family: 'Pretendard Variable', Pretendard, sans-serif;
   letter-spacing: 0 !important; /* TDS Requirement */
@@ -265,15 +264,15 @@ optgroup {
   color: #E03E3E; /* Red */
 }
 
-/* 10. Node Label Styling with EXTREME Dynamic Scaling */
+/* 10. Node Label Styling with Balanced Dynamic Scaling */
 .node-label {
-  /* 🔥🔥🔥 EXTREME Font Size: 14px → 최대 60px (줌 아웃 시 폭발적 가독성) */
-  /* 계산식: 14px + (zoom-scale - 1) * 20px, 줌 아웃 시 20px씩 증가 */
-  font-size: clamp(14px, calc(14px + (var(--zoom-scale, 1) - 1) * 20px), 60px) !important;
+  /* 🔥 BALANCED Font Size: 14px → 최대 40px (적당한 가독성) */
+  /* 계산식: 14px + (zoom-scale - 1) * 6px, 줌 아웃 시 6px씩 증가 */
+  font-size: clamp(14px, calc(14px + (var(--zoom-scale, 1) - 1) * 6px), 40px) !important;
   font-weight: 700;
   color: #191F28; /* TDS Grey 900 */
   letter-spacing: 0 !important;
-  line-height: 1.4;
+  line-height: 1.2;
 
   /* 레이아웃 방어: 글자가 커져도 줄바꿈되지 않고 말줄임표 처리 */
   white-space: nowrap;
@@ -283,6 +282,44 @@ optgroup {
   /* 🔥 중요: 폰트가 커질 때 컨테이너 폭을 넘지 않도록 max-width 제어 */
   max-width: 100%;
   display: block;
+}
+
+/* 11. TDS Edge Label (HTML-based via EdgeLabelRenderer) */
+.tds-edge-label {
+  background-color: #F2F4F6; /* TDS Grey 200 */
+  color: #333D4B;            /* TDS Grey 800 */
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+  white-space: nowrap;
+}
+
+/* 12. MiniMap Styling */
+.react-flow__minimap {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #E5E8EB;
+}
+
+/* 13. Zoom Indicator */
+.zoom-indicator {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+  pointer-events: none;
 }
 
 /* 스크롤바 커스텀 (미니멀하게) */
