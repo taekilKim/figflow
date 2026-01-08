@@ -267,6 +267,9 @@ const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPan
 }
 
 function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanvasProps) {
+  // React Flow 훅 (getEdges 추가 - 디버깅 툴에서 사용)
+  const { getEdges } = useReactFlow()
+
   // 초기 로드 시 localStorage에서 데이터 복원
   const loadedProject = loadProject()
   const [nodes, setNodes, onNodesChange] = useNodesState(
@@ -362,10 +365,23 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     setEdges,
   })
 
-  // 🔧 Real-time Debugging Tool (Console Backdoor)
+  // 🔧 Real-time Debugging Tool (Console Backdoor) - 완전체
   useEffect(() => {
     // @ts-ignore - Intentional global debug tool
     window.flowDebug = {
+      // ✅ 엣지 상태 확인
+      check: () => {
+        const currentEdges = getEdges()
+        console.log('📊 총 엣지 개수:', currentEdges.length)
+        if (currentEdges.length > 0) {
+          console.log('🔍 첫 번째 엣지 설정:', currentEdges[0].data?.smartEdge)
+          console.log('🎨 첫 번째 엣지 스타일:', currentEdges[0].style)
+        } else {
+          console.log('⚠️ 현재 연결된 엣지가 없습니다.')
+        }
+      },
+
+      // 간격 조절
       setPadding: (padding: number) => {
         setEdges((currentEdges) =>
           currentEdges.map(edge => ({
@@ -379,20 +395,42 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             }
           } as Edge<FlowEdgeData>))
         )
-        console.log(`✅ Edge padding updated to ${padding}px`)
+        console.log(`✅ nodePadding을 ${padding}px로 변경했습니다.`)
       },
+
+      // 그리드 비율 조절
+      setGrid: (ratio: number) => {
+        setEdges((currentEdges) =>
+          currentEdges.map(edge => ({
+            ...edge,
+            data: {
+              ...edge.data,
+              smartEdge: {
+                ...(edge.data?.smartEdge || {}),
+                gridRatio: ratio
+              }
+            }
+          } as Edge<FlowEdgeData>))
+        )
+        console.log(`✅ gridRatio를 ${ratio}로 변경했습니다.`)
+      },
+
+      // 현재 엣지 목록 반환
       getEdges: () => {
-        console.log('Current edges:', edges)
-        return edges
+        const currentEdges = getEdges()
+        console.log('Current edges:', currentEdges)
+        return currentEdges
       },
+
+      // 현재 노드 목록 반환
       getNodes: () => {
         console.log('Current nodes:', nodes)
         return nodes
       }
     }
 
-    console.log('🔧 Debug tool ready! Use window.flowDebug.setPadding(80) to adjust edge spacing')
-  }, [setEdges, edges, nodes])
+    console.log('🔧 디버깅 툴 로드 완료. window.flowDebug.check()를 입력해보세요.')
+  }, [setEdges, getEdges, nodes])
 
   // storage 이벤트 감지하여 노드 및 엣지 업데이트
   useEffect(() => {
