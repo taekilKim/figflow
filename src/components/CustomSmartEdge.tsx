@@ -67,11 +67,19 @@ function CustomSmartEdge(props: EdgeProps) {
 
   // 🔥 CRITICAL: Node Dimension Injection (장애물 회피 기능 복원)
   // getSmartEdge가 노드 크기를 인식할 수 있도록 measured 데이터에서 width/height 주입
-  const nodesWithDimensions = nodes.map((node) => ({
-    ...node,
-    width: node.measured?.width ?? node.width ?? 0,
-    height: node.measured?.height ?? node.height ?? 0,
-  }))
+  // 크기가 0이면 기본 크기(375x500, 일반적인 모바일 프레임 크기)를 강제 할당
+  const nodesWithDimensions = nodes.map((node) => {
+    const w = node.measured?.width ?? node.width ?? 0
+    const h = node.measured?.height ?? node.height ?? 0
+
+    return {
+      ...node,
+      // 🔥 너비/높이가 0이면 기본 크기 강제 할당 (투명인간 방지)
+      width: w > 0 ? w : 375,
+      height: h > 0 ? h : 500,
+      position: node.position,
+    }
+  })
 
   const smartEdgeResult = getSmartEdge({
     sourcePosition,
