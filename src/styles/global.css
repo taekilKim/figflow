@@ -62,6 +62,19 @@ optgroup {
   font-size: inherit;
   line-height: inherit;
   color: inherit;
+  letter-spacing: 0 !important; /* TDS 자간 0 강제 */
+}
+
+/* TDS 자간 0 강제 - 모든 UI 요소 */
+.inspector-title,
+.inspector-section,
+.inspector-label,
+.node-label,
+.status-tag,
+.react-flow__edge-text,
+.react-flow__node {
+  letter-spacing: 0 !important;
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
@@ -170,7 +183,7 @@ optgroup {
   stroke-width: calc(20px * var(--zoom-scale, 1)) !important;
   opacity: 0;
   transition: opacity 0.2s;
-  z-index: 99999 !important; /* 핸들과 동일한 최상위 */
+  z-index: 100000 !important; /* 핸들보다 위 */
 }
 
 /* 시각적으로 보이는 점 (Circle) - Functional Size */
