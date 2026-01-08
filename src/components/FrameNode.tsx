@@ -118,13 +118,13 @@ function FrameNode({ data, selected }: NodeProps) {
         type="target"
         position={Position.Top}
         id="target-top"
-        style={{ top: 0, left: '50%', transform: 'translate(-50%, -50%)', zIndex: 9999 }}
+        style={{ top: 0, left: '50%', transform: 'translate(-50%, -50%)', zIndex: 99999 }}
       />
       <Handle
         type="source"
         position={Position.Top}
         id="source-top"
-        style={{ top: 0, left: '50%', transform: 'translate(-50%, -50%)', zIndex: 9999 }}
+        style={{ top: 0, left: '50%', transform: 'translate(-50%, -50%)', zIndex: 99999 }}
       />
 
       {/* Bottom Center */}
@@ -132,13 +132,13 @@ function FrameNode({ data, selected }: NodeProps) {
         type="target"
         position={Position.Bottom}
         id="target-bottom"
-        style={{ bottom: 0, left: '50%', transform: 'translate(-50%, 50%)', zIndex: 9999 }}
+        style={{ bottom: 0, left: '50%', transform: 'translate(-50%, 50%)', zIndex: 99999 }}
       />
       <Handle
         type="source"
         position={Position.Bottom}
         id="source-bottom"
-        style={{ bottom: 0, left: '50%', transform: 'translate(-50%, 50%)', zIndex: 9999 }}
+        style={{ bottom: 0, left: '50%', transform: 'translate(-50%, 50%)', zIndex: 99999 }}
       />
 
       {/* Left Center */}
@@ -146,13 +146,13 @@ function FrameNode({ data, selected }: NodeProps) {
         type="target"
         position={Position.Left}
         id="target-left"
-        style={{ top: '50%', left: 0, transform: 'translate(-50%, -50%)', zIndex: 9999 }}
+        style={{ top: '50%', left: 0, transform: 'translate(-50%, -50%)', zIndex: 99999 }}
       />
       <Handle
         type="source"
         position={Position.Left}
         id="source-left"
-        style={{ top: '50%', left: 0, transform: 'translate(-50%, -50%)', zIndex: 9999 }}
+        style={{ top: '50%', left: 0, transform: 'translate(-50%, -50%)', zIndex: 99999 }}
       />
 
       {/* Right Center */}
@@ -160,13 +160,13 @@ function FrameNode({ data, selected }: NodeProps) {
         type="target"
         position={Position.Right}
         id="target-right"
-        style={{ top: '50%', right: 0, transform: 'translate(50%, -50%)', zIndex: 9999 }}
+        style={{ top: '50%', right: 0, transform: 'translate(50%, -50%)', zIndex: 99999 }}
       />
       <Handle
         type="source"
         position={Position.Right}
         id="source-right"
-        style={{ top: '50%', right: 0, transform: 'translate(50%, -50%)', zIndex: 9999 }}
+        style={{ top: '50%', right: 0, transform: 'translate(50%, -50%)', zIndex: 99999 }}
       />
     </div>
   )
