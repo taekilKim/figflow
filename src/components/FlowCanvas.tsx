@@ -22,7 +22,8 @@ import {
   useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-// SmartStepEdge 제거 - 네이티브 StepEdge 사용
+// 🚨 주의: SmartBezierEdge 절대 금지. SmartStepEdge만 사용 (직각 보장)
+import { SmartStepEdge } from '@tisoap/react-flow-smart-edge'
 import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom, ArrowCounterClockwise, ArrowClockwise } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
@@ -32,6 +33,11 @@ import { saveProject, loadProject } from '../utils/storage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
 import { useFlowHistory } from '../hooks/useFlowHistory'
 import '../styles/FlowCanvas.css'
+
+// 🔥 안전장치 1: SmartStepEdge 타입 등록 (곡선 원천 차단)
+const edgeTypes = {
+  smart: SmartStepEdge,
+}
 
 // 커스텀 노드 타입 등록
 const nodeTypes = {
@@ -1074,17 +1080,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         }))}
         edges={edges.map((edge) => ({
           ...edge,
-          type: 'step', // 명시적으로 step 타입 지정
+          type: 'smart', // 🔥 안전장치 3: 모든 엣지를 'smart' 타입으로 강제
           updatable: 'target',
           style: getEdgeStyle(edge.data),
           markerEnd: getMarkerEnd(edge.data),
           markerStart: getMarkerStart(edge.data),
-          // 🔥 각 edge에 pathOptions 설정
-          data: {
-            ...edge.data,
-            offset: 60,        // Figma-like breakout
-            borderRadius: 20,  // 둥근 모서리
-          }
+          // 기존 data 유지
         } as Edge<FlowEdgeData>))}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -1097,9 +1098,10 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
-        connectionLineType={ConnectionLineType.Step}
+        edgeTypes={edgeTypes}
+        connectionLineType={ConnectionLineType.Step} // 🔥 안전장치 2: 드래그 중 직각 강제
         defaultEdgeOptions={{
-          type: 'step', // 네이티브 StepEdge 사용 (SmartStepEdge 대신)
+          type: 'smart', // 🔥 SmartStepEdge 사용
           animated: false,
           focusable: true,
           style: { strokeWidth: 2, stroke: '#555555' },
@@ -1109,6 +1111,14 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             width: 30,
             height: 30,
           },
+          // 🔥 Smart Routing Config (직각 유지 + 회피)
+          data: {
+            smartEdge: {
+              nodePadding: 60,    // 장애물 회피 거리
+              gridRatio: 10,      // 경로 정밀도
+              lessCorners: true,  // 불필요한 꺾임 최소화 (직선 선호)
+            }
+          }
         }}
         edgesReconnectable={true}
         reconnectRadius={30}
