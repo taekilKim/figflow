@@ -1,15 +1,18 @@
-import { EdgeProps, useNodes, getSmoothStepPath } from '@xyflow/react'
-import { getSmartEdge } from '@tisoap/react-flow-smart-edge'
+import { memo } from 'react'
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  EdgeProps,
+  getSmoothStepPath,
+} from '@xyflow/react'
 
 /**
- * CustomSmartEdge: "Path Patching" 기법으로 갭 제거
+ * CustomSmartEdge: Fail-Safe Step Edge with Forced Label Rendering
  *
- * 문제: SmartStepEdge의 nodePadding은 핸들에서 떨어진 곳에서 경로를 시작하여 갭을 만듦
- * 해결: 핸들 -> 경로 시작점, 경로 끝점 -> 핸들을 직선(L)으로 강제 연결
- *
- * 결과: Touch (핸들에 붙음) + Breakout (직선 구간) + Avoidance (장애물 회피)
+ * 전략: 무조건 직각 경로(Step) 사용, 곡선 절대 금지
+ * 라벨: EdgeLabelRenderer로 강제 렌더링
  */
-export default function CustomSmartEdge(props: EdgeProps) {
+function CustomSmartEdge(props: EdgeProps) {
   const {
     id,
     sourceX,
@@ -21,113 +24,63 @@ export default function CustomSmartEdge(props: EdgeProps) {
     style = {},
     markerEnd,
     markerStart,
-    data,
+    label,
   } = props
 
-  const nodes = useNodes()
-
-  // SmartStepEdge 설정 추출
-  const smartEdgeOptions = data?.smartEdge || {
-    nodePadding: 80,
-    gridRatio: 10,
-    lessCorners: true,
-  }
-
-  // getSmartEdge로 스마트 경로 계산
-  const smartResult = getSmartEdge({
-    sourcePosition,
-    targetPosition,
+  // 🔥 Fail-Safe: 무조건 직각 경로 사용 (borderRadius: 0 = 완전 직각)
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
+    sourcePosition,
     targetX,
     targetY,
-    nodes,
-    options: smartEdgeOptions,
+    targetPosition,
+    borderRadius: 0,  // 🔥 완전 직각 (곡선 제거)
+    offset: 50,       // 핸들에서 50px 직선 진행 후 꺾임
   })
 
-  // getSmartEdge가 null/Error를 반환하면 fallback으로 기본 Step Edge 사용
-  if (!smartResult || smartResult instanceof Error) {
-    const [fallbackPath] = getSmoothStepPath({
-      sourceX,
-      sourceY,
-      targetX,
-      targetY,
-      sourcePosition,
-      targetPosition,
-    })
-    return (
-      <path
-        id={id}
-        className="react-flow__edge-path"
-        d={fallbackPath}
-        style={style}
-        markerEnd={markerEnd}
-        markerStart={markerStart}
-      />
-    )
-  }
-
-  // 🔥 Path Patching: 핸들과 경로를 직선으로 연결
-  // getSmartEdge는 string 또는 { svgPathString: string } 반환
-  const svgPathString = typeof smartResult === 'string'
-    ? smartResult
-    : (smartResult as any).svgPathString
-
-  if (typeof svgPathString !== 'string') {
-    // Fallback
-    const [fallbackPath] = getSmoothStepPath({
-      sourceX,
-      sourceY,
-      targetX,
-      targetY,
-      sourcePosition,
-      targetPosition,
-    })
-    return (
-      <path
-        id={id}
-        className="react-flow__edge-path"
-        d={fallbackPath}
-        style={style}
-        markerEnd={markerEnd}
-        markerStart={markerStart}
-      />
-    )
-  }
-
-  // SVG Path 파싱: "M x y L ..." 형태
-  // 첫 번째 M 명령의 좌표를 추출
-  const pathMatch = svgPathString.match(/M\s*([\d.]+)\s+([\d.]+)/)
-  if (!pathMatch) {
-    // 파싱 실패 시 원본 경로 사용
-    return (
-      <path
-        id={id}
-        className="react-flow__edge-path"
-        d={svgPathString}
-        style={style}
-        markerEnd={markerEnd}
-        markerStart={markerStart}
-      />
-    )
-  }
-
-  const smartStartX = parseFloat(pathMatch[1])
-  const smartStartY = parseFloat(pathMatch[2])
-
-  // 🔥 Bridged Path 생성:
-  // "M sourceX sourceY L smartStartX smartStartY [원본 경로 나머지] L targetX targetY"
-  const remainingPath = svgPathString.substring(pathMatch[0].length) // "M x y" 제거
-  const bridgedPath = `M ${sourceX} ${sourceY} L ${smartStartX} ${smartStartY}${remainingPath} L ${targetX} ${targetY}`
-
   return (
-    <path
-      id={id}
-      className="react-flow__edge-path"
-      d={bridgedPath}
-      style={style}
-      markerEnd={markerEnd}
-      markerStart={markerStart}
-    />
+    <>
+      {/* 엣지 경로 렌더링 */}
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        markerEnd={markerEnd}
+        markerStart={markerStart}
+        style={style}
+      />
+
+      {/* 🔥 라벨 강제 렌더링 (사라진 라벨 복구) */}
+      {label && (
+        <EdgeLabelRenderer>
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              pointerEvents: 'all',
+              zIndex: 1000,
+            }}
+            className="nodrag nopan"
+          >
+            <div
+              style={{
+                background: '#F2F4F6',
+                padding: '4px 8px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#333D4B',
+                fontFamily: "'Pretendard Variable', Pretendard, sans-serif",
+                letterSpacing: 0,
+              }}
+            >
+              {label}
+            </div>
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
   )
 }
+
+export default memo(CustomSmartEdge)
