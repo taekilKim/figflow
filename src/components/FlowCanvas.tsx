@@ -25,14 +25,13 @@ import {
 import '@xyflow/react/dist/style.css'
 // 🔥 CustomSmartEdge: Path Patching 기법으로 갭 제거 + Breakout 구현
 import CustomSmartEdge from './CustomSmartEdge'
-import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom, ArrowCounterClockwise, ArrowClockwise } from '@phosphor-icons/react'
+import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
 import FigmaFileImportDialog from './FigmaFileImportDialog'
 import { FlowNodeData, FlowEdgeData } from '../types'
 import { saveProject, loadProject } from '../utils/storage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
-import { useFlowHistory } from '../hooks/useFlowHistory'
 import '../styles/FlowCanvas.css'
 
 // 🔥 CustomSmartEdge: Path Patching으로 Touch + Breakout + Avoidance 구현
@@ -123,12 +122,10 @@ const initialEdges: Edge<FlowEdgeData>[] = [
 ]
 
 // 정렬 툴바 컴포넌트 (선택된 노드가 2개 이상일 때 표시)
-const AlignmentToolbar = ({ selectedNodeIds, takeSnapshot }: { selectedNodeIds: string[], takeSnapshot: () => void }) => {
+const AlignmentToolbar = ({ selectedNodeIds }: { selectedNodeIds: string[] }) => {
   const { setNodes } = useReactFlow()
 
   const alignNodes = (direction: string) => {
-    // 정렬 전에 스냅샷 저장 (Undo 가능하도록)
-    takeSnapshot()
 
     setNodes((nodes) => {
       const selectedNodes = nodes.filter((n) => selectedNodeIds.includes(n.id))
@@ -188,9 +185,6 @@ const AlignmentToolbar = ({ selectedNodeIds, takeSnapshot }: { selectedNodeIds: 
   }
 
   const distributeNodes = (direction: 'horizontal' | 'vertical') => {
-    // 분배 전에 스냅샷 저장
-    takeSnapshot()
-
     setNodes((nodes) => {
       const selectedNodes = nodes.filter((n) => selectedNodeIds.includes(n.id))
       if (selectedNodes.length < 3) return nodes // 3개 이상이어야 간격 조정 의미 있음
@@ -370,14 +364,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
   const [isFileImportDialogOpen, setIsFileImportDialogOpen] = useState(false)
   const connectingNodeId = useRef<string | null>(null)
   const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null)
-
-  // History 관리 (Undo/Redo)
-  const { takeSnapshot, undo, redo, canUndo, canRedo } = useFlowHistory<FlowNodeData, FlowEdgeData>({
-    nodes,
-    edges,
-    setNodes,
-    setEdges,
-  })
 
   // 🔧 Real-time Debugging Tool (Console Backdoor) - 완전체
   useEffect(() => {
@@ -599,9 +585,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      // 엣지 추가 전 스냅샷
-      takeSnapshot()
-
       const newEdge: Edge<FlowEdgeData> = {
         ...connection,
         id: `e${connection.source}-${connection.target}`,
@@ -610,7 +593,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
       setEdges((eds) => addEdge(newEdge, eds))
       connectingNodeId.current = null
     },
-    [setEdges, takeSnapshot]
+    [setEdges]
   )
 
   const onConnectStart: OnConnectStart = useCallback((_event, params) => {
@@ -790,9 +773,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         // 선택된 노드들 삭제
         const selectedNodes = (nodes as Node[]).filter((node) => node.selected)
         if (selectedNodes.length > 0) {
-          // 삭제 전 스냅샷
-          takeSnapshot()
-
           const nodeIdsToDelete = selectedNodes.map((node) => node.id)
           setNodes((nds) => nds.filter((node) => !nodeIdsToDelete.includes(node.id)))
 
@@ -813,9 +793,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         // 선택된 엣지들 삭제
         const selectedEdges = (edges as Edge[]).filter((edge) => edge.selected)
         if (selectedEdges.length > 0) {
-          // 삭제 전 스냅샷
-          takeSnapshot()
-
           const edgeIdsToDelete = selectedEdges.map((edge) => edge.id)
           setEdges((eds) => eds.filter((edge) => !edgeIdsToDelete.includes(edge.id)))
           onEdgeSelect(null)
@@ -828,7 +805,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [nodes, edges, setNodes, setEdges, onNodeSelect, onEdgeSelect, takeSnapshot])
+  }, [nodes, edges, setNodes, setEdges, onNodeSelect, onEdgeSelect])
 
   // 줌 단축키: Ctrl+1 (100%), Ctrl+2 (선택 요소 핏)
   useEffect(() => {
@@ -973,9 +950,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     thumbnailUrl: string | null
     dimensions: { width: number; height: number } | null
   }) => {
-    // 노드 추가 전 스냅샷
-    takeSnapshot()
-
     // 🔥 새로운 노드 생성 - Figma 원본 크기(absoluteBoundingBox)만 사용
     const newNode: Node<FlowNodeData> = {
       id: `node-${Date.now()}`,
@@ -1008,7 +982,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     // 노드 추가
     setNodes((nds) => [...nds, newNode])
     alert(`"${frameData.title}" 프레임이 추가되었습니다! 썸네일과 함께 캔버스에 표시됩니다.`)
-  }, [setNodes, takeSnapshot])
+  }, [setNodes])
 
   // 배치 프레임 가져오기 (파일 전체 import)
   const handleBatchImport = useCallback(async (
@@ -1021,9 +995,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     }>
   ) => {
     console.log('handleBatchImport called', { fileKey, framesCount: selectedFrames.length })
-
-    // 배치 추가 전 스냅샷
-    takeSnapshot()
 
     const accessToken = getFigmaToken()
     if (!accessToken) {
@@ -1116,7 +1087,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
       setImportProgress(null)
       alert('프레임 가져오기 실패: ' + (error instanceof Error ? error.message : '알 수 없는 오류'))
     }
-  }, [setNodes, takeSnapshot])
+  }, [setNodes])
 
   return (
     <>
@@ -1134,23 +1105,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         >
           <FileArrowDown size={20} weight="bold" />
           파일 가져오기
-        </button>
-        <div className="toolbar-divider" />
-        <button
-          className="toolbar-button"
-          onClick={undo}
-          disabled={!canUndo}
-          title="실행 취소 (Ctrl+Z)"
-        >
-          <ArrowCounterClockwise size={20} weight="bold" />
-        </button>
-        <button
-          className="toolbar-button"
-          onClick={redo}
-          disabled={!canRedo}
-          title="다시 실행 (Ctrl+Y)"
-        >
-          <ArrowClockwise size={20} weight="bold" />
         </button>
         <div className="toolbar-divider" />
         <button
@@ -1244,12 +1198,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           nodeStrokeWidth={3}
           zoomable
           pannable
-          style={{ height: 120 }}
+          style={{ height: 120, bottom: 20, right: 320 }}
         />
-        <Panel position="top-right">
+        <Panel position="top-right" style={{ marginRight: '310px', marginTop: '10px' }}>
           <ZoomIndicator />
         </Panel>
-        <AlignmentToolbar selectedNodeIds={selectedNodeIds} takeSnapshot={takeSnapshot} />
+        <AlignmentToolbar selectedNodeIds={selectedNodeIds} />
       </ReactFlow>
       </FlowWrapper>
 
