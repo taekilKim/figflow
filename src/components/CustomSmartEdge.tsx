@@ -56,7 +56,8 @@ function CustomSmartEdge(props: EdgeProps) {
   })
 
   // getSmartEdge가 경로를 찾지 못한 경우 (드물지만 가능)
-  if (!smartEdgeResult) {
+  // Error 객체이거나 결과가 없거나 svgPath가 없는 경우 폴백
+  if (!smartEdgeResult || smartEdgeResult instanceof Error || !(smartEdgeResult as any).svgPath) {
     // Fallback: 직선 경로
     const fallbackPath = `M ${sourceX},${sourceY} L ${targetX},${targetY}`
     return (
@@ -92,6 +93,37 @@ function CustomSmartEdge(props: EdgeProps) {
   // 2. Path Patching: 핸들-경로 간 갭 제거
   // SVG path는 "M x,y L x2,y2 ..." 형식
   // svgPath의 시작점이 sourceX, sourceY와 다르면 연결선 추가
+
+  // 🔥 안전성 검사: svgPath가 문자열인지 확인
+  if (!svgPath || typeof svgPath !== 'string') {
+    const fallbackPath = `M ${sourceX},${sourceY} L ${targetX},${targetY}`
+    return (
+      <>
+        <BaseEdge
+          id={id}
+          path={fallbackPath}
+          markerEnd={markerEnd}
+          markerStart={markerStart}
+          style={style}
+        />
+        {label && (
+          <EdgeLabelRenderer>
+            <div
+              style={{
+                position: 'absolute',
+                transform: `translate(-50%, -50%) translate(${(sourceX + targetX) / 2}px, ${(sourceY + targetY) / 2}px) scale(${labelScale})`,
+                pointerEvents: 'all',
+                zIndex: 1000,
+              }}
+              className="nodrag nopan tds-edge-label"
+            >
+              {label}
+            </div>
+          </EdgeLabelRenderer>
+        )}
+      </>
+    )
+  }
 
   // SVG path에서 시작점 추출
   const pathMatch = svgPath.match(/^M\s*([\d.]+)[,\s]+([\d.]+)/)
