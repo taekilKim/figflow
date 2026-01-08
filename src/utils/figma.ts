@@ -23,7 +23,9 @@ export async function getFigmaImages(
   accessToken: string,
   options: FigmaImageOptions
 ): Promise<FigmaImageResult[]> {
-  const { fileKey, nodeIds, scale = 2, format = 'png' } = options
+  // 🔥 CRITICAL: scale=1을 사용하여 논리적 크기와 이미지 크기 일치
+  // scale=2 (레티나)를 사용하면 이미지가 2배 크기로 반환되어 노드가 커지는 버그 발생
+  const { fileKey, nodeIds, scale = 1, format = 'png' } = options
 
   try {
     const idsParam = nodeIds.join(',')
