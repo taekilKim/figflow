@@ -434,6 +434,61 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     console.log('🔧 디버깅 툴 로드 완료. window.flowDebug.check()를 입력해보세요.')
   }, [setEdges, getEdges, nodes])
 
+  // 🔍 2단계: 런타임 진단 (실시간 상태 확인)
+  useEffect(() => {
+    const diagnosisInterval = setInterval(() => {
+      // 1. CSS 변수 주입 확인
+      const container = document.querySelector('.flow-canvas')
+      const computedStyle = container ? getComputedStyle(container) : null
+      const zoomScale = computedStyle ? computedStyle.getPropertyValue('--zoom-scale') : 'Not Found'
+
+      // 2. 엣지 속성 확인
+      const currentEdges = getEdges()
+      const firstEdge = currentEdges[0]
+
+      console.log('--- 🔍 FigFlow Diagnosis ---')
+      console.log('1. CSS --zoom-scale:', zoomScale) // 숫자가 나와야 함
+      console.log('2. Edge Count:', currentEdges.length)
+
+      if (firstEdge) {
+        console.log('3. Edge Type:', firstEdge.type) // 'smart'여야 함
+        console.log('4. Edge PathOptions:', (firstEdge.data as any)?.pathOptions) // offset: 50이 있어야 함
+        console.log('5. Edge SmartEdge:', firstEdge.data?.smartEdge) // nodePadding: 60이 있어야 함
+      }
+      console.log('----------------------------')
+    }, 5000) // 5초마다 진단
+
+    return () => clearInterval(diagnosisInterval)
+  }, [getEdges])
+
+  // 🚀 3단계: 강제 마이그레이션 (기존 엣지를 새 설정으로 업데이트)
+  useEffect(() => {
+    console.log('🚀 Applying forced edge migration to existing edges...')
+
+    setEdges((currentEdges) =>
+      currentEdges.map((edge) => ({
+        ...edge,
+        type: 'smart', // 타입 강제 변경
+        data: {
+          ...edge.data,
+          // SmartStepEdge 설정 강제 주입
+          smartEdge: {
+            nodePadding: 60,
+            gridRatio: 10,
+            lessCorners: true,
+          },
+          // PathOptions 강제 주입
+          pathOptions: {
+            offset: 50,
+            borderRadius: 20,
+          }
+        }
+      } as Edge<FlowEdgeData>))
+    )
+
+    console.log('✅ Existing edges have been migrated to new settings.')
+  }, []) // 마운트 시 1회만 실행
+
   // storage 이벤트 감지하여 노드 및 엣지 업데이트
   useEffect(() => {
     const handleStorageChange = () => {
