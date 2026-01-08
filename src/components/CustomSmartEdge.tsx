@@ -9,12 +9,12 @@ import {
 import { getSmartEdge } from '@tisoap/react-flow-smart-edge'
 
 /**
- * CustomSmartEdge: The Bridge Strategy
+ * CustomSmartEdge: Manual Coordinate Bridge
  *
- * 핵심 전략:
- * 1. nodePadding: 80으로 장애물 회피 경로 계산 (갭 발생)
- * 2. Path Patching으로 핸들-경로 간 갭을 직선(Bridge)으로 연결
- * 3. 결과: 딱 붙음 + 80px 직진 + 회피
+ * 전략:
+ * 1. nodePadding: 80으로 장애물 회피 경로 계산
+ * 2. 정규식으로 경로 시작점 좌표 추출
+ * 3. M sourceX,sourceY L startX,startY + 나머지 경로 + L targetX,targetY
  */
 function CustomSmartEdge(props: EdgeProps) {
   const {
@@ -32,15 +32,13 @@ function CustomSmartEdge(props: EdgeProps) {
   } = props
 
   const nodes = useNodes()
-  const [edgePath, setEdgePath] = useState('')
+  const [smartPath, setSmartPath] = useState('')
   const [labelPos, setLabelPos] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
     let isMounted = true
 
-    // 1. 노드 치수 보정 (Dimension Injection)
-    // 회피가 안 되는 이유: width/height가 0이면 투명인간 취급
-    // 기본값 강제 할당으로 회피 구역 생성
+    // 1. 노드 치수 주입 (Avoidance 필수)
     const nodesWithDims = nodes.map((node) => ({
       ...node,
       width: node.measured?.width ?? node.width ?? 375,
@@ -59,7 +57,7 @@ function CustomSmartEdge(props: EdgeProps) {
           targetPosition,
           nodes: nodesWithDims,
           options: {
-            nodePadding: 80, // 회피 거리 겸 오프셋 거리
+            nodePadding: 80, // 회피/오프셋 거리
             gridRatio: 10,
           } as any,
         })
@@ -69,32 +67,36 @@ function CustomSmartEdge(props: EdgeProps) {
         if (smartResult && !(smartResult instanceof Error)) {
           const { svgPath, edgeCenterX, edgeCenterY } = smartResult as any
 
-          // 🔥 [핵심 로직] Path Patching (The Bridge)
-          // svgPath는 "M startX,startY ..."로 시작 (핸들과 떨어져 있음)
-          // 이를 "M sourceX,sourceY L startX,startY ..."로 개조하여 갭을 직선으로 이음
+          // 🔥 [Manual Bridge Logic]
+          // 정규식으로 시작점 좌표 추출
+          const matchStart = svgPath.match(/^M\s*([-\d.]+)[,\s]+([-\d.]+)/)
 
-          // SVG path에서 첫 M 명령의 좌표 추출
-          const pathMatch = svgPath.match(/^M\s*([\d.]+)[,\s]+([\d.]+)/)
-          let patchedPath = svgPath
+          if (matchStart) {
+            const startX = parseFloat(matchStart[1])
+            const startY = parseFloat(matchStart[2])
 
-          if (pathMatch) {
-            const pathStartX = parseFloat(pathMatch[1])
-            const pathStartY = parseFloat(pathMatch[2])
+            // Bridge Path 생성: Source -> SmartPathStart
+            const bridgeStart = `M ${sourceX},${sourceY} L ${startX},${startY}`
+            // 원본 경로의 M 명령 제거하고 이어붙이기
+            const restPath = svgPath.substring(matchStart[0].length)
+            // Target까지 직선 추가
+            const fullPath = `${bridgeStart}${restPath} L ${targetX},${targetY}`
 
-            // 핸들에서 경로 시작점까지 직선 연결
-            patchedPath = `M ${sourceX},${sourceY} L ${pathStartX},${pathStartY}` + svgPath.substring(pathMatch[0].length)
+            setSmartPath(fullPath)
+          } else {
+            // 파싱 실패 시 원본 사용
+            setSmartPath(svgPath)
           }
 
-          setEdgePath(patchedPath)
           setLabelPos({ x: edgeCenterX, y: edgeCenterY })
         } else {
-          throw new Error('No path found')
+          throw new Error('No path')
         }
       } catch (e) {
         if (!isMounted) return
 
-        // Fallback: 내장 Step 경로
-        const [fallbackPath, lx, ly] = getSmoothStepPath({
+        // Fallback: Native Step Path (직각)
+        const [fallback, lx, ly] = getSmoothStepPath({
           sourceX,
           sourceY,
           sourcePosition,
@@ -104,20 +106,19 @@ function CustomSmartEdge(props: EdgeProps) {
           borderRadius: 0,
           offset: 50,
         })
-        setEdgePath(fallbackPath)
+        setSmartPath(fallback)
         setLabelPos({ x: lx, y: ly })
       }
     }
 
     calculatePath()
-
     return () => {
       isMounted = false
     }
   }, [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, nodes])
 
-  // 초기 렌더링 시 깜빡임 방지를 위한 Fallback
-  if (!edgePath) {
+  // 초기 렌더링 시 깜빡임 방지
+  if (!smartPath) {
     const [tempPath] = getSmoothStepPath({
       sourceX,
       sourceY,
@@ -140,7 +141,7 @@ function CustomSmartEdge(props: EdgeProps) {
 
   return (
     <>
-      <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} markerStart={markerStart} style={style} />
+      <BaseEdge id={id} path={smartPath} markerEnd={markerEnd} markerStart={markerStart} style={style} />
       {label && (
         <EdgeLabelRenderer>
           <div

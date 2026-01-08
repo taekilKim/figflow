@@ -4,7 +4,6 @@ import {
   Background,
   Controls,
   MiniMap,
-  Panel,
   Node,
   Edge,
   Connection,
@@ -1191,18 +1190,25 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         }}
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-        <Controls />
-        <MiniMap
-          nodeColor="#e2e2e2"
-          maskColor="rgba(240, 240, 240, 0.6)"
-          nodeStrokeWidth={3}
-          zoomable
-          pannable
-          style={{ height: 120, bottom: 20, right: 330 }}
-        />
-        <Panel position="top-right" style={{ marginRight: '320px', marginTop: '0px' }}>
-          <ZoomIndicator />
-        </Panel>
+        <Controls style={{ left: 310, bottom: 20 }} />
+        <div style={{ position: 'relative' }}>
+          <MiniMap
+            nodeColor="#e2e2e2"
+            maskColor="rgba(240, 240, 240, 0.6)"
+            nodeStrokeWidth={3}
+            zoomable
+            pannable
+            style={{ height: 120, bottom: 16, right: 24, marginRight: 280 }}
+          />
+          <div style={{
+            position: 'absolute',
+            top: 24,
+            right: 304 + 8,
+            zIndex: 10
+          }}>
+            <ZoomIndicator />
+          </div>
+        </div>
         <AlignmentToolbar selectedNodeIds={selectedNodeIds} />
       </ReactFlow>
       </FlowWrapper>
