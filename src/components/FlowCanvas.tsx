@@ -4,6 +4,7 @@ import {
   Background,
   Controls,
   MiniMap,
+  Panel,
   Node,
   Edge,
   Connection,
@@ -1206,8 +1207,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           markerEnd: {
             type: MarkerType.ArrowClosed,
             color: '#555555',
-            width: 30,
-            height: 30,
+            width: 20, // 🔥 화살표 크기 축소 (줌 아웃 시 부담 감소)
+            height: 20,
           },
           // 🔥 CustomSmartEdge Config (Touch + Breakout + Avoidance)
           data: {
@@ -1238,11 +1239,16 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
         <Controls />
         <MiniMap
+          nodeColor="#e2e2e2"
+          maskColor="rgba(240, 240, 240, 0.6)"
           nodeStrokeWidth={3}
           zoomable
           pannable
+          style={{ height: 120 }}
         />
-        <ZoomIndicator />
+        <Panel position="top-right">
+          <ZoomIndicator />
+        </Panel>
         <AlignmentToolbar selectedNodeIds={selectedNodeIds} takeSnapshot={takeSnapshot} />
       </ReactFlow>
       </FlowWrapper>

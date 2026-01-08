@@ -40,6 +40,15 @@ function CustomSmartEdge(props: EdgeProps) {
   // 줌 아웃 시 라벨 크기 증가 (화면상 크기 유지)
   const labelScale = zoom < 1 ? 1 / zoom : 1
 
+  // 🔥 라벨 스타일링 로직 (프리셋 적용)
+  // 기본: 흰색 배경 / 회색 텍스트
+  // 커스텀 색상: 선 색상 배경 / 흰색 텍스트
+  const edgeColor = style?.stroke as string | undefined
+  const isDefaultColor = !edgeColor || edgeColor === '#555555' || edgeColor === '#555'
+  const labelBg = isDefaultColor ? '#FFFFFF' : edgeColor
+  const labelColor = isDefaultColor ? '#333D4B' : '#FFFFFF'
+  const labelBorder = isDefaultColor ? '1px solid #E5E8EB' : 'none'
+
   // 🔥 CRITICAL: Fallback Path (직각 경로, 절대 직선 금지)
   // 스마트 라우팅 실패 시 React Flow 내장 Step 경로 사용
   const [fallbackPath, fallbackLabelX, fallbackLabelY] = getSmoothStepPath({
@@ -55,6 +64,15 @@ function CustomSmartEdge(props: EdgeProps) {
 
   // 1. 스마트 경로 계산 (장애물 회피)
   const edgeData = data as any
+
+  // 🔥 CRITICAL: Node Dimension Injection (장애물 회피 기능 복원)
+  // getSmartEdge가 노드 크기를 인식할 수 있도록 measured 데이터에서 width/height 주입
+  const nodesWithDimensions = nodes.map((node) => ({
+    ...node,
+    width: node.measured?.width ?? node.width ?? 0,
+    height: node.measured?.height ?? node.height ?? 0,
+  }))
+
   const smartEdgeResult = getSmartEdge({
     sourcePosition,
     targetPosition,
@@ -62,7 +80,7 @@ function CustomSmartEdge(props: EdgeProps) {
     sourceY,
     targetX,
     targetY,
-    nodes,
+    nodes: nodesWithDimensions, // 🔥 치수가 주입된 노드 배열 전달
     options: {
       nodePadding: edgeData?.smartEdge?.nodePadding || 80,
       gridRatio: edgeData?.smartEdge?.gridRatio || 10,
@@ -92,9 +110,26 @@ function CustomSmartEdge(props: EdgeProps) {
                 pointerEvents: 'all',
                 zIndex: 1000,
               }}
-              className="nodrag nopan tds-edge-label"
+              className="nodrag nopan"
             >
-              {label}
+              <div
+                style={{
+                  backgroundColor: labelBg,
+                  color: labelColor,
+                  border: labelBorder,
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  letterSpacing: 0,
+                  fontFamily: "'Pretendard Variable', Pretendard, sans-serif",
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {label}
+              </div>
             </div>
           </EdgeLabelRenderer>
         )}
@@ -130,9 +165,26 @@ function CustomSmartEdge(props: EdgeProps) {
                 pointerEvents: 'all',
                 zIndex: 1000,
               }}
-              className="nodrag nopan tds-edge-label"
+              className="nodrag nopan"
             >
-              {label}
+              <div
+                style={{
+                  backgroundColor: labelBg,
+                  color: labelColor,
+                  border: labelBorder,
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  letterSpacing: 0,
+                  fontFamily: "'Pretendard Variable', Pretendard, sans-serif",
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {label}
+              </div>
             </div>
           </EdgeLabelRenderer>
         )}
@@ -170,7 +222,7 @@ function CustomSmartEdge(props: EdgeProps) {
         style={style}
       />
 
-      {/* 라벨 렌더링 (HTML + TDS 스타일 + 동적 스케일) */}
+      {/* 라벨 렌더링 (HTML + TDS 스타일 + 동적 스케일 + 프리셋 색상) */}
       {label && (
         <EdgeLabelRenderer>
           <div
@@ -181,9 +233,26 @@ function CustomSmartEdge(props: EdgeProps) {
               pointerEvents: 'all',
               zIndex: 1000,
             }}
-            className="nodrag nopan tds-edge-label"
+            className="nodrag nopan"
           >
-            {label}
+            <div
+              style={{
+                backgroundColor: labelBg,
+                color: labelColor,
+                border: labelBorder,
+                padding: '4px 8px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                fontWeight: 600,
+                letterSpacing: 0,
+                fontFamily: "'Pretendard Variable', Pretendard, sans-serif",
+                boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                transition: 'all 0.2s',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {label}
+            </div>
           </div>
         </EdgeLabelRenderer>
       )}
