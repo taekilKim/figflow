@@ -22,8 +22,8 @@ import {
   useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-// 🚨 주의: SmartBezierEdge 절대 금지. SmartStepEdge만 사용 (직각 보장)
-import { SmartStepEdge } from '@tisoap/react-flow-smart-edge'
+// 🔥 CustomSmartEdge: Path Patching 기법으로 갭 제거 + Breakout 구현
+import CustomSmartEdge from './CustomSmartEdge'
 import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom, ArrowCounterClockwise, ArrowClockwise } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
@@ -34,9 +34,9 @@ import { getFigmaImages, getFigmaToken } from '../utils/figma'
 import { useFlowHistory } from '../hooks/useFlowHistory'
 import '../styles/FlowCanvas.css'
 
-// 🔥 안전장치 1: SmartStepEdge 타입 등록 (곡선 원천 차단)
+// 🔥 CustomSmartEdge: Path Patching으로 Touch + Breakout + Avoidance 구현
 const edgeTypes = {
-  smart: SmartStepEdge,
+  smart: CustomSmartEdge,
 }
 
 // 커스텀 노드 타입 등록
@@ -1173,20 +1173,13 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             width: 30,
             height: 30,
           },
-          // 🔥 Smart Routing Config (Touch & Breakout + Avoidance)
+          // 🔥 CustomSmartEdge Config (Touch + Breakout + Avoidance)
           data: {
-            // SmartStepEdge 설정
+            // CustomSmartEdge 설정
             smartEdge: {
-              nodePadding: 60,    // 다른 프레임과의 안전 거리 (회피 간격)
+              nodePadding: 80,    // 80px = Breakout 직선 구간 + 장애물 회피 거리
               gridRatio: 10,      // 경로 정밀도
-              lessCorners: true,  // 불필요한 꺾임 최소화 (직선 선호)
-            },
-            // 🔥 핵심: Breakout 설정 (핸들에서 50px 직진 후 턴)
-            // Note: SmartStepEdge가 이 옵션을 지원하지 않을 수 있음
-            // 그 경우 커스텀 엣지 컴포넌트가 필요함
-            pathOptions: {
-              offset: 50,        // 최소 50px 직선 진행 후 턴 (갈고리 현상 제거)
-              borderRadius: 20,  // 둥근 모서리
+              lessCorners: true,  // 불필요한 꺾임 최소화 (L자 선호)
             }
           }
         }}
