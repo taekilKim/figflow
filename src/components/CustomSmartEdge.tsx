@@ -5,6 +5,7 @@ import {
   EdgeProps,
   useNodes,
   useViewport,
+  getSmoothStepPath,
 } from '@xyflow/react'
 import { getSmartEdge } from '@tisoap/react-flow-smart-edge'
 
@@ -39,6 +40,19 @@ function CustomSmartEdge(props: EdgeProps) {
   // 줌 아웃 시 라벨 크기 증가 (화면상 크기 유지)
   const labelScale = zoom < 1 ? 1 / zoom : 1
 
+  // 🔥 CRITICAL: Fallback Path (직각 경로, 절대 직선 금지)
+  // 스마트 라우팅 실패 시 React Flow 내장 Step 경로 사용
+  const [fallbackPath, fallbackLabelX, fallbackLabelY] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+    borderRadius: 0,  // 완전 직각
+    offset: 50,       // 최소 오프셋
+  })
+
   // 1. 스마트 경로 계산 (장애물 회피)
   const edgeData = data as any
   const smartEdgeResult = getSmartEdge({
@@ -58,8 +72,7 @@ function CustomSmartEdge(props: EdgeProps) {
   // getSmartEdge가 경로를 찾지 못한 경우 (드물지만 가능)
   // Error 객체이거나 결과가 없거나 svgPath가 없는 경우 폴백
   if (!smartEdgeResult || smartEdgeResult instanceof Error || !(smartEdgeResult as any).svgPath) {
-    // Fallback: 직선 경로
-    const fallbackPath = `M ${sourceX},${sourceY} L ${targetX},${targetY}`
+    // 🔥 Fallback: 직각 경로 (절대 직선 아님!)
     return (
       <>
         <BaseEdge
@@ -74,7 +87,8 @@ function CustomSmartEdge(props: EdgeProps) {
             <div
               style={{
                 position: 'absolute',
-                transform: `translate(-50%, -50%) translate(${(sourceX + targetX) / 2}px, ${(sourceY + targetY) / 2}px) scale(${labelScale})`,
+                transform: `translate(-50%, -50%) translate(${fallbackLabelX}px, ${fallbackLabelY}px) scale(${labelScale})`,
+                transformOrigin: 'center',
                 pointerEvents: 'all',
                 zIndex: 1000,
               }}
@@ -96,7 +110,7 @@ function CustomSmartEdge(props: EdgeProps) {
 
   // 🔥 안전성 검사: svgPath가 문자열인지 확인
   if (!svgPath || typeof svgPath !== 'string') {
-    const fallbackPath = `M ${sourceX},${sourceY} L ${targetX},${targetY}`
+    // 🔥 Fallback: 직각 경로 (절대 직선 아님!)
     return (
       <>
         <BaseEdge
@@ -111,7 +125,8 @@ function CustomSmartEdge(props: EdgeProps) {
             <div
               style={{
                 position: 'absolute',
-                transform: `translate(-50%, -50%) translate(${(sourceX + targetX) / 2}px, ${(sourceY + targetY) / 2}px) scale(${labelScale})`,
+                transform: `translate(-50%, -50%) translate(${fallbackLabelX}px, ${fallbackLabelY}px) scale(${labelScale})`,
+                transformOrigin: 'center',
                 pointerEvents: 'all',
                 zIndex: 1000,
               }}
