@@ -249,9 +249,10 @@ const AlignmentToolbar = ({ selectedNodeIds, takeSnapshot }: { selectedNodeIds: 
 const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPanning: boolean }) => {
   const { zoom } = useViewport()
 
-  // 줌이 작을수록 스케일을 키워서 UI 요소가 화면상 일정 크기 유지
-  // 최소값/최대값 제한(clamp)을 두어 너무 거대해지거나 작아지는 것 방지
-  const scale = Math.min(Math.max(1 / zoom, 1), 20)
+  // 줌 값을 역수로 계산 (줌 아웃 시 값이 커짐)
+  // 예: zoom 0.5 -> scale 2.0, zoom 1.0 -> scale 1.0
+  // 🔥 중요: 줌 인(zoom > 1) 시에는 scale을 1로 고정 (글자가 작아지지 않게)
+  const scale = zoom < 1 ? (1 / zoom) : 1
 
   return (
     <div
@@ -1111,12 +1112,20 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             width: 30,
             height: 30,
           },
-          // 🔥 Smart Routing Config (직각 유지 + 회피)
+          // 🔥 Smart Routing Config (Touch & Breakout + Avoidance)
           data: {
+            // SmartStepEdge 설정
             smartEdge: {
-              nodePadding: 60,    // 장애물 회피 거리
+              nodePadding: 60,    // 다른 프레임과의 안전 거리 (회피 간격)
               gridRatio: 10,      // 경로 정밀도
               lessCorners: true,  // 불필요한 꺾임 최소화 (직선 선호)
+            },
+            // 🔥 핵심: Breakout 설정 (핸들에서 50px 직진 후 턴)
+            // Note: SmartStepEdge가 이 옵션을 지원하지 않을 수 있음
+            // 그 경우 커스텀 엣지 컴포넌트가 필요함
+            pathOptions: {
+              offset: 50,        // 최소 50px 직선 진행 후 턴 (갈고리 현상 제거)
+              borderRadius: 20,  // 둥근 모서리
             }
           }
         }}

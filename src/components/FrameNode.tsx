@@ -21,7 +21,7 @@ function FrameNode({ data, selected }: NodeProps) {
           position: 'absolute',
           top: -40, // 여유 있게 위로 배치
           left: 0,
-          width: '150%', // 🔥 중요: 폰트가 커졌을 때 잘리지 않도록 너비를 프레임보다 넓게 확보
+          width: '200%', // 🔥 중요: 폰트가 커졌을 때 잘리지 않도록 너비를 프레임의 2배로 확보
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
