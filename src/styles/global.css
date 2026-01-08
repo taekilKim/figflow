@@ -140,11 +140,13 @@ optgroup {
 /* TDS Typography - Edge Labels with Dynamic Scaling */
 .react-flow__edge-text {
   font-family: 'Pretendard Variable', Pretendard, sans-serif !important;
-  /* 🔥 Clamped Dynamic Scaling: 12px → 최대 18px (줌 아웃 시 가독성 확보) */
-  font-size: clamp(12px, calc(12px + (var(--zoom-scale, 1) - 1) * 2px), 18px) !important;
+  /* 🔥 Clamped Dynamic Scaling: 12px → 최대 20px (줌 아웃 시 가독성 확보) */
+  /* 계산식: 12px + (zoom-scale - 1) * 3px, 줌 아웃 시 3px씩 증가 */
+  font-size: clamp(12px, calc(12px + (var(--zoom-scale, 1) - 1) * 3px), 20px) !important;
   font-weight: 600 !important; /* TDS 강조 */
   fill: #333D4B !important; /* TDS Grey 800 */
   letter-spacing: 0 !important; /* TDS Requirement */
+  line-height: 1.2;
 }
 
 .react-flow__edge-text-bg {
@@ -229,11 +231,14 @@ optgroup {
   align-items: center;
   justify-content: center;
   /* 🔥 Clamped Dynamic Padding: 너무 커지지 않게 보수적으로 키움 */
-  padding: clamp(4px, calc(4px * var(--zoom-scale, 1) * 0.5), 8px)
-           clamp(8px, calc(8px * var(--zoom-scale, 1) * 0.5), 12px);
+  padding-top: clamp(4px, calc(4px * var(--zoom-scale, 1) * 0.5), 8px) !important;
+  padding-bottom: clamp(4px, calc(4px * var(--zoom-scale, 1) * 0.5), 8px) !important;
+  padding-left: clamp(8px, calc(8px * var(--zoom-scale, 1) * 0.8), 16px) !important;
+  padding-right: clamp(8px, calc(8px * var(--zoom-scale, 1) * 0.8), 16px) !important;
   border-radius: 6px;
-  /* 🔥 Clamped Dynamic Font Size: 11px → 최대 14px */
-  font-size: clamp(11px, calc(11px + (var(--zoom-scale, 1) - 1) * 1px), 14px);
+  /* 🔥 Clamped Dynamic Font Size: 11px → 최대 16px */
+  /* 계산식: 11px + (zoom-scale - 1) * 2px, 줌 아웃 시 2px씩 증가 */
+  font-size: clamp(11px, calc(11px + (var(--zoom-scale, 1) - 1) * 2px), 16px) !important;
   font-weight: 700; /* TDS 강조 */
   font-family: 'Pretendard Variable', Pretendard, sans-serif;
   letter-spacing: 0 !important; /* TDS Requirement */
@@ -265,11 +270,13 @@ optgroup {
 
 /* 10. Node Label Styling with Dynamic Scaling */
 .node-label {
-  /* 🔥 Clamped Dynamic Font Size: 14px → 최대 24px (줌 아웃 시 가독성 확보) */
-  font-size: clamp(14px, calc(14px + (var(--zoom-scale, 1) - 1) * 3px), 24px);
+  /* 🔥 Clamped Dynamic Font Size: 14px → 최대 28px (줌 아웃 시 가독성 확보) */
+  /* 계산식: 14px + (zoom-scale - 1) * 4px, 줌 아웃 시 4px씩 증가 */
+  font-size: clamp(14px, calc(14px + (var(--zoom-scale, 1) - 1) * 4px), 28px) !important;
   font-weight: 600;
   color: #191F28; /* TDS Grey 900 */
   letter-spacing: 0 !important;
+  line-height: 1.2;
 
   /* 레이아웃 방어: 글자가 커져도 줄바꿈되지 않고 말줄임표 처리 */
   white-space: nowrap;
