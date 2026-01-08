@@ -939,7 +939,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     // 노드 추가 전 스냅샷
     takeSnapshot()
 
-    // 새로운 노드 생성 - Figma 원본 크기 그대로 사용
+    // 🔥 새로운 노드 생성 - Figma 원본 크기(absoluteBoundingBox)만 사용
     const newNode: Node<FlowNodeData> = {
       id: `node-${Date.now()}`,
       type: 'frameNode',
@@ -947,7 +947,11 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         x: Math.random() * 400 + 100,
         y: Math.random() * 400 + 100,
       },
-      style: frameData.dimensions ? { width: frameData.dimensions.width, height: 'auto' } : undefined,
+      // 🔥 CRITICAL: width와 height 모두 명시적으로 설정 (이미지 크기에 영향받지 않도록)
+      style: frameData.dimensions ? {
+        width: frameData.dimensions.width,
+        height: frameData.dimensions.height
+      } : undefined,
       data: {
         figma: {
           fileKey: frameData.fileKey,
@@ -1039,7 +1043,9 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           id: `node-${Date.now()}-${index}`,
           type: 'frameNode',
           position: { x, y },
-          style: { width: frame.width, height: 'auto' },
+          // 🔥 CRITICAL: height도 명시적으로 설정하여 이미지 크기에 의해 노드가 커지는 것을 방지
+          // absoluteBoundingBox (논리적 크기)만 사용
+          style: { width: frame.width, height: frame.height },
           data: {
             figma: {
               fileKey,
