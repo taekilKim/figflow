@@ -156,28 +156,51 @@ optgroup {
   ry: 6px !important;
 }
 
-/* 5. 노드 핸들 (앵커 포인트) - Dynamic Sizing with Minimums */
+/* 5. 노드 핸들 (앵커 포인트) - Dynamic Sizing with Expanded Hit Area */
 .react-flow__handle {
-  /* Dynamic sizing: 줌 아웃 시 화면상 크기 유지 */
-  width: calc(10px * var(--zoom-scale, 1)) !important;
-  height: calc(10px * var(--zoom-scale, 1)) !important;
-  /* 최소 크기 보장 - 절대 사라지지 않게 */
-  min-width: 6px !important;
-  min-height: 6px !important;
+  /* 🔥 Fix: 히트 영역 확대 (클릭 범위를 모서리 면으로 확장) */
+  width: calc(50px * var(--zoom-scale, 1)) !important;
+  height: calc(50px * var(--zoom-scale, 1)) !important;
+  /* 최소 크기 보장 */
+  min-width: 30px !important;
+  min-height: 30px !important;
 
-  background: #3182F6 !important; /* TDS Blue 500 */
-  border: calc(2px * var(--zoom-scale, 1)) solid #fff !important;
+  background: transparent !important; /* 🔥 Fix: 투명 배경 (넓은 영역) */
+  border: none !important; /* 🔥 Fix: 테두리 제거 */
   border-radius: 50%;
-  /* 크기가 커져도 센터가 맞도록 transform 활용 */
   transform: translate(-50%, -50%);
-  z-index: 99999 !important; /* 무조건 최상위 - 이미지에 가려지지 않게 */
+  z-index: 99999 !important;
   opacity: 0; /* 평소엔 숨김 */
   transition: opacity 0.1s;
+  cursor: crosshair !important;
+}
+
+/* 🔥 Fix: 시각적 표시는 ::after로 작게 표현 */
+.react-flow__handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: #3182F6; /* TDS Blue 500 */
+  border: 2px solid #fff;
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 /* 연결 시도 중이거나 노드 선택 시 핸들 보이기 */
 .react-flow__node:hover .react-flow__handle,
-.react-flow__node.selected .react-flow__handle {
+.react-flow__node.selected .react-flow__handle,
+.react-flow__node.connection-target .react-flow__handle {
+  opacity: 1;
+}
+
+/* 🔥 Fix: 호버 시 ::after도 보이도록 */
+.react-flow__node:hover .react-flow__handle::after,
+.react-flow__node.selected .react-flow__handle::after,
+.react-flow__node.connection-target .react-flow__handle::after {
   opacity: 1;
 }
 

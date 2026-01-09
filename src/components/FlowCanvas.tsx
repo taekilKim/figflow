@@ -43,17 +43,17 @@ const nodeTypes = {
   frameNode: FrameNode,
 }
 
-// 🔥 [Pivot] Safe Area Layout Constants (UI 간격 확대)
-// GUTTER: 16 → 40px (320px total)
+// 🔥 [Fix] Safe Area Layout Constants (미니맵 추가 여백)
+// GUTTER: 40 → 60px (340px total, 패널에서 더 띄우기)
 const LAYOUT = {
   LEFT_PANEL_WIDTH: 280,
   RIGHT_PANEL_WIDTH: 280,
-  GUTTER: 40, // 🔥 Pivot: 16 → 40px (추가 16px 확보)
+  GUTTER: 60, // 🔥 Fix: 40 → 60px (추가 20px 확보)
   get CONTROLS_LEFT() {
-    return this.LEFT_PANEL_WIDTH + this.GUTTER  // 320px
+    return this.LEFT_PANEL_WIDTH + this.GUTTER  // 340px
   },
   get MINIMAP_RIGHT() {
-    return this.RIGHT_PANEL_WIDTH + this.GUTTER  // 320px
+    return this.RIGHT_PANEL_WIDTH + this.GUTTER  // 340px
   },
 }
 
@@ -123,6 +123,8 @@ const initialEdges: Edge<FlowEdgeData>[] = [
     source: '1',
     target: '2',
     label: '로그인 성공',
+    type: 'step',  // 🔥 Fix: type 명시
+    markerEnd: 'url(#tds-arrow)',  // 🔥 Fix: 화살표 명시
     data: { sourceType: 'manual' },
   },
   {
@@ -130,6 +132,8 @@ const initialEdges: Edge<FlowEdgeData>[] = [
     source: '2',
     target: '3',
     label: '프로필 클릭',
+    type: 'step',  // 🔥 Fix: type 명시
+    markerEnd: 'url(#tds-arrow)',  // 🔥 Fix: 화살표 명시
     data: { sourceType: 'manual' },
   },
 ]
@@ -354,7 +358,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
   const loadedEdges = loadedProject?.edges?.map((edge) => ({
     ...edge,
     label: edge.label,
-    type: 'smoothstep',
+    type: 'step', // 🔥 Fix: 쿠키 삭제 시에도 step 타입 유지
     style: getEdgeStyle(edge.data),
     markerEnd: getMarkerEnd(edge.data),
     markerStart: getMarkerStart(edge.data),
@@ -592,6 +596,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
       const newEdge: Edge<FlowEdgeData> = {
         ...connection,
         id: `e${connection.source}-${connection.target}`,
+        type: 'step',  // 🔥 Fix: type 명시
+        markerEnd: 'url(#tds-arrow)',  // 🔥 Fix: 화살표 명시
         data: { sourceType: 'manual' },
       }
       setEdges((eds) => addEdge(newEdge, eds))
@@ -686,6 +692,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             target: targetNodeId,
             sourceHandle,
             targetHandle,
+            type: 'step',  // 🔥 Fix: type 명시
+            markerEnd: 'url(#tds-arrow)',  // 🔥 Fix: 화살표 명시
             data: { sourceType: 'manual' },
           }
           setEdges((eds) => addEdge(newEdge, eds))
@@ -829,13 +837,27 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     }
   }, [nodes, edges, setNodes, setEdges, onNodeSelect, onEdgeSelect])
 
-  // 줌 단축키: Ctrl+1 (100%), Ctrl+2 (선택 요소 핏)
+  // 🔥 [Fix] 줌 단축키: Ctrl+1 (토글: 100% ↔ 전체화면), Ctrl+2 (선택 요소 핏)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.metaKey) {
         if (event.key === '1') {
           event.preventDefault()
-          zoomTo(1, { duration: 800 }) // 100% 줌
+          // 🔥 토글 로직: 현재 줌이 1(100%)이면 전체화면, 아니면 100%로
+          const viewport = document.querySelector('.react-flow__viewport')
+          if (viewport) {
+            const transform = window.getComputedStyle(viewport).transform
+            const matrix = new DOMMatrix(transform)
+            const zoom = matrix.a // scale value
+
+            if (Math.abs(zoom - 1) < 0.01) {
+              // 현재 100%이면 → 전체화면
+              fitView({ padding: 0.2, duration: 800 })
+            } else {
+              // 현재 100%가 아니면 → 100%로
+              zoomTo(1, { duration: 800 })
+            }
+          }
         }
         if (event.key === '2') {
           event.preventDefault()
@@ -1236,7 +1258,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         {/* 🔥 [Pivot] TDSControls with 320px alignment */}
         <TDSControls style={{ left: LAYOUT.CONTROLS_LEFT, bottom: 16 }} />
 
-        {/* 🔥 [Pivot] MiniMap with 320px alignment */}
+        {/* 🔥 [Fix] MiniMap with 340px alignment + ZoomIndicator inside */}
         <MiniMap
           nodeColor="#e2e2e2"
           maskColor="rgba(240, 240, 240, 0.6)"
@@ -1247,17 +1269,17 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             position: 'absolute',
             height: 120,
             width: 200,
-            bottom: 16,
-            right: LAYOUT.MINIMAP_RIGHT,  // 320px
+            bottom: 20,  // 🔥 Fix: 16 → 20px
+            right: LAYOUT.MINIMAP_RIGHT,  // 340px
             margin: 0,
             border: '1px solid #E5E8EB',
             borderRadius: '12px',
-            overflow: 'hidden',
+            overflow: 'visible',  // 🔥 Fix: hidden → visible (ZoomIndicator 보이게)
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
             zIndex: 5,
           }}
         >
-          {/* ZoomIndicator as MiniMap child */}
+          {/* 🔥 Fix: ZoomIndicator as MiniMap direct child (top: 8, right: 8) */}
           <div
             style={{
               position: 'absolute',

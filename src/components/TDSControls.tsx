@@ -29,12 +29,25 @@ export default function TDSControls({ style }: TDSControlsProps) {
     zoomOut({ duration: 400 })
   }
 
-  // 🔥 [System Bible v2.0] Ctrl+1과 동일한 동작: 100% 줌
+  // 🔥 [Fix] Ctrl+1 토글: 100% ↔ 전체화면
   const handleFitView = () => {
-    zoomTo(1, { duration: 800 })
+    const viewport = document.querySelector('.react-flow__viewport')
+    if (viewport) {
+      const transform = window.getComputedStyle(viewport).transform
+      const matrix = new DOMMatrix(transform)
+      const zoom = matrix.a // scale value
+
+      if (Math.abs(zoom - 1) < 0.01) {
+        // 현재 100%이면 → 전체화면
+        fitView({ padding: 0.2, duration: 800 })
+      } else {
+        // 현재 100%가 아니면 → 100%로
+        zoomTo(1, { duration: 800 })
+      }
+    }
   }
 
-  // 🔥 [System Bible v2.0] Ctrl+2와 동일한 동작: 선택된 노드들로 핏
+  // 🔥 Ctrl+2와 동일한 동작: 선택된 노드들로 핏
   const handleFitSelection = () => {
     const selectedNodes = getNodes().filter((n) => n.selected)
     if (selectedNodes.length > 0) {
@@ -69,13 +82,13 @@ export default function TDSControls({ style }: TDSControlsProps) {
 
         <div className="tds-control-divider" />
 
-        {/* Fit View (전체 화면) */}
+        {/* Fit View (100% ↔ 전체화면 토글) */}
         <button
           className="tds-control-button"
           onClick={handleFitView}
           data-tooltip-id="tds-tooltip"
-          data-tooltip-content="전체 보기 (Ctrl+1 / Cmd+1)"
-          aria-label="전체 보기"
+          data-tooltip-content="100% / 전체화면 토글 (Ctrl+1 / Cmd+1)"
+          aria-label="100% / 전체화면 토글"
         >
           <FrameCorners size={20} weight="bold" />
         </button>
