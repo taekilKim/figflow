@@ -44,14 +44,6 @@ const nodeTypes = {
   frameNode: FrameNode,
 }
 
-// 🔥 [Final] TDS Marker Object (NO url(#id) references)
-const TDS_MARKER = {
-  type: MarkerType.ArrowClosed,
-  width: 20,
-  height: 20,
-  color: '#555555', // 🔥 하드코딩된 색상
-}
-
 interface FlowCanvasProps {
   onNodeSelect: (nodeId: string | null) => void
   onEdgeSelect: (edgeId: string | null) => void
@@ -119,7 +111,12 @@ const initialEdges: Edge<FlowEdgeData>[] = [
     target: '2',
     label: '로그인 성공',
     type: 'step',
-    markerEnd: TDS_MARKER,  // 🔥 Final: 객체 직접 주입
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      width: 20,
+      height: 20,
+      color: '#555555',
+    },
     data: { sourceType: 'manual' },
   },
   {
@@ -128,7 +125,12 @@ const initialEdges: Edge<FlowEdgeData>[] = [
     target: '3',
     label: '프로필 클릭',
     type: 'step',
-    markerEnd: TDS_MARKER,  // 🔥 Final: 객체 직접 주입
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      width: 20,
+      height: 20,
+      color: '#555555',
+    },
     data: { sourceType: 'manual' },
   },
 ]
@@ -331,32 +333,46 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     return style
   }
 
-  // 🔥 [Final] Marker 객체 반환 (NO url references)
-  const getMarkerEnd = (edgeData?: FlowEdgeData) => {
+  // 🔥 [Fix 1] 마커 색상을 엣지 색상과 동일하게 적용
+  const getMarkerEnd = (edgeData?: FlowEdgeData, strokeColor?: string) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'forward' || arrowType === 'both') {
-      return TDS_MARKER
+      return {
+        type: MarkerType.ArrowClosed,
+        width: 20,
+        height: 20,
+        color: strokeColor || edgeData?.color || '#555555',
+      }
     }
     return undefined
   }
 
-  const getMarkerStart = (edgeData?: FlowEdgeData) => {
+  const getMarkerStart = (edgeData?: FlowEdgeData, strokeColor?: string) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'backward' || arrowType === 'both') {
-      return TDS_MARKER
+      return {
+        type: MarkerType.ArrowClosed,
+        width: 20,
+        height: 20,
+        color: strokeColor || edgeData?.color || '#555555',
+      }
     }
     return undefined
   }
 
   // 엣지 로드 시 label 및 스타일 속성 설정
-  const loadedEdges = loadedProject?.edges?.map((edge) => ({
-    ...edge,
-    label: edge.label,
-    type: 'step', // 🔥 Fix: 쿠키 삭제 시에도 step 타입 유지
-    style: getEdgeStyle(edge.data),
-    markerEnd: getMarkerEnd(edge.data),
-    markerStart: getMarkerStart(edge.data),
-  })) || initialEdges
+  const loadedEdges = loadedProject?.edges?.map((edge) => {
+    const style = getEdgeStyle(edge.data)
+    const strokeColor = style.stroke as string | undefined
+    return {
+      ...edge,
+      label: edge.label,
+      type: 'step',
+      style,
+      markerEnd: getMarkerEnd(edge.data, strokeColor),
+      markerStart: getMarkerStart(edge.data, strokeColor),
+    }
+  }) || initialEdges
 
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge<FlowEdgeData>>(
     loadedEdges
@@ -591,7 +607,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         ...connection,
         id: `e${connection.source}-${connection.target}`,
         type: 'step',
-        markerEnd: TDS_MARKER,  // 🔥 Final: 객체 직접 주입
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 20,
+          height: 20,
+          color: '#555555',
+        },
         data: { sourceType: 'manual' },
       }
       setEdges((eds) => addEdge(newEdge, eds))
@@ -687,7 +708,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             sourceHandle,
             targetHandle,
             type: 'step',
-            markerEnd: TDS_MARKER,  // 🔥 Final: 객체 직접 주입
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              width: 20,
+              height: 20,
+              color: '#555555',
+            },
             data: { sourceType: 'manual' },
           }
           setEdges((eds) => addEdge(newEdge, eds))
@@ -1169,14 +1195,18 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           ...node,
           className: connectingNodeId.current && connectingNodeId.current !== node.id ? 'connection-target' : '',
         }))}
-        edges={edges.map((edge) => ({
-          ...edge,
-          type: 'step', // 🔥 Pivot: 'smart' → 'step'
-          updatable: 'target',
-          style: getEdgeStyle(edge.data),
-          markerEnd: getMarkerEnd(edge.data),
-          markerStart: getMarkerStart(edge.data),
-        } as Edge<FlowEdgeData>))}
+        edges={edges.map((edge) => {
+          const style = getEdgeStyle(edge.data)
+          const strokeColor = style.stroke as string | undefined
+          return {
+            ...edge,
+            type: 'step',
+            updatable: 'target',
+            style,
+            markerEnd: getMarkerEnd(edge.data, strokeColor),
+            markerStart: getMarkerStart(edge.data, strokeColor),
+          } as Edge<FlowEdgeData>
+        })}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -1195,7 +1225,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           animated: false,
           focusable: true,
           style: { strokeWidth: 2, stroke: '#555555' },
-          markerEnd: TDS_MARKER,  // 🔥 Final: 객체 직접 주입
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 20,
+            height: 20,
+            color: '#555555',
+          },
           data: {
             sourceType: 'manual' as const,
           }
@@ -1216,18 +1251,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           cursor: isPanning ? 'grab' : 'default',
         }}
       >
-        {/* 🔥 [Final] SVG defs 제거 - MarkerType 객체 사용으로 대체 */}
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
 
-        {/* 🔥 [Final] ZoomIndicator 독립 배치 (MiniMap 밖으로) */}
-        <div style={{ position: 'absolute', top: 16, right: 320, zIndex: 10 }}>
-          <ZoomIndicator />
-        </div>
+        {/* 🔥 [Fix 6, 7] TDSControls: left 312px, bottom 16px */}
+        <TDSControls style={{ left: 312, bottom: 16 }} />
 
-        {/* 🔥 [Final] TDSControls with hardcoded 320px */}
-        <TDSControls style={{ left: 320, bottom: 20 }} />
-
-        {/* 🔥 [Final] MiniMap with hardcoded 320px */}
+        {/* 🔥 [Fix 3, 4, 5] MiniMap: right 352px, bottom 16px, ZoomIndicator 내부 배치 */}
         <MiniMap
           nodeColor="#e2e2e2"
           maskColor="rgba(240, 240, 240, 0.6)"
@@ -1238,15 +1267,21 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             position: 'absolute',
             height: 120,
             width: 200,
-            bottom: 20,
-            right: 320,  // 🔥 Final: 하드코딩
+            bottom: 16,
+            right: 352,
             margin: 0,
             border: '1px solid #E5E8EB',
             borderRadius: '12px',
+            overflow: 'visible',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
             zIndex: 5,
           }}
-        />
+        >
+          {/* 🔥 [Fix 3] ZoomIndicator를 MiniMap 안으로 이동 */}
+          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}>
+            <ZoomIndicator />
+          </div>
+        </MiniMap>
         <AlignmentToolbar selectedNodeIds={selectedNodeIds} />
       </ReactFlow>
       </FlowWrapper>
