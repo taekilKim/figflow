@@ -20,8 +20,8 @@ import {
   useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-// 🔥 CustomSmartEdge: Path Patching 기법으로 갭 제거 + Breakout 구현
-import CustomSmartEdge from './CustomSmartEdge'
+// 🔥 Pivot: Smart Edge 제거, Native StepEdge 복귀
+import TDSStepEdge from './TDSStepEdge'
 import TDSControls from './TDSControls'
 import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
@@ -33,9 +33,9 @@ import { getFigmaImages, getFigmaToken } from '../utils/figma'
 import { uniqueEdges } from '../utils/edgeUtils'
 import '../styles/FlowCanvas.css'
 
-// 🔥 CustomSmartEdge: Path Patching으로 Touch + Breakout + Avoidance 구현
+// 🔥 Pivot: Native Step Edge 사용 (Smart Routing 제거)
 const edgeTypes = {
-  smart: CustomSmartEdge,
+  step: TDSStepEdge,
 }
 
 // 커스텀 노드 타입 등록
@@ -43,17 +43,17 @@ const nodeTypes = {
   frameNode: FrameNode,
 }
 
-// 🔥 [System Bible v2.0] Safe Area Layout Constants
-// 사이드 패널 너비 기준으로 안전 영역 계산 (16px 간격)
+// 🔥 [Pivot] Safe Area Layout Constants (UI 간격 확대)
+// GUTTER: 16 → 40px (320px total)
 const LAYOUT = {
   LEFT_PANEL_WIDTH: 280,
   RIGHT_PANEL_WIDTH: 280,
-  GUTTER: 16, // 🔥 v2.0: 24 → 16px
+  GUTTER: 40, // 🔥 Pivot: 16 → 40px (추가 16px 확보)
   get CONTROLS_LEFT() {
-    return this.LEFT_PANEL_WIDTH + this.GUTTER  // 296px
+    return this.LEFT_PANEL_WIDTH + this.GUTTER  // 320px
   },
   get MINIMAP_RIGHT() {
-    return this.RIGHT_PANEL_WIDTH + this.GUTTER  // 296px
+    return this.RIGHT_PANEL_WIDTH + this.GUTTER  // 320px
   },
 }
 
@@ -697,37 +697,27 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     [nodes, setEdges, getClosestHandles]
   )
 
-  // 🔥 [Architectural Fix] Strict Singleton Strategy (3-Step Logic)
-  // Step 1 (Purge): 기존 엣지 완전 제거
-  // Step 2 (Construct): 새 엣지 생성 (메타데이터 보존)
-  // Step 3 (Guard): uniqueEdges로 중복 방지
+  // 🔥 [Pivot Fix] Reconnect Bug (역전 현상 수정)
+  // newConnection은 항상 '최종적인' source와 target을 담고 있음
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
       setEdges((els) => {
-        // Step 1: Purge - 기존 엣지를 ID 기준으로 완전히 제거
-        const purged = els.filter((e) => e.id !== oldEdge.id)
+        // Step 1: 기존 엣지 제거
+        const filtered = els.filter((e) => e.id !== oldEdge.id)
 
-        // Step 2: Construct - 새 엣지 객체 생성 (oldEdge의 메타데이터 보존)
-        const reconstructed: Edge<FlowEdgeData> = {
+        // Step 2: 새 엣지 생성 (newConnection 신뢰)
+        const newEdge: Edge<FlowEdgeData> = {
           ...oldEdge,
+          id: `e${newConnection.source}-${newConnection.target}`, // 🔥 ID 갱신
           source: newConnection.source,
           target: newConnection.target,
           sourceHandle: newConnection.sourceHandle,
           targetHandle: newConnection.targetHandle,
-          // 🔒 Critical: data.smartEdge 설정 유지 (nodePadding: 80 유실 방지)
-          data: oldEdge.data || {
-            sourceType: 'manual' as const,
-            smartEdge: {
-              nodePadding: 80,
-              gridRatio: 10,
-              lessCorners: true,
-            }
-          },
+          data: { ...oldEdge.data }, // 데이터 보존
         } as Edge<FlowEdgeData>
 
-        // Step 3: Guard - uniqueEdges 함수로 중복 연결 최종 차단
-        const candidateEdges = [...purged, reconstructed]
-        return uniqueEdges(candidateEdges)
+        // Step 3: 중복 방지 (uniqueEdges 가드 유지)
+        return uniqueEdges([...filtered, newEdge])
       })
     },
     [setEdges]
@@ -1165,12 +1155,11 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         }))}
         edges={edges.map((edge) => ({
           ...edge,
-          type: 'smart', // 🔥 안전장치 3: 모든 엣지를 'smart' 타입으로 강제
+          type: 'step', // 🔥 Pivot: 'smart' → 'step'
           updatable: 'target',
           style: getEdgeStyle(edge.data),
           markerEnd: getMarkerEnd(edge.data),
           markerStart: getMarkerStart(edge.data),
-          // 기존 data 유지
         } as Edge<FlowEdgeData>))}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -1184,21 +1173,15 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        connectionLineType={ConnectionLineType.Step} // 🔥 안전장치 2: 드래그 중 직각 강제
+        connectionLineType={ConnectionLineType.Step} // 🔥 드래그 중 직각 강제
         defaultEdgeOptions={{
-          type: 'smart', // 🔥 SmartStepEdge 사용
+          type: 'step', // 🔥 Pivot: 'smart' → 'step'
           animated: false,
           focusable: true,
           style: { strokeWidth: 2, stroke: '#555555' },
           markerEnd: 'url(#tds-arrow)', // 🔥 Hard-defined marker reference
-          // 🔥 CustomSmartEdge Config (Touch + Breakout + Avoidance)
           data: {
-            // CustomSmartEdge 설정
-            smartEdge: {
-              nodePadding: 80,    // 80px = Breakout 직선 구간 + 장애물 회피 거리
-              gridRatio: 10,      // 경로 정밀도
-              lessCorners: true,  // 불필요한 꺾임 최소화 (L자 선호)
-            }
+            sourceType: 'manual' as const,
           }
         }}
         edgesReconnectable={true}
@@ -1217,7 +1200,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           cursor: isPanning ? 'grab' : 'default',
         }}
       >
-        {/* 🔥 [Architecture] Hard-defined SVG Marker (CSS 상속 문제 해결) */}
+        {/* 🔥 [Pivot] Hard-defined SVG Marker (Native Edge에서도 동일하게 사용) */}
         <svg style={{ position: 'absolute', width: 0, height: 0 }}>
           <defs>
             {/* TDS Arrow Marker - 기본 화살표 (#555555) */}
@@ -1250,10 +1233,10 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
 
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
 
-        {/* 🔥 [System Bible v2.0] TDSControls with 16px alignment */}
+        {/* 🔥 [Pivot] TDSControls with 320px alignment */}
         <TDSControls style={{ left: LAYOUT.CONTROLS_LEFT, bottom: 16 }} />
 
-        {/* 🔥 [System Bible v2.0] MiniMap with ZoomIndicator as child */}
+        {/* 🔥 [Pivot] MiniMap with 320px alignment */}
         <MiniMap
           nodeColor="#e2e2e2"
           maskColor="rgba(240, 240, 240, 0.6)"
@@ -1264,9 +1247,9 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             position: 'absolute',
             height: 120,
             width: 200,
-            bottom: 16,  // 🔥 v2.0: 20 → 16px
-            right: LAYOUT.MINIMAP_RIGHT,  // 296px
-            margin: 0,  // 🔥 v2.0: 마진 0 강제
+            bottom: 16,
+            right: LAYOUT.MINIMAP_RIGHT,  // 320px
+            margin: 0,
             border: '1px solid #E5E8EB',
             borderRadius: '12px',
             overflow: 'hidden',
@@ -1274,7 +1257,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             zIndex: 5,
           }}
         >
-          {/* 🔥 v2.0: ZoomIndicator를 MiniMap의 직계 자식으로 이동 */}
+          {/* ZoomIndicator as MiniMap child */}
           <div
             style={{
               position: 'absolute',
