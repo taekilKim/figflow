@@ -692,10 +692,35 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     [nodes, setEdges, getClosestHandles]
   )
 
-  // 엣지 재연결 - React Flow의 reconnectEdge 헬퍼 사용
+  // 🔥 [Ultimate Fix] Manual Reconnect Logic (No Library Helpers)
+  // reconnectEdge 헬퍼를 신뢰하지 않고, 직접 필터링 + 생성 로직 구현
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
-      setEdges((els) => reconnectEdge(oldEdge, newConnection, els) as Edge<FlowEdgeData>[])
+      setEdges((els) => {
+        // 1. 기존 엣지를 완전히 제거
+        const filtered = els.filter((e) => e.id !== oldEdge.id)
+
+        // 2. 새 엣지 생성 (기존 속성 모두 보존 - 특히 data.smartEdge!)
+        const newEdge: Edge<FlowEdgeData> = {
+          ...oldEdge,
+          source: newConnection.source,
+          target: newConnection.target,
+          sourceHandle: newConnection.sourceHandle,
+          targetHandle: newConnection.targetHandle,
+          // data 속성 완전히 보존 (smartEdge 설정 유실 방지)
+          data: oldEdge.data || {
+            sourceType: 'manual' as const,
+            smartEdge: {
+              nodePadding: 80,
+              gridRatio: 10,
+              lessCorners: true,
+            }
+          },
+        } as Edge<FlowEdgeData>
+
+        // 3. 제거 후 새 엣지 추가
+        return [...filtered, newEdge]
+      })
     },
     [setEdges]
   )
@@ -1191,23 +1216,31 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
         <Controls style={{ left: 310, bottom: 20 }} />
-        <div style={{ position: 'relative' }}>
-          <MiniMap
-            nodeColor="#e2e2e2"
-            maskColor="rgba(240, 240, 240, 0.6)"
-            nodeStrokeWidth={3}
-            zoomable
-            pannable
-            style={{ height: 120, bottom: 16, right: 24, marginRight: 280 }}
-          />
-          <div style={{
+        {/* 🔥 [Fix] MiniMap with explicit absolute positioning */}
+        <MiniMap
+          nodeColor="#e2e2e2"
+          maskColor="rgba(240, 240, 240, 0.6)"
+          nodeStrokeWidth={3}
+          zoomable
+          pannable
+          style={{
             position: 'absolute',
-            top: 24,
-            right: 304 + 8,
-            zIndex: 10
-          }}>
-            <ZoomIndicator />
-          </div>
+            height: 120,
+            width: 200,
+            bottom: 20,
+            right: 320, // 우측 패널(280) + 여백(40)
+            zIndex: 5,
+            margin: 0,
+          }}
+        />
+        {/* ZoomIndicator positioned over MiniMap */}
+        <div style={{
+          position: 'absolute',
+          bottom: 150, // MiniMap 위에 위치
+          right: 330,
+          zIndex: 10
+        }}>
+          <ZoomIndicator />
         </div>
         <AlignmentToolbar selectedNodeIds={selectedNodeIds} />
       </ReactFlow>
