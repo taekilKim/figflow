@@ -1,0 +1,65 @@
+/* TDSControls: Atomic Custom Controls */
+/* TDS 디자인 시스템을 따르는 커스텀 컨트롤 패널 */
+
+.tds-controls {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12),
+              0 1px 3px rgba(0, 0, 0, 0.08);
+  z-index: 5;
+  transition: all 0.2s ease;
+}
+
+.tds-controls:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16),
+              0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tds-control-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: #4E5968;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+  padding: 0;
+}
+
+.tds-control-button:hover {
+  background: #F2F4F6;
+  color: #191F28;
+  transform: scale(1.05);
+}
+
+.tds-control-button:active {
+  background: #E5E8EB;
+  transform: scale(0.98);
+}
+
+.tds-control-button:focus-visible {
+  outline: 2px solid #3182F6;
+  outline-offset: 2px;
+}
+
+.tds-control-divider {
+  height: 1px;
+  background: #E5E8EB;
+  margin: 4px 0;
+}
+
+/* TDS Tooltip Override (react-tooltip 스타일 보완) */
+.tds-tooltip {
+  font-family: 'Pretendard Variable', Pretendard, sans-serif !important;
+  letter-spacing: 0 !important;
+}
