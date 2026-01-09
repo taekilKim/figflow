@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState, useRef } from 'react'
 import {
   ReactFlow,
   Background,
-  Controls,
   MiniMap,
   Node,
   Edge,
@@ -15,7 +14,6 @@ import {
   ConnectionLineType,
   OnConnectStart,
   OnConnectEnd,
-  MarkerType,
   SelectionMode,
   useViewport,
   useOnSelectionChange,
@@ -24,6 +22,7 @@ import {
 import '@xyflow/react/dist/style.css'
 // 🔥 CustomSmartEdge: Path Patching 기법으로 갭 제거 + Breakout 구현
 import CustomSmartEdge from './CustomSmartEdge'
+import TDSControls from './TDSControls'
 import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
@@ -31,6 +30,7 @@ import FigmaFileImportDialog from './FigmaFileImportDialog'
 import { FlowNodeData, FlowEdgeData } from '../types'
 import { saveProject, loadProject } from '../utils/storage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
+import { uniqueEdges } from '../utils/edgeUtils'
 import '../styles/FlowCanvas.css'
 
 // 🔥 CustomSmartEdge: Path Patching으로 Touch + Breakout + Avoidance 구현
@@ -41,6 +41,20 @@ const edgeTypes = {
 // 커스텀 노드 타입 등록
 const nodeTypes = {
   frameNode: FrameNode,
+}
+
+// 🔥 [Architecture] Safe Area Layout Constants
+// 사이드 패널 너비 기준으로 안전 영역 계산
+const LAYOUT = {
+  LEFT_PANEL_WIDTH: 280,
+  RIGHT_PANEL_WIDTH: 280,
+  GUTTER: 24,
+  get CONTROLS_LEFT() {
+    return this.LEFT_PANEL_WIDTH + this.GUTTER
+  },
+  get MINIMAP_RIGHT() {
+    return this.RIGHT_PANEL_WIDTH + this.GUTTER
+  },
 }
 
 interface FlowCanvasProps {
@@ -318,16 +332,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     return style
   }
 
-  // 화살표 마커 설정 - React Flow 내장 MarkerType 사용
+  // 🔥 [Architecture] Hard-defined Marker References (url(#id) 방식)
+  // CSS 상속 문제를 피하기 위해 SVG <defs>에서 정의한 마커를 직접 참조
   const getMarkerEnd = (edgeData?: FlowEdgeData) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'forward' || arrowType === 'both') {
-      return {
-        type: MarkerType.Arrow,
-        width: 20,
-        height: 20,
-        color: edgeData?.color || '#555555',
-      }
+      return 'url(#tds-arrow)'
     }
     return undefined
   }
@@ -335,12 +345,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
   const getMarkerStart = (edgeData?: FlowEdgeData) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'backward' || arrowType === 'both') {
-      return {
-        type: MarkerType.Arrow,
-        width: 20,
-        height: 20,
-        color: edgeData?.color || '#555555',
-      }
+      return 'url(#tds-arrow-reverse)'
     }
     return undefined
   }
@@ -692,22 +697,24 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     [nodes, setEdges, getClosestHandles]
   )
 
-  // 🔥 [Ultimate Fix] Manual Reconnect Logic (No Library Helpers)
-  // reconnectEdge 헬퍼를 신뢰하지 않고, 직접 필터링 + 생성 로직 구현
+  // 🔥 [Architectural Fix] Strict Singleton Strategy (3-Step Logic)
+  // Step 1 (Purge): 기존 엣지 완전 제거
+  // Step 2 (Construct): 새 엣지 생성 (메타데이터 보존)
+  // Step 3 (Guard): uniqueEdges로 중복 방지
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
       setEdges((els) => {
-        // 1. 기존 엣지를 완전히 제거
-        const filtered = els.filter((e) => e.id !== oldEdge.id)
+        // Step 1: Purge - 기존 엣지를 ID 기준으로 완전히 제거
+        const purged = els.filter((e) => e.id !== oldEdge.id)
 
-        // 2. 새 엣지 생성 (기존 속성 모두 보존 - 특히 data.smartEdge!)
-        const newEdge: Edge<FlowEdgeData> = {
+        // Step 2: Construct - 새 엣지 객체 생성 (oldEdge의 메타데이터 보존)
+        const reconstructed: Edge<FlowEdgeData> = {
           ...oldEdge,
           source: newConnection.source,
           target: newConnection.target,
           sourceHandle: newConnection.sourceHandle,
           targetHandle: newConnection.targetHandle,
-          // data 속성 완전히 보존 (smartEdge 설정 유실 방지)
+          // 🔒 Critical: data.smartEdge 설정 유지 (nodePadding: 80 유실 방지)
           data: oldEdge.data || {
             sourceType: 'manual' as const,
             smartEdge: {
@@ -718,8 +725,9 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           },
         } as Edge<FlowEdgeData>
 
-        // 3. 제거 후 새 엣지 추가
-        return [...filtered, newEdge]
+        // Step 3: Guard - uniqueEdges 함수로 중복 연결 최종 차단
+        const candidateEdges = [...purged, reconstructed]
+        return uniqueEdges(candidateEdges)
       })
     },
     [setEdges]
@@ -1182,12 +1190,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           animated: false,
           focusable: true,
           style: { strokeWidth: 2, stroke: '#555555' },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#555555',
-            width: 20, // 🔥 화살표 크기 축소 (줌 아웃 시 부담 감소)
-            height: 20,
-          },
+          markerEnd: 'url(#tds-arrow)', // 🔥 Hard-defined marker reference
           // 🔥 CustomSmartEdge Config (Touch + Breakout + Avoidance)
           data: {
             // CustomSmartEdge 설정
@@ -1214,33 +1217,78 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           cursor: isPanning ? 'grab' : 'default',
         }}
       >
+        {/* 🔥 [Architecture] Hard-defined SVG Marker (CSS 상속 문제 해결) */}
+        <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+          <defs>
+            {/* TDS Arrow Marker - 기본 화살표 (#555555) */}
+            <marker
+              id="tds-arrow"
+              viewBox="0 0 10 10"
+              refX="5"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
+              orient="auto-start-reverse"
+            >
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#555555" />
+            </marker>
+
+            {/* TDS Arrow Marker - 역방향 화살표 (양방향 엣지용) */}
+            <marker
+              id="tds-arrow-reverse"
+              viewBox="0 0 10 10"
+              refX="5"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
+              orient="auto-start-reverse"
+            >
+              <path d="M 10 0 L 0 5 L 10 10 z" fill="#555555" />
+            </marker>
+          </defs>
+        </svg>
+
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-        <Controls style={{ left: 310, bottom: 20 }} />
-        {/* 🔥 [Fix] MiniMap with explicit absolute positioning */}
-        <MiniMap
-          nodeColor="#e2e2e2"
-          maskColor="rgba(240, 240, 240, 0.6)"
-          nodeStrokeWidth={3}
-          zoomable
-          pannable
+
+        {/* 🔥 [Architecture] TDSControls with Safe Area Layout */}
+        <TDSControls style={{ left: LAYOUT.CONTROLS_LEFT, bottom: 20 }} />
+
+        {/* 🔥 [Architecture] MiniMap with ZoomIndicator Integration */}
+        <div
           style={{
             position: 'absolute',
-            height: 120,
-            width: 200,
             bottom: 20,
-            right: 320, // 우측 패널(280) + 여백(40)
+            right: LAYOUT.MINIMAP_RIGHT,
             zIndex: 5,
-            margin: 0,
           }}
-        />
-        {/* ZoomIndicator positioned over MiniMap */}
-        <div style={{
-          position: 'absolute',
-          bottom: 150, // MiniMap 위에 위치
-          right: 330,
-          zIndex: 10
-        }}>
-          <ZoomIndicator />
+        >
+          {/* MiniMap Container */}
+          <MiniMap
+            nodeColor="#e2e2e2"
+            maskColor="rgba(240, 240, 240, 0.6)"
+            nodeStrokeWidth={3}
+            zoomable
+            pannable
+            style={{
+              height: 120,
+              width: 200,
+              border: '1px solid #E5E8EB',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+            }}
+          />
+          {/* ZoomIndicator Overlay (MiniMap 우상단) */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 10,
+            }}
+          >
+            <ZoomIndicator />
+          </div>
         </div>
         <AlignmentToolbar selectedNodeIds={selectedNodeIds} />
       </ReactFlow>
