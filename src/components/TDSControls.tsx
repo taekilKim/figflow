@@ -19,7 +19,7 @@ interface TDSControlsProps {
 }
 
 export default function TDSControls({ style }: TDSControlsProps) {
-  const { zoomIn, zoomOut, fitView } = useReactFlow()
+  const { zoomIn, zoomOut, fitView, zoomTo, getNodes } = useReactFlow()
 
   const handleZoomIn = () => {
     zoomIn({ duration: 400 })
@@ -29,14 +29,17 @@ export default function TDSControls({ style }: TDSControlsProps) {
     zoomOut({ duration: 400 })
   }
 
+  // 🔥 [System Bible v2.0] Ctrl+1과 동일한 동작: 100% 줌
   const handleFitView = () => {
-    fitView({ padding: 0.2, duration: 800 })
+    zoomTo(1, { duration: 800 })
   }
 
+  // 🔥 [System Bible v2.0] Ctrl+2와 동일한 동작: 선택된 노드들로 핏
   const handleFitSelection = () => {
-    // Ctrl+2와 동일한 동작 (선택된 노드들로 핏)
-    // 이 기능은 상위 컴포넌트에서 전달받아야 할 수도 있음
-    fitView({ padding: 0.2, duration: 800 })
+    const selectedNodes = getNodes().filter((n) => n.selected)
+    if (selectedNodes.length > 0) {
+      fitView({ nodes: selectedNodes, padding: 0.2, duration: 800 })
+    }
   }
 
   return (
@@ -71,7 +74,7 @@ export default function TDSControls({ style }: TDSControlsProps) {
           className="tds-control-button"
           onClick={handleFitView}
           data-tooltip-id="tds-tooltip"
-          data-tooltip-content="전체 보기 (Fit View)"
+          data-tooltip-content="전체 보기 (Ctrl+1 / Cmd+1)"
           aria-label="전체 보기"
         >
           <FrameCorners size={20} weight="bold" />
@@ -82,8 +85,8 @@ export default function TDSControls({ style }: TDSControlsProps) {
           className="tds-control-button"
           onClick={handleFitSelection}
           data-tooltip-id="tds-tooltip"
-          data-tooltip-content="선택 요소 맞추기 (Ctrl+2)"
-          aria-label="선택 요소 맞추기"
+          data-tooltip-content="선택 요소 보기 (Ctrl+2 / Cmd+2)"
+          aria-label="선택 요소 보기"
         >
           <Selection size={20} weight="bold" />
         </button>
