@@ -290,16 +290,14 @@ optgroup {
 }
 
 /* 11. TDS Edge Label (HTML-based via EdgeLabelRenderer) */
+/* 🔥 Fix 2: 동적 폰트 사이즈 정의 (Portal 내부에서도 작동) */
 .tds-edge-label {
-  background-color: #F2F4F6; /* TDS Grey 200 */
-  color: #333D4B;            /* TDS Grey 800 */
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  letter-spacing: 0;
-  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif !important;
+  font-weight: 600 !important;
+  /* 12px 시작, 줌 아웃 시 최대 24px까지 커짐 */
+  font-size: clamp(12px, calc(12px + (var(--zoom-scale, 1) - 1) * 8px), 24px) !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0 !important;
   white-space: nowrap;
 }
 
