@@ -7,7 +7,6 @@ import {
   Edge,
   Connection,
   addEdge,
-  reconnectEdge,
   useNodesState,
   useEdgesState,
   BackgroundVariant,
@@ -757,7 +756,20 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
               targetHandle: handleType === 'target' ? targetHandle : (edge.targetHandle || null),
             }
 
-            setEdges((els) => reconnectEdge(edge, newConnection, els) as Edge<FlowEdgeData>[])
+            // 🔥 [Fix] 복제 방지: reconnectEdge 대신 수동 제거 + uniqueEdges 사용
+            setEdges((els) => {
+              const filtered = els.filter((e) => e.id !== edge.id)
+              const newEdge: Edge<FlowEdgeData> = {
+                ...edge,
+                id: `e${newConnection.source}-${newConnection.target}`,
+                source: newConnection.source,
+                target: newConnection.target,
+                sourceHandle: newConnection.sourceHandle,
+                targetHandle: newConnection.targetHandle,
+                data: { ...edge.data },
+              } as Edge<FlowEdgeData>
+              return uniqueEdges([...filtered, newEdge])
+            })
           }
         }
       }
@@ -1238,7 +1250,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
               markerHeight="5"
               orient="auto"
             >
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#555555" />
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
             </marker>
           </defs>
         </svg>
