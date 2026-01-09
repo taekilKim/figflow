@@ -4,6 +4,34 @@
 
 FigFlow는 디자이너와 기획자가 Figma 화면을 캡처해서 붙여넣는 대신, Figma 프레임을 '참조'한 채로 플로우차트를 만들 수 있는 웹 애플리케이션입니다. Figma에서 화면이 수정되면 Sync 버튼 하나로 플로우차트의 썸네일을 갱신할 수 있습니다.
 
+---
+
+## 👨‍💻 For Developers (Claude Code Sessions)
+
+**새로운 세션을 시작하시나요?** 다음 문서들을 순서대로 읽어주세요:
+
+1. **[SESSION_HANDOVER.md](SESSION_HANDOVER.md)** ← **먼저 읽으세요!**
+   - 체크리스트와 긴급 참조 가이드
+   - 다음 작업 시작 전 필수 확인 사항
+
+2. **[QUICK_START.md](QUICK_START.md)** (5분)
+   - Critical Rules (NEVER DO / ALWAYS DO)
+   - 가장 흔한 4가지 문제와 해결법
+   - 핵심 코드 블록
+
+3. **[DEVELOPMENT_HISTORY.md](DEVELOPMENT_HISTORY.md)** (15분)
+   - 완전한 커밋 히스토리
+   - 사용자 요구사항 원문
+   - 근본 원인 분석 및 해결 과정
+
+4. **[CODE_SNAPSHOT.md](CODE_SNAPSHOT.md)** (참고용)
+   - 주요 컴포넌트 코드 스냅샷
+   - Critical sections 빠른 참조
+
+**⚠️ 중요**: 이 문서들을 읽지 않고 작업하면 **이미 해결된 문제를 다시 발생**시킬 수 있습니다!
+
+---
+
 ## 🌐 바로 사용해보기 (설치 불필요!)
 
 ### 🔗 **서비스 주소: [https://taekilKim.github.io/figflow/](https://taekilKim.github.io/figflow/)**
