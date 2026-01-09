@@ -116,6 +116,7 @@ const initialEdges: Edge<FlowEdgeData>[] = [
       width: 20,
       height: 20,
       color: '#555555',
+      orient: 'auto' as const,
     },
     data: { sourceType: 'manual' },
   },
@@ -130,6 +131,7 @@ const initialEdges: Edge<FlowEdgeData>[] = [
       width: 20,
       height: 20,
       color: '#555555',
+      orient: 'auto' as const,
     },
     data: { sourceType: 'manual' },
   },
@@ -333,7 +335,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     return style
   }
 
-  // 🔥 [Fix 1] 마커 색상을 엣지 색상과 동일하게 적용
+  // 🔥 [Fix 1] 마커 색상을 엣지 색상과 동일하게 적용 + orient: auto 명시
   const getMarkerEnd = (edgeData?: FlowEdgeData, strokeColor?: string) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'forward' || arrowType === 'both') {
@@ -342,6 +344,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         width: 20,
         height: 20,
         color: strokeColor || edgeData?.color || '#555555',
+        orient: 'auto' as const,  // 🔥 Fix: 수직 연결선 화살표 방향 수정
       }
     }
     return undefined
@@ -355,6 +358,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         width: 20,
         height: 20,
         color: strokeColor || edgeData?.color || '#555555',
+        orient: 'auto' as const,  // 🔥 Fix: 수직 연결선 화살표 방향 수정
       }
     }
     return undefined
@@ -612,6 +616,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           width: 20,
           height: 20,
           color: '#555555',
+          orient: 'auto' as const,
         },
         data: { sourceType: 'manual' },
       }
@@ -713,6 +718,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
               width: 20,
               height: 20,
               color: '#555555',
+              orient: 'auto' as const,
             },
             data: { sourceType: 'manual' },
           }
@@ -1230,6 +1236,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             width: 20,
             height: 20,
             color: '#555555',
+            orient: 'auto' as const,
           },
           data: {
             sourceType: 'manual' as const,
@@ -1242,8 +1249,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         panOnScroll={true}
         selectionMode={SelectionMode.Partial}
         multiSelectionKeyCode="Shift"
-        selectionKeyCode="Shift"
         connectOnClick={false}
+        deleteKeyCode="Delete"
         fitView
         minZoom={0.1}
         maxZoom={2}
@@ -1256,7 +1263,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         {/* 🔥 [Fix 6, 7] TDSControls: left 312px, bottom 16px */}
         <TDSControls style={{ left: 312, bottom: 16 }} />
 
-        {/* 🔥 [Fix 3, 4, 5] MiniMap: right 352px, bottom 16px, ZoomIndicator 내부 배치 */}
+        {/* 🔥 [Fix 3, 4, 5] MiniMap: right 352px, bottom 16px */}
         <MiniMap
           nodeColor="#e2e2e2"
           maskColor="rgba(240, 240, 240, 0.6)"
@@ -1272,16 +1279,21 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             margin: 0,
             border: '1px solid #E5E8EB',
             borderRadius: '12px',
-            overflow: 'visible',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
             zIndex: 5,
           }}
-        >
-          {/* 🔥 [Fix 3] ZoomIndicator를 MiniMap 안으로 이동 */}
-          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}>
-            <ZoomIndicator />
-          </div>
-        </MiniMap>
+        />
+
+        {/* 🔥 [Fix 3] ZoomIndicator를 MiniMap 밖으로 독립 배치 (렌더링 보장) */}
+        <div style={{
+          position: 'absolute',
+          top: 'auto',
+          bottom: 16 + 120 - 8 - 20,  // MiniMap bottom + height - top offset - indicator height
+          right: 352 + 8,  // MiniMap right + right offset
+          zIndex: 6,  // MiniMap보다 위
+        }}>
+          <ZoomIndicator />
+        </div>
         <AlignmentToolbar selectedNodeIds={selectedNodeIds} />
       </ReactFlow>
       </FlowWrapper>
