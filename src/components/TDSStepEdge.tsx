@@ -82,13 +82,13 @@ function TDSStepEdge(props: EdgeProps) {
             className="nodrag nopan"
           >
             <div
+              className="tds-edge-label"
               style={{
                 backgroundColor: labelBg,
                 color: labelColor,
                 border: labelBorder,
                 padding: '4px 8px',
                 borderRadius: '6px',
-                fontSize: '11px',
                 fontWeight: 600,
                 letterSpacing: 0,
                 fontFamily: "'Pretendard Variable', Pretendard, sans-serif",

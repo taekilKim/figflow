@@ -174,13 +174,15 @@ optgroup {
   opacity: 0; /* 평소엔 숨김 */
   transition: opacity 0.1s;
   cursor: crosshair !important;
+  pointer-events: none; /* 🔥 Fix: 숨겨진 핸들이 클릭 방해하지 않도록 */
 }
 
-/* 연결 시도 중이거나 노드 선택 시 핸들 보이기 */
+/* 연결 시도 중이거나 노드 선택 시 핸들 보이기 및 클릭 가능 */
 .react-flow__node:hover .react-flow__handle,
 .react-flow__node.selected .react-flow__handle,
 .react-flow__node.connection-target .react-flow__handle {
   opacity: 1;
+  pointer-events: all; /* 🔥 Fix: 보일 때만 클릭 가능 */
 }
 
 /* 6. 엣지 재연결 핸들 - Visible Size */
