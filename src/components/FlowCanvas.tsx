@@ -43,17 +43,17 @@ const nodeTypes = {
   frameNode: FrameNode,
 }
 
-// 🔥 [Architecture] Safe Area Layout Constants
-// 사이드 패널 너비 기준으로 안전 영역 계산
+// 🔥 [System Bible v2.0] Safe Area Layout Constants
+// 사이드 패널 너비 기준으로 안전 영역 계산 (16px 간격)
 const LAYOUT = {
   LEFT_PANEL_WIDTH: 280,
   RIGHT_PANEL_WIDTH: 280,
-  GUTTER: 24,
+  GUTTER: 16, // 🔥 v2.0: 24 → 16px
   get CONTROLS_LEFT() {
-    return this.LEFT_PANEL_WIDTH + this.GUTTER
+    return this.LEFT_PANEL_WIDTH + this.GUTTER  // 296px
   },
   get MINIMAP_RIGHT() {
-    return this.RIGHT_PANEL_WIDTH + this.GUTTER
+    return this.RIGHT_PANEL_WIDTH + this.GUTTER  // 296px
   },
 }
 
@@ -1250,35 +1250,31 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
 
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
 
-        {/* 🔥 [Architecture] TDSControls with Safe Area Layout */}
-        <TDSControls style={{ left: LAYOUT.CONTROLS_LEFT, bottom: 20 }} />
+        {/* 🔥 [System Bible v2.0] TDSControls with 16px alignment */}
+        <TDSControls style={{ left: LAYOUT.CONTROLS_LEFT, bottom: 16 }} />
 
-        {/* 🔥 [Architecture] MiniMap with ZoomIndicator Integration */}
-        <div
+        {/* 🔥 [System Bible v2.0] MiniMap with ZoomIndicator as child */}
+        <MiniMap
+          nodeColor="#e2e2e2"
+          maskColor="rgba(240, 240, 240, 0.6)"
+          nodeStrokeWidth={3}
+          zoomable
+          pannable
           style={{
             position: 'absolute',
-            bottom: 20,
-            right: LAYOUT.MINIMAP_RIGHT,
+            height: 120,
+            width: 200,
+            bottom: 16,  // 🔥 v2.0: 20 → 16px
+            right: LAYOUT.MINIMAP_RIGHT,  // 296px
+            margin: 0,  // 🔥 v2.0: 마진 0 강제
+            border: '1px solid #E5E8EB',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
             zIndex: 5,
           }}
         >
-          {/* MiniMap Container */}
-          <MiniMap
-            nodeColor="#e2e2e2"
-            maskColor="rgba(240, 240, 240, 0.6)"
-            nodeStrokeWidth={3}
-            zoomable
-            pannable
-            style={{
-              height: 120,
-              width: 200,
-              border: '1px solid #E5E8EB',
-              borderRadius: '12px',
-              overflow: 'hidden',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
-            }}
-          />
-          {/* ZoomIndicator Overlay (MiniMap 우상단) */}
+          {/* 🔥 v2.0: ZoomIndicator를 MiniMap의 직계 자식으로 이동 */}
           <div
             style={{
               position: 'absolute',
@@ -1289,7 +1285,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           >
             <ZoomIndicator />
           </div>
-        </div>
+        </MiniMap>
         <AlignmentToolbar selectedNodeIds={selectedNodeIds} />
       </ReactFlow>
       </FlowWrapper>
