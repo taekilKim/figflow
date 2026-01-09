@@ -116,7 +116,7 @@ const initialEdges: Edge<FlowEdgeData>[] = [
       width: 20,
       height: 20,
       color: '#555555',
-      orient: 'auto' as const,
+      orient: 'auto-start-reverse' as const,
     },
     data: { sourceType: 'manual' },
   },
@@ -131,7 +131,7 @@ const initialEdges: Edge<FlowEdgeData>[] = [
       width: 20,
       height: 20,
       color: '#555555',
-      orient: 'auto' as const,
+      orient: 'auto-start-reverse' as const,
     },
     data: { sourceType: 'manual' },
   },
@@ -276,6 +276,11 @@ const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPan
   // 🔥 중요: 줌 인(zoom > 1) 시에는 scale을 1로 고정 (글자가 작아지지 않게)
   const scale = zoom < 1 ? (1 / zoom) : 1
 
+  // 🔥 Fix 2: Portal 내부에서도 변수를 쓸 수 있도록 body에 주입
+  useEffect(() => {
+    document.body.style.setProperty('--zoom-scale', scale.toString())
+  }, [scale])
+
   return (
     <div
       className={`flow-canvas ${isPanning ? 'panning' : ''}`}
@@ -335,7 +340,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     return style
   }
 
-  // 🔥 [Fix 1] 마커 색상을 엣지 색상과 동일하게 적용 + orient: auto 명시
+  // 🔥 [Fix 1] 마커 색상을 엣지 색상과 동일하게 적용 + orient: auto-start-reverse
   const getMarkerEnd = (edgeData?: FlowEdgeData, strokeColor?: string) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'forward' || arrowType === 'both') {
@@ -344,7 +349,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         width: 20,
         height: 20,
         color: strokeColor || edgeData?.color || '#555555',
-        orient: 'auto' as const,  // 🔥 Fix: 수직 연결선 화살표 방향 수정
+        orient: 'auto-start-reverse' as const,  // 🔥 Fix: 화살표 방향 강제 정렬
       }
     }
     return undefined
@@ -358,7 +363,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         width: 20,
         height: 20,
         color: strokeColor || edgeData?.color || '#555555',
-        orient: 'auto' as const,  // 🔥 Fix: 수직 연결선 화살표 방향 수정
+        orient: 'auto-start-reverse' as const,  // 🔥 Fix: 화살표 방향 강제 정렬
       }
     }
     return undefined
@@ -616,7 +621,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           width: 20,
           height: 20,
           color: '#555555',
-          orient: 'auto' as const,
+          orient: 'auto-start-reverse' as const,
         },
         data: { sourceType: 'manual' },
       }
@@ -718,7 +723,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
               width: 20,
               height: 20,
               color: '#555555',
-              orient: 'auto' as const,
+              orient: 'auto-start-reverse' as const,
             },
             data: { sourceType: 'manual' },
           }
@@ -1230,13 +1235,17 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           type: 'step',
           animated: false,
           focusable: true,
-          style: { strokeWidth: 2, stroke: '#555555' },
+          style: {
+            strokeWidth: 2,
+            stroke: '#555555',
+            pointerEvents: 'visibleStroke' as any,  // 🔥 Fix 4: 선 부분만 클릭 가능
+          },
           markerEnd: {
             type: MarkerType.ArrowClosed,
             width: 20,
             height: 20,
             color: '#555555',
-            orient: 'auto' as const,
+            orient: 'auto-start-reverse' as const,  // 🔥 Fix 1
           },
           data: {
             sourceType: 'manual' as const,
@@ -1245,10 +1254,11 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         edgesReconnectable={true}
         reconnectRadius={30}
         panOnDrag={isPanning}
-        selectionOnDrag={!isPanning}
+        selectionOnDrag={true}  // 🔥 Fix 3: 드래그로 바로 선택
         panOnScroll={true}
         selectionMode={SelectionMode.Partial}
-        multiSelectionKeyCode="Shift"
+        selectionKeyCode={null}  // 🔥 Fix 3: 드래그하면 바로 선택 (Shift 불필요)
+        multiSelectionKeyCode="Shift"  // Shift+클릭으로 추가 선택
         connectOnClick={false}
         deleteKeyCode="Delete"
         fitView
