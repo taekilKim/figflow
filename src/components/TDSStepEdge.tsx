@@ -36,9 +36,9 @@ function TDSStepEdge(props: EdgeProps) {
     label,
   } = props
 
-  // 🔥 Native Step Path 계산 (회피 X, 직각 O)
-  // offset: 50 → 핸들에서 50px 직선으로 나간 후 꺾임
-  // borderRadius: 20 → 부드러운 코너
+  // 🔥 [Final] Native Step Path - Zero Gap (offset: 0)
+  // offset: 0 → 핸들에 완전히 밀착 (갭 제거)
+  // borderRadius: 0 → 완전한 직각
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -46,8 +46,8 @@ function TDSStepEdge(props: EdgeProps) {
     targetX,
     targetY,
     targetPosition,
-    borderRadius: 20,  // 둥근 직각
-    offset: 50,        // 50px 브레이크아웃
+    borderRadius: 0,  // 🔥 Final: 직각 유지
+    offset: 0,        // 🔥 Final: 갭 제거
   })
 
   // 라벨 색상 로직 (프리셋 적용)
