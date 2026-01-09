@@ -18,7 +18,6 @@ import {
   useViewport,
   useOnSelectionChange,
   useReactFlow,
-  MarkerType,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 // 🔥 Pivot: Smart Edge 제거, Native StepEdge 복귀
@@ -43,6 +42,9 @@ const edgeTypes = {
 const nodeTypes = {
   frameNode: FrameNode,
 }
+
+// 🔥 [Final Fix] Manual Marker Reference (SVG defs 사용)
+const TDS_MARKER = 'url(#tds-arrow-manual)'
 
 interface FlowCanvasProps {
   onNodeSelect: (nodeId: string | null) => void
@@ -111,13 +113,7 @@ const initialEdges: Edge<FlowEdgeData>[] = [
     target: '2',
     label: '로그인 성공',
     type: 'step',
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      width: 20,
-      height: 20,
-      color: '#555555',
-      orient: 'auto-start-reverse' as const,
-    },
+    markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
     data: { sourceType: 'manual' },
   },
   {
@@ -126,13 +122,7 @@ const initialEdges: Edge<FlowEdgeData>[] = [
     target: '3',
     label: '프로필 클릭',
     type: 'step',
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      width: 20,
-      height: 20,
-      color: '#555555',
-      orient: 'auto-start-reverse' as const,
-    },
+    markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
     data: { sourceType: 'manual' },
   },
 ]
@@ -340,31 +330,19 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     return style
   }
 
-  // 🔥 [Fix 1] 마커 색상을 엣지 색상과 동일하게 적용 + orient: auto-start-reverse
-  const getMarkerEnd = (edgeData?: FlowEdgeData, strokeColor?: string) => {
+  // 🔥 [Final Fix] 마커 문자열 반환 (orient="auto" 적용된 SVG defs 사용)
+  const getMarkerEnd = (edgeData?: FlowEdgeData) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'forward' || arrowType === 'both') {
-      return {
-        type: MarkerType.ArrowClosed,
-        width: 20,
-        height: 20,
-        color: strokeColor || edgeData?.color || '#555555',
-        orient: 'auto-start-reverse' as const,  // 🔥 Fix: 화살표 방향 강제 정렬
-      }
+      return TDS_MARKER
     }
     return undefined
   }
 
-  const getMarkerStart = (edgeData?: FlowEdgeData, strokeColor?: string) => {
+  const getMarkerStart = (edgeData?: FlowEdgeData) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'backward' || arrowType === 'both') {
-      return {
-        type: MarkerType.ArrowClosed,
-        width: 20,
-        height: 20,
-        color: strokeColor || edgeData?.color || '#555555',
-        orient: 'auto-start-reverse' as const,  // 🔥 Fix: 화살표 방향 강제 정렬
-      }
+      return TDS_MARKER
     }
     return undefined
   }
@@ -372,14 +350,13 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
   // 엣지 로드 시 label 및 스타일 속성 설정
   const loadedEdges = loadedProject?.edges?.map((edge) => {
     const style = getEdgeStyle(edge.data)
-    const strokeColor = style.stroke as string | undefined
     return {
       ...edge,
       label: edge.label,
       type: 'step',
       style,
-      markerEnd: getMarkerEnd(edge.data, strokeColor),
-      markerStart: getMarkerStart(edge.data, strokeColor),
+      markerEnd: getMarkerEnd(edge.data),
+      markerStart: getMarkerStart(edge.data),
     }
   }) || initialEdges
 
@@ -616,13 +593,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         ...connection,
         id: `e${connection.source}-${connection.target}`,
         type: 'step',
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          width: 20,
-          height: 20,
-          color: '#555555',
-          orient: 'auto-start-reverse' as const,
-        },
+        markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
         data: { sourceType: 'manual' },
       }
       setEdges((eds) => addEdge(newEdge, eds))
@@ -718,13 +689,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             sourceHandle,
             targetHandle,
             type: 'step',
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              width: 20,
-              height: 20,
-              color: '#555555',
-              orient: 'auto-start-reverse' as const,
-            },
+            markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
             data: { sourceType: 'manual' },
           }
           setEdges((eds) => addEdge(newEdge, eds))
@@ -1208,14 +1173,13 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         }))}
         edges={edges.map((edge) => {
           const style = getEdgeStyle(edge.data)
-          const strokeColor = style.stroke as string | undefined
           return {
             ...edge,
             type: 'step',
             updatable: 'target',
             style,
-            markerEnd: getMarkerEnd(edge.data, strokeColor),
-            markerStart: getMarkerStart(edge.data, strokeColor),
+            markerEnd: getMarkerEnd(edge.data),
+            markerStart: getMarkerStart(edge.data),
           } as Edge<FlowEdgeData>
         })}
         onNodesChange={onNodesChange}
@@ -1238,15 +1202,9 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           style: {
             strokeWidth: 2,
             stroke: '#555555',
-            pointerEvents: 'visibleStroke' as any,  // 🔥 Fix 4: 선 부분만 클릭 가능
+            pointerEvents: 'visibleStroke' as any,  // 🔥 Fix: 선 부분만 클릭 가능
           },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            width: 20,
-            height: 20,
-            color: '#555555',
-            orient: 'auto-start-reverse' as const,  // 🔥 Fix 1
-          },
+          markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
           data: {
             sourceType: 'manual' as const,
           }
@@ -1268,6 +1226,23 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           cursor: isPanning ? 'grab' : 'default',
         }}
       >
+        {/* 🔥 [Final Fix] Manual SVG Marker Definition with orient="auto" */}
+        <svg style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 0 }}>
+          <defs>
+            <marker
+              id="tds-arrow-manual"
+              viewBox="0 0 10 10"
+              refX="5"
+              refY="5"
+              markerWidth="5"
+              markerHeight="5"
+              orient="auto"
+            >
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#555555" />
+            </marker>
+          </defs>
+        </svg>
+
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
 
         {/* 🔥 [Fix 6, 7] TDSControls: left 312px, bottom 16px */}
