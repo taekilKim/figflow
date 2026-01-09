@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from 'react'
+import { memo, useState, useEffect, useMemo } from 'react'
 import {
   BaseEdge,
   EdgeLabelRenderer,
@@ -35,16 +35,19 @@ function CustomSmartEdge(props: EdgeProps) {
   const [smartPath, setSmartPath] = useState('')
   const [labelPos, setLabelPos] = useState({ x: 0, y: 0 })
 
-  useEffect(() => {
-    let isMounted = true
-
-    // 1. 노드 치수 주입 (Avoidance 필수)
-    const nodesWithDims = nodes.map((node) => ({
+  // 🔥 [Fix] 노드 치수 계산을 useMemo로 즉시 실행 (useEffect 딜레이 제거)
+  // 타이밍 이슈를 제거하여 장애물 회피가 항상 동작하도록 보장
+  const nodesWithDims = useMemo(() => {
+    return nodes.map((node) => ({
       ...node,
       width: node.measured?.width ?? node.width ?? 375,
       height: node.measured?.height ?? node.height ?? 600,
       position: node.position,
     }))
+  }, [nodes])
+
+  useEffect(() => {
+    let isMounted = true
 
     const calculatePath = async () => {
       try {
@@ -115,7 +118,7 @@ function CustomSmartEdge(props: EdgeProps) {
     return () => {
       isMounted = false
     }
-  }, [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, nodes])
+  }, [sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, nodesWithDims])
 
   // 초기 렌더링 시 깜빡임 방지
   if (!smartPath) {
