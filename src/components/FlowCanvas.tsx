@@ -700,32 +700,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
     [nodes, setEdges, getClosestHandles]
   )
 
-  // 🔥 [Pivot Fix] Reconnect Bug (역전 현상 수정)
-  // newConnection은 항상 '최종적인' source와 target을 담고 있음
-  const onReconnect = useCallback(
-    (oldEdge: Edge, newConnection: Connection) => {
-      setEdges((els) => {
-        // Step 1: 기존 엣지 제거
-        const filtered = els.filter((e) => e.id !== oldEdge.id)
-
-        // Step 2: 새 엣지 생성 (newConnection 신뢰)
-        const newEdge: Edge<FlowEdgeData> = {
-          ...oldEdge,
-          id: `e${newConnection.source}-${newConnection.target}`, // 🔥 ID 갱신
-          source: newConnection.source,
-          target: newConnection.target,
-          sourceHandle: newConnection.sourceHandle,
-          targetHandle: newConnection.targetHandle,
-          data: { ...oldEdge.data }, // 데이터 보존
-        } as Edge<FlowEdgeData>
-
-        // Step 3: 중복 방지 (uniqueEdges 가드 유지)
-        return uniqueEdges([...filtered, newEdge])
-      })
-    },
-    [setEdges]
-  )
-
+  // 🔥 [Fix] 연결선 재연결 종료 시 - 복제 방지를 위해 onReconnect는 제거하고 onReconnectEnd만 사용
   // 엣지 재연결 종료 시 - 노드 바디에 드롭했을 때 처리 (Figma-like)
   const onReconnectEnd = useCallback(
     (event: MouseEvent | TouchEvent, edge: Edge, handleType: 'source' | 'target') => {
@@ -1199,7 +1174,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         onConnect={onConnect}
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
-        onReconnect={onReconnect}
         onReconnectEnd={onReconnectEnd}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
@@ -1250,7 +1224,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
               markerHeight="5"
               orient="auto"
             >
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#555555" />
             </marker>
           </defs>
         </svg>
