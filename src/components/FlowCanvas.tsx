@@ -42,8 +42,11 @@ const nodeTypes = {
   frameNode: FrameNode,
 }
 
-// 🔥 [Final Fix] Manual Marker Reference (SVG defs 사용)
-const TDS_MARKER = 'url(#tds-arrow-manual)'
+// 🔥 [Final Fix] 색상별 마커 ID 생성 함수
+const getMarkerIdForColor = (color?: string) => {
+  const normalizedColor = (color || '#555555').replace('#', '')
+  return `tds-arrow-${normalizedColor}`
+}
 
 interface FlowCanvasProps {
   onNodeSelect: (nodeId: string | null) => void
@@ -112,7 +115,7 @@ const initialEdges: Edge<FlowEdgeData>[] = [
     target: '2',
     label: '로그인 성공',
     type: 'step',
-    markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
+    markerEnd: `url(#${getMarkerIdForColor('#555555')})`,  // 🔥 Final: 기본 색상 마커
     data: { sourceType: 'manual' },
   },
   {
@@ -121,7 +124,7 @@ const initialEdges: Edge<FlowEdgeData>[] = [
     target: '3',
     label: '프로필 클릭',
     type: 'step',
-    markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
+    markerEnd: `url(#${getMarkerIdForColor('#555555')})`,  // 🔥 Final: 기본 색상 마커
     data: { sourceType: 'manual' },
   },
 ]
@@ -333,7 +336,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
   const getMarkerEnd = (edgeData?: FlowEdgeData) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'forward' || arrowType === 'both') {
-      return TDS_MARKER
+      const color = edgeData?.color
+      return `url(#${getMarkerIdForColor(color)})`
     }
     return undefined
   }
@@ -341,7 +345,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
   const getMarkerStart = (edgeData?: FlowEdgeData) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'backward' || arrowType === 'both') {
-      return TDS_MARKER
+      const color = edgeData?.color
+      return `url(#${getMarkerIdForColor(color)})`
     }
     return undefined
   }
@@ -592,7 +597,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
         ...connection,
         id: `e${connection.source}-${connection.target}`,
         type: 'step',
-        markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
+        markerEnd: `url(#${getMarkerIdForColor('#555555')})`,  // 🔥 Final: 기본 색상 마커
         data: { sourceType: 'manual' },
       }
       setEdges((eds) => addEdge(newEdge, eds))
@@ -688,7 +693,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             sourceHandle,
             targetHandle,
             type: 'step',
-            markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
+            markerEnd: `url(#${getMarkerIdForColor('#555555')})`,  // 🔥 Final: 기본 색상 마커
             data: { sourceType: 'manual' },
           }
           setEdges((eds) => addEdge(newEdge, eds))
@@ -1216,7 +1221,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
             stroke: '#555555',
             pointerEvents: 'visibleStroke' as any,  // 🔥 Fix: 선 부분만 클릭 가능
           },
-          markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
+          markerEnd: `url(#${getMarkerIdForColor('#555555')})`,  // 🔥 Final: 기본 색상 마커
           data: {
             sourceType: 'manual' as const,
           }
@@ -1238,20 +1243,34 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
           cursor: isPanning ? 'grab' : 'default',
         }}
       >
-        {/* 🔥 [Final Fix] Manual SVG Marker Definition with orient="auto" */}
+        {/* 🔥 [Final Fix] 색상별 Dynamic SVG Markers with orient="auto" */}
         <svg style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 0 }}>
           <defs>
-            <marker
-              id="tds-arrow-manual"
-              viewBox="0 0 10 10"
-              refX="5"
-              refY="5"
-              markerWidth="5"
-              markerHeight="5"
-              orient="auto"
-            >
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
-            </marker>
+            {/* 모든 고유 색상에 대한 마커 생성 */}
+            {Array.from(
+              new Set([
+                '#555555', // 기본 색상
+                '#b0b0b0', // 기본 플로우
+                '#4caf50', // 성공 경로
+                '#f44336', // 오류 경로
+                '#2196f3', // 양방향 동기화
+                '#9e9e9e', // 선택적 경로
+                ...edges.map(e => e.data?.color).filter(Boolean) as string[], // 사용 중인 모든 색상
+              ])
+            ).map(color => (
+              <marker
+                key={getMarkerIdForColor(color)}
+                id={getMarkerIdForColor(color)}
+                viewBox="0 0 10 10"
+                refX="5"
+                refY="5"
+                markerWidth="5"
+                markerHeight="5"
+                orient="auto"
+              >
+                <path d="M 0 0 L 10 5 L 0 10 z" fill={color} />
+              </marker>
+            ))}
           </defs>
         </svg>
 
