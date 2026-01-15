@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>FigFlow</title>
+  <script>
+    // GitHub Pages SPA 리다이렉트 해결
+    // 404 페이지에서 현재 경로를 저장하고 index.html로 리다이렉트
+    sessionStorage.setItem('redirect', location.href);
+    location.replace(location.origin + location.pathname.split('/').slice(0, -1).join('/') + '/');
+  </script>
+</head>
+<body>
+</body>
+</html>
