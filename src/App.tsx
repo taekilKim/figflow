@@ -1,30 +1,19 @@
-import { useState } from 'react'
-import { ReactFlowProvider } from '@xyflow/react'
-import FlowCanvas from './components/FlowCanvas'
-import LeftPanel from './components/LeftPanel'
-import RightPanel from './components/RightPanel'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import LandingPage from './pages/LandingPage'
+import WorkspacePage from './pages/WorkspacePage'
+import FlowPage from './pages/FlowPage'
 import './styles/App.css'
 
 function App() {
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
-  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
-  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([])
-
   return (
-    <ReactFlowProvider>
-      <div className="app-container">
-        <LeftPanel selectedNodeIds={selectedNodeIds} />
-        <FlowCanvas
-          onNodeSelect={setSelectedNodeId}
-          onEdgeSelect={setSelectedEdgeId}
-          onSelectionChange={setSelectedNodeIds}
-        />
-        <RightPanel
-          selectedNodeId={selectedNodeId}
-          selectedEdgeId={selectedEdgeId}
-        />
-      </div>
-    </ReactFlowProvider>
+    <BrowserRouter basename="/figflow">
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/workspace" element={<WorkspacePage />} />
+        <Route path="/flow/:id" element={<FlowPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
