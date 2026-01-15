@@ -1,12 +1,27 @@
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Lightning, GitBranch, Palette, Check } from '@phosphor-icons/react'
+import { ArrowRight, Lightning, GitBranch, Sparkle, Check, Palette } from '@phosphor-icons/react'
+import { startFigmaOAuth, isOAuthAvailable } from '../utils/figmaAuth'
+import { saveFigmaToken } from '../utils/figma'
 import '../styles/LandingPage.css'
 
 function LandingPage() {
   const navigate = useNavigate()
 
   const handleGetStarted = () => {
-    navigate('/workspace')
+    // OAuth가 사용 가능하면 OAuth 사용, 아니면 토큰 입력
+    if (isOAuthAvailable()) {
+      startFigmaOAuth()
+    } else {
+      // OAuth 미설정 시 토큰 입력 후 워크스페이스로
+      const token = prompt(
+        'Figma Personal Access Token을 입력하세요:\n\n' +
+        '토큰 발급: Figma → Settings → Personal Access Tokens'
+      )
+      if (token) {
+        saveFigmaToken(token)
+        navigate('/workspace')
+      }
+    }
   }
 
   return (
@@ -14,21 +29,28 @@ function LandingPage() {
       {/* Hero Section */}
       <header className="hero-section">
         <div className="hero-content">
-          <div className="logo-title">
-            <Lightning size={48} weight="fill" className="logo-icon" />
-            <h1 className="brand-name">FigFlow</h1>
+          <div className="hero-badge">
+            <Sparkle size={16} weight="fill" />
+            <span>Design Systems, Visualized</span>
           </div>
-          <h2 className="hero-title">
-            Figma 프로토타입을 플로우차트로 자동 변환
-          </h2>
+          <h1 className="hero-title">
+            Figma 프로토타입을
+            <br />
+            <span className="gradient-text">플로우차트로</span>
+            <br />
+            자동 변환
+          </h1>
           <p className="hero-description">
-            복잡한 화면 흐름을 한눈에 파악하세요. <br />
+            복잡한 화면 흐름을 한눈에 파악하세요.
+            <br />
             Figma 프로토타입 링크를 시각적인 플로우차트로 자동 변환합니다.
           </p>
-          <button className="cta-button" onClick={handleGetStarted}>
-            시작하기
-            <ArrowRight size={20} weight="bold" />
-          </button>
+          <div className="hero-cta">
+            <button className="cta-button primary" onClick={handleGetStarted}>
+              무료로 시작하기
+              <ArrowRight size={20} weight="bold" />
+            </button>
+          </div>
         </div>
       </header>
 

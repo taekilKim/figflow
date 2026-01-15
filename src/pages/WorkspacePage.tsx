@@ -10,6 +10,7 @@ import {
   setCurrentProjectId,
 } from '../utils/storage'
 import { getFigmaToken, saveFigmaToken, clearFigmaToken } from '../utils/figma'
+import { startFigmaOAuth, isOAuthAvailable } from '../utils/figmaAuth'
 import { ProjectData } from '../types'
 import '../styles/WorkspacePage.css'
 
@@ -85,6 +86,15 @@ function WorkspacePage() {
   }
 
   const handleFigmaLogin = () => {
+    // OAuth가 사용 가능하면 OAuth 사용, 아니면 토큰 입력
+    if (isOAuthAvailable()) {
+      startFigmaOAuth()
+    } else {
+      handleTokenLogin()
+    }
+  }
+
+  const handleTokenLogin = () => {
     const token = prompt('Figma Personal Access Token을 입력하세요:\n\n토큰 발급: Figma → Settings → Personal Access Tokens')
     if (token) {
       saveFigmaToken(token)
