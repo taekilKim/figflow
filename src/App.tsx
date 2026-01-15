@@ -3,6 +3,7 @@ import LandingPage from './pages/LandingPage'
 import WorkspacePage from './pages/WorkspacePage'
 import FlowPage from './pages/FlowPage'
 import AuthCallbackPage from './pages/AuthCallbackPage'
+import ProtectedRoute from './components/ProtectedRoute'
 import './styles/App.css'
 
 function App() {
@@ -10,8 +11,22 @@ function App() {
     <BrowserRouter basename="/figflow">
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/workspace" element={<WorkspacePage />} />
-        <Route path="/flow/:id" element={<FlowPage />} />
+        <Route
+          path="/workspace"
+          element={
+            <ProtectedRoute>
+              <WorkspacePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/flow/:id"
+          element={
+            <ProtectedRoute>
+              <FlowPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

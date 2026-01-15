@@ -335,6 +335,19 @@
   z-index: 1;
 }
 
+.cta-section .cta-button {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, #38e8f5 0%, #a499ff 100%);
+  color: #08022f;
+  box-shadow: 0 8px 24px rgba(56, 232, 245, 0.3);
+}
+
+.cta-section .cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(56, 232, 245, 0.4);
+}
+
 /* Footer */
 .landing-footer {
   padding: 48px 24px;

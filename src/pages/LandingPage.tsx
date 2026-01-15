@@ -1,12 +1,27 @@
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Lightning, GitBranch, Sparkle, Check, Palette } from '@phosphor-icons/react'
+import { startFigmaOAuth, isOAuthAvailable } from '../utils/figmaAuth'
+import { saveFigmaToken } from '../utils/figma'
 import '../styles/LandingPage.css'
 
 function LandingPage() {
   const navigate = useNavigate()
 
   const handleGetStarted = () => {
-    navigate('/workspace')
+    // OAuth가 사용 가능하면 OAuth 사용, 아니면 토큰 입력
+    if (isOAuthAvailable()) {
+      startFigmaOAuth()
+    } else {
+      // OAuth 미설정 시 토큰 입력 후 워크스페이스로
+      const token = prompt(
+        'Figma Personal Access Token을 입력하세요:\n\n' +
+        '토큰 발급: Figma → Settings → Personal Access Tokens'
+      )
+      if (token) {
+        saveFigmaToken(token)
+        navigate('/workspace')
+      }
+    }
   }
 
   return (
@@ -34,9 +49,6 @@ function LandingPage() {
             <button className="cta-button primary" onClick={handleGetStarted}>
               무료로 시작하기
               <ArrowRight size={20} weight="bold" />
-            </button>
-            <button className="cta-button secondary" onClick={() => navigate('/workspace')}>
-              예시 보기
             </button>
           </div>
         </div>
