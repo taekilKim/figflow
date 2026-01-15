@@ -27,7 +27,7 @@ import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
 import FigmaFileImportDialog from './FigmaFileImportDialog'
 import { FlowNodeData, FlowEdgeData } from '../types'
-import { saveProject, loadProject } from '../utils/storage'
+import { saveProject, loadProject, getProjectById, updateProject } from '../utils/storage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
 import { uniqueEdges } from '../utils/edgeUtils'
 import '../styles/FlowCanvas.css'
@@ -49,6 +49,7 @@ interface FlowCanvasProps {
   onNodeSelect: (nodeId: string | null) => void
   onEdgeSelect: (edgeId: string | null) => void
   onSelectionChange?: (nodeIds: string[]) => void
+  projectId?: string
 }
 
 // 초기 데모 데이터
@@ -284,12 +285,13 @@ const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPan
   )
 }
 
-function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanvasProps) {
+function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }: FlowCanvasProps) {
   // React Flow 훅 (단축키 및 디버깅용)
   const { getEdges, zoomTo, fitView, getNodes } = useReactFlow()
 
   // 초기 로드 시 localStorage에서 데이터 복원
-  const loadedProject = loadProject()
+  // projectId가 있으면 해당 프로젝트를, 없으면 기존 방식(단일 프로젝트) 사용
+  const loadedProject = projectId ? getProjectById(projectId) : loadProject()
   const [nodes, setNodes, onNodesChange] = useNodesState(
     loadedProject?.nodes || initialNodes
   )
@@ -583,8 +585,13 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
       createdAt: loadedProject?.createdAt || Date.now(),
       updatedAt: Date.now(),
     }
-    saveProject(project)
-  }, [nodes, edges])
+    // projectId가 있으면 updateProject, 없으면 saveProject (기존 호환성)
+    if (projectId) {
+      updateProject(projectId, { nodes: project.nodes, edges: project.edges })
+    } else {
+      saveProject(project)
+    }
+  }, [nodes, edges, projectId, loadedProject])
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -881,9 +888,14 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange }: FlowCanva
       createdAt: loadedProject?.createdAt || Date.now(),
       updatedAt: Date.now(),
     }
-    saveProject(project)
+    // projectId가 있으면 updateProject, 없으면 saveProject (기존 호환성)
+    if (projectId) {
+      updateProject(projectId, { nodes: project.nodes, edges: project.edges })
+    } else {
+      saveProject(project)
+    }
     alert('프로젝트가 저장되었습니다!')
-  }, [nodes, edges])
+  }, [nodes, edges, projectId, loadedProject])
 
   const handleSync = useCallback(async () => {
     const token = getFigmaToken()
