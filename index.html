@@ -15,7 +15,15 @@
         var redirect = sessionStorage.getItem('redirect');
         if (redirect && redirect !== location.href) {
           sessionStorage.removeItem('redirect');
-          history.replaceState(null, '', redirect);
+          // 유효한 경로인지 한 번 더 확인
+          var url = new URL(redirect);
+          var validPaths = ['/figflow/auth/callback', '/figflow/workspace', '/figflow/flow/'];
+          var isValid = validPaths.some(function(path) {
+            return url.pathname === path || url.pathname.startsWith(path);
+          });
+          if (isValid) {
+            history.replaceState(null, '', redirect);
+          }
         }
       })();
     </script>
