@@ -40,7 +40,7 @@ export function startFigmaOAuth(): void {
   const authUrl = buildAuthUrl({
     clientId: FIGMA_CLIENT_ID,
     redirectUri: REDIRECT_URI,
-    scope: 'file_read',
+    scope: 'files:read',
   }, state)
 
   window.location.href = authUrl
