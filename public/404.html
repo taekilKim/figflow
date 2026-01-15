@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>FigFlow</title>
+  <script>
+    // GitHub Pages SPA 리다이렉트 해결
+    // 유효한 SPA 경로만 리다이렉트하고, 나머지는 404 페이지 표시
+    (function() {
+      var path = location.pathname;
+      var validPaths = ['/figflow/auth/callback', '/figflow/workspace', '/figflow/flow/'];
+
+      var isValidPath = validPaths.some(function(validPath) {
+        return path === validPath || path.startsWith(validPath);
+      });
+
+      if (isValidPath) {
+        sessionStorage.setItem('redirect', location.href);
+        location.replace('/figflow/');
+      } else {
+        // 실제 404 페이지 표시
+        document.write('<style>body{margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0c0f0f;color:#fff;text-align:center}</style>');
+        document.write('<div><h1 style="font-size:72px;margin:0;">404</h1><p style="font-size:20px;color:rgba(255,255,255,0.6);">페이지를 찾을 수 없습니다</p><a href="/figflow/" style="display:inline-block;margin-top:24px;padding:12px 24px;background:linear-gradient(135deg,#38e8f5,#a499ff);color:#08022f;text-decoration:none;border-radius:8px;font-weight:600">홈으로 돌아가기</a></div>');
+      }
+    })();
+  </script>
+</head>
+<body>
+</body>
+</html>
