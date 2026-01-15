@@ -34,6 +34,9 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          VITE_FIGMA_CLIENT_ID: ${{ secrets.VITE_FIGMA_CLIENT_ID }}
+          VITE_FIGMA_CLIENT_SECRET: ${{ secrets.VITE_FIGMA_CLIENT_SECRET }}
         run: npm run build
 
       - name: Setup Pages
