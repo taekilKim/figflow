@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Lightning, GitBranch, Palette, Check } from '@phosphor-icons/react'
+import { ArrowRight, Lightning, GitBranch, Sparkle, Check, Palette } from '@phosphor-icons/react'
 import '../styles/LandingPage.css'
 
 function LandingPage() {
@@ -14,21 +14,31 @@ function LandingPage() {
       {/* Hero Section */}
       <header className="hero-section">
         <div className="hero-content">
-          <div className="logo-title">
-            <Lightning size={48} weight="fill" className="logo-icon" />
-            <h1 className="brand-name">FigFlow</h1>
+          <div className="hero-badge">
+            <Sparkle size={16} weight="fill" />
+            <span>Design Systems, Visualized</span>
           </div>
-          <h2 className="hero-title">
-            Figma 프로토타입을 플로우차트로 자동 변환
-          </h2>
+          <h1 className="hero-title">
+            Figma 프로토타입을
+            <br />
+            <span className="gradient-text">플로우차트로</span>
+            <br />
+            자동 변환
+          </h1>
           <p className="hero-description">
-            복잡한 화면 흐름을 한눈에 파악하세요. <br />
+            복잡한 화면 흐름을 한눈에 파악하세요.
+            <br />
             Figma 프로토타입 링크를 시각적인 플로우차트로 자동 변환합니다.
           </p>
-          <button className="cta-button" onClick={handleGetStarted}>
-            시작하기
-            <ArrowRight size={20} weight="bold" />
-          </button>
+          <div className="hero-cta">
+            <button className="cta-button primary" onClick={handleGetStarted}>
+              무료로 시작하기
+              <ArrowRight size={20} weight="bold" />
+            </button>
+            <button className="cta-button secondary" onClick={() => navigate('/workspace')}>
+              예시 보기
+            </button>
+          </div>
         </div>
       </header>
 
