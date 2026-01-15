@@ -135,5 +135,8 @@ function generateRandomState(): string {
  * OAuth 사용 가능 여부 확인
  */
 export function isOAuthAvailable(): boolean {
-  return Boolean(FIGMA_CLIENT_ID)
+  const available = Boolean(FIGMA_CLIENT_ID)
+  console.log('[OAuth Debug] Client ID:', FIGMA_CLIENT_ID ? '설정됨' : '미설정')
+  console.log('[OAuth Debug] OAuth 사용 가능:', available)
+  return available
 }
