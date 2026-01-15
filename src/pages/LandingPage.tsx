@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Lightning, GitBranch, Sparkle, Check, Palette } from '@phosphor-icons/react'
+import { Lightning, GitBranch, Sparkle, Check, Palette, FigmaLogo } from '@phosphor-icons/react'
 import { startFigmaOAuth, isOAuthAvailable } from '../utils/figmaAuth'
 import { saveFigmaToken } from '../utils/figma'
 import '../styles/LandingPage.css'
@@ -47,8 +47,8 @@ function LandingPage() {
           </p>
           <div className="hero-cta">
             <button className="cta-button primary" onClick={handleGetStarted}>
-              무료로 시작하기
-              <ArrowRight size={20} weight="bold" />
+              <FigmaLogo size={24} weight="bold" />
+              Continue with Figma
             </button>
           </div>
         </div>
@@ -135,8 +135,8 @@ function LandingPage() {
           별도의 설치 없이 웹 브라우저에서 바로 사용할 수 있습니다.
         </p>
         <button className="cta-button" onClick={handleGetStarted}>
-          무료로 시작하기
-          <ArrowRight size={20} weight="bold" />
+          <FigmaLogo size={24} weight="bold" />
+          Continue with Figma
         </button>
       </section>
 
