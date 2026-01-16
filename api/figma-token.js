@@ -78,12 +78,14 @@ export default async function handler(req, res) {
     }
 
     const tokenData = await tokenResponse.json()
+    console.log('[figma-token] FULL Token response:', JSON.stringify(tokenData, null, 2))
     console.log('[figma-token] Token response received:', {
       hasAccessToken: !!tokenData.access_token,
       tokenPrefix: tokenData.access_token ? tokenData.access_token.substring(0, 10) : 'none',
       tokenLength: tokenData.access_token ? tokenData.access_token.length : 0,
       hasRefreshToken: !!tokenData.refresh_token,
-      expiresIn: tokenData.expires_in
+      expiresIn: tokenData.expires_in,
+      allKeys: Object.keys(tokenData)
     })
     console.log('[figma-token] Success - returning tokens')
 
