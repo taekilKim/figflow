@@ -52,7 +52,7 @@ export default async function handler(req, res) {
     })
 
     // Figma API로 토큰 교환 요청
-    const tokenResponse = await fetch('https://www.figma.com/api/oauth/token', {
+    const tokenResponse = await fetch('https://api.figma.com/v1/oauth/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
