@@ -42,7 +42,7 @@ function FlowPage() {
   return (
     <ReactFlowProvider>
       <div className="app-container">
-        <LeftPanel selectedNodeIds={selectedNodeIds} />
+        <LeftPanel selectedNodeIds={selectedNodeIds} projectId={id} />
         <FlowCanvas
           onNodeSelect={setSelectedNodeId}
           onEdgeSelect={setSelectedEdgeId}
@@ -52,6 +52,7 @@ function FlowPage() {
         <RightPanel
           selectedNodeId={selectedNodeId}
           selectedEdgeId={selectedEdgeId}
+          projectId={id}
         />
       </div>
     </ReactFlowProvider>

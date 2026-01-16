@@ -143,33 +143,6 @@
   transition: width 0.3s ease-out;
 }
 
-/* Edge reconnection handles - SVG circle 요소이므로 r 속성 사용 */
-/* 동적 줌 스케일링: 줌 레벨과 무관하게 일정한 크기 유지 */
-.react-flow__edgeupdater {
-  r: 0;
-  stroke: transparent;
-  fill: transparent;
-  transition: all 0.2s;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.react-flow__edge.selected .react-flow__edgeupdater {
-  r: calc(5 * var(--zoom-scale, 1));
-  opacity: 1;
-  pointer-events: all;
-  fill: #ffffff;
-  stroke: #2f80ed;
-  stroke-width: calc(2px * var(--zoom-scale, 1));
-}
-
-.react-flow__edge.selected .react-flow__edgeupdater:hover {
-  r: calc(6 * var(--zoom-scale, 1));
-  fill: #2f80ed;
-  stroke: #fff;
-  cursor: grab;
-}
-
 /* --- 커서 (Cursor) 강제 적용 --- */
 /* React Flow의 인라인 스타일을 덮어쓰기 위해 !important 사용 */
 .flow-canvas .react-flow__pane,

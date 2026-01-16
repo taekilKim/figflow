@@ -17,6 +17,7 @@ import {
   useViewport,
   useOnSelectionChange,
   useReactFlow,
+  MarkerType,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 // 🔥 Pivot: Smart Edge 제거, Native StepEdge 복귀
@@ -42,8 +43,16 @@ const nodeTypes = {
   frameNode: FrameNode,
 }
 
-// 🔥 [Final Fix] Manual Marker Reference (SVG defs 사용)
-const TDS_MARKER = 'url(#tds-arrow-manual)'
+// 🔥 [Fix] Marker 객체 생성 함수 (orient: auto-start-reverse 필수!)
+const createMarker = (color: string = '#555555'): any => ({
+  type: MarkerType.ArrowClosed,
+  width: 20,
+  height: 20,
+  color,
+  orient: 'auto-start-reverse' as const,
+})
+
+const DEFAULT_MARKER = createMarker()
 
 interface FlowCanvasProps {
   onNodeSelect: (nodeId: string | null) => void
@@ -113,7 +122,7 @@ const initialEdges: Edge<FlowEdgeData>[] = [
     target: '2',
     label: '로그인 성공',
     type: 'step',
-    markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
+    markerEnd: DEFAULT_MARKER,
     data: { sourceType: 'manual' },
   },
   {
@@ -122,7 +131,7 @@ const initialEdges: Edge<FlowEdgeData>[] = [
     target: '3',
     label: '프로필 클릭',
     type: 'step',
-    markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
+    markerEnd: DEFAULT_MARKER,
     data: { sourceType: 'manual' },
   },
 ]
@@ -335,7 +344,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   const getMarkerEnd = (edgeData?: FlowEdgeData) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'forward' || arrowType === 'both') {
-      return TDS_MARKER
+      const color = (edgeData?.color as string) || '#555555'
+      return createMarker(color)
     }
     return undefined
   }
@@ -343,7 +353,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   const getMarkerStart = (edgeData?: FlowEdgeData) => {
     const arrowType = edgeData?.arrowType || 'forward'
     if (arrowType === 'backward' || arrowType === 'both') {
-      return TDS_MARKER
+      const color = (edgeData?.color as string) || '#555555'
+      return createMarker(color)
     }
     return undefined
   }
@@ -599,7 +610,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         ...connection,
         id: `e${connection.source}-${connection.target}`,
         type: 'step',
-        markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
+        markerEnd: DEFAULT_MARKER,
         data: { sourceType: 'manual' },
       }
       setEdges((eds) => addEdge(newEdge, eds))
@@ -695,7 +706,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
             sourceHandle,
             targetHandle,
             type: 'step',
-            markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
+            markerEnd: DEFAULT_MARKER,
             data: { sourceType: 'manual' },
           }
           setEdges((eds) => addEdge(newEdge, eds))
@@ -1202,7 +1213,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
             stroke: '#555555',
             pointerEvents: 'visibleStroke' as any,  // 🔥 Fix: 선 부분만 클릭 가능
           },
-          markerEnd: TDS_MARKER,  // 🔥 Final: 문자열 참조
+          markerEnd: DEFAULT_MARKER,
           data: {
             sourceType: 'manual' as const,
           }
@@ -1224,23 +1235,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           cursor: isPanning ? 'grab' : 'default',
         }}
       >
-        {/* 🔥 [Final Fix] Manual SVG Marker Definition with orient="auto" */}
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 0 }}>
-          <defs>
-            <marker
-              id="tds-arrow-manual"
-              viewBox="0 0 10 10"
-              refX="5"
-              refY="5"
-              markerWidth="5"
-              markerHeight="5"
-              orient="auto"
-            >
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#555555" />
-            </marker>
-          </defs>
-        </svg>
-
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
 
         {/* 🔥 [Fix 6, 7] TDSControls: left 312px, bottom 16px */}

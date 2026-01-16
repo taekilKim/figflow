@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { loadProject, saveProject } from '../utils/storage'
+import { loadProject, saveProject, getProjectById, updateProject } from '../utils/storage'
 import { EdgeStyle, ArrowType, FlowEdgeData } from '../types'
 import { loadPresets, addPreset, deletePreset } from '../utils/edgePresets'
 import '../styles/RightPanel.css'
@@ -7,9 +7,10 @@ import '../styles/RightPanel.css'
 interface RightPanelProps {
   selectedNodeId: string | null
   selectedEdgeId: string | null
+  projectId?: string
 }
 
-function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
+function RightPanel({ selectedNodeId, selectedEdgeId, projectId }: RightPanelProps) {
   const [edgeData, setEdgeData] = useState<FlowEdgeData | null>(null)
   const [edgeLabel, setEdgeLabel] = useState('')
   const [presets, setPresets] = useState(loadPresets())
@@ -27,7 +28,7 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
       return
     }
 
-    const project = loadProject()
+    const project = projectId ? getProjectById(projectId) : loadProject()
     if (project?.nodes) {
       const node = project.nodes.find((n) => n.id === selectedNodeId)
       if (node && node.data?.meta) {
@@ -36,7 +37,7 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
         setNodeNotes(node.data.meta.notes || '')
       }
     }
-  }, [selectedNodeId])
+  }, [selectedNodeId, projectId])
 
   // 선택된 엣지의 데이터 로드
   useEffect(() => {
@@ -45,7 +46,7 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
       return
     }
 
-    const project = loadProject()
+    const project = projectId ? getProjectById(projectId) : loadProject()
     if (project?.edges) {
       const edge = project.edges.find((e) => e.id === selectedEdgeId)
       if (edge) {
@@ -53,7 +54,7 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
         setEdgeLabel(edge.label || '')
       }
     }
-  }, [selectedEdgeId])
+  }, [selectedEdgeId, projectId])
 
   // 노드 속성 업데이트
   const updateNode = (updates: {
@@ -63,7 +64,7 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
   }) => {
     if (!selectedNodeId) return
 
-    const project = loadProject()
+    const project = projectId ? getProjectById(projectId) : loadProject()
     if (!project) return
 
     const nodeIndex = project.nodes.findIndex((n) => n.id === selectedNodeId)
@@ -83,7 +84,11 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
       },
     }
 
-    saveProject({ ...project, nodes: updatedNodes, updatedAt: Date.now() })
+    if (projectId) {
+      updateProject(projectId, { nodes: updatedNodes })
+    } else {
+      saveProject({ ...project, nodes: updatedNodes, updatedAt: Date.now() })
+    }
     window.dispatchEvent(new Event('storage'))
 
     if (updates.title !== undefined) setNodeTitle(updates.title)
@@ -132,7 +137,7 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
   const updateEdge = (updates: Partial<FlowEdgeData> | { label?: string }) => {
     if (!selectedEdgeId) return
 
-    const project = loadProject()
+    const project = projectId ? getProjectById(projectId) : loadProject()
     if (!project) return
 
     const edgeIndex = project.edges.findIndex((e) => e.id === selectedEdgeId)
@@ -152,7 +157,11 @@ function RightPanel({ selectedNodeId, selectedEdgeId }: RightPanelProps) {
       setEdgeData({ ...edge.data, ...updates })
     }
 
-    saveProject({ ...project, edges: updatedEdges, updatedAt: Date.now() })
+    if (projectId) {
+      updateProject(projectId, { edges: updatedEdges })
+    } else {
+      saveProject({ ...project, edges: updatedEdges, updatedAt: Date.now() })
+    }
 
     // 변경사항을 즉시 반영하기 위해 storage 이벤트 발생
     window.dispatchEvent(new Event('storage'))
