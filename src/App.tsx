@@ -8,7 +8,7 @@ import './styles/App.css'
 
 function App() {
   return (
-    <BrowserRouter basename="/figflow">
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route

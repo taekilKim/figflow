@@ -9,9 +9,7 @@
 
 // @ts-ignore - Vite env variables
 const FIGMA_CLIENT_ID = import.meta.env?.VITE_FIGMA_CLIENT_ID || ''
-// @ts-ignore - Vite env variables
-const FIGMA_CLIENT_SECRET = import.meta.env?.VITE_FIGMA_CLIENT_SECRET || ''
-const REDIRECT_URI = `${window.location.origin}/figflow/auth/callback`
+const REDIRECT_URI = `${window.location.origin}/auth/callback`
 
 export interface FigmaOAuthConfig {
   clientId: string
@@ -64,8 +62,7 @@ function buildAuthUrl(config: FigmaOAuthConfig, state: string): string {
 /**
  * OAuth 콜백 처리 (code를 access_token으로 교환)
  *
- * ⚠️ 주의: 이 함수는 백엔드 서버가 필요합니다.
- * client_secret을 클라이언트에 노출하면 안 됩니다.
+ * Vercel Serverless Function을 통해 안전하게 토큰 교환
  */
 export async function handleOAuthCallback(code: string, state: string): Promise<string | null> {
   // State 검증
@@ -75,28 +72,21 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
   }
   sessionStorage.removeItem('figma_oauth_state')
 
-  // 🔥 실제 구현: 백엔드 서버로 code 전송하고 access_token 받아오기
-  // 현재는 클라이언트 사이드 전용이므로 직접 교환 불가
-
-  if (!FIGMA_CLIENT_SECRET) {
-    console.error('FIGMA_CLIENT_SECRET이 설정되지 않았습니다.')
-    throw new Error(
-      'OAuth 토큰 교환을 위해서는 백엔드 서버가 필요합니다.\n\n' +
-      '개발자: 백엔드 API 엔드포인트를 구현하거나,\n' +
-      'Personal Access Token 방식을 사용하세요.'
-    )
-  }
-
   try {
-    // 백엔드 API 호출 예시 (실제 구현 필요)
+    // Vercel Serverless Function으로 토큰 교환 요청
     const response = await fetch('/api/figma/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, redirect_uri: REDIRECT_URI }),
+      body: JSON.stringify({
+        code,
+        redirect_uri: REDIRECT_URI
+      }),
     })
 
     if (!response.ok) {
-      throw new Error('Failed to exchange code for token')
+      const errorData = await response.json()
+      console.error('Token exchange failed:', errorData)
+      throw new Error(errorData.error || 'Failed to exchange code for token')
     }
 
     const data = await response.json()
