@@ -21,7 +21,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 // 🔥 Pivot: Smart Edge 제거, Native StepEdge 복귀
-// import TDSStepEdge from './TDSStepEdge'  // 비활성화: 기본 edge 사용
+import TDSStepEdge from './TDSStepEdge'  // 재활성화: 핸들 직접 렌더링 추가
 import TDSControls from './TDSControls'
 import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
@@ -34,10 +34,9 @@ import { uniqueEdges } from '../utils/edgeUtils'
 import '../styles/FlowCanvas.css'
 
 // 🔥 Pivot: Native Step Edge 사용 (Smart Routing 제거)
-// 🔥 [Fix] TDSStepEdge는 edgeupdater 핸들을 렌더링하지 않음
-// 기본 step edge를 사용하여 자동 핸들 렌더링 활성화
+// 🔥 [Fix] TDSStepEdge에 edgeupdater 핸들 직접 렌더링 추가
 const edgeTypes = {
-  // step: TDSStepEdge,  // 비활성화: 핸들이 필요하므로 기본 edge 사용
+  step: TDSStepEdge,
 }
 
 // 커스텀 노드 타입 등록
