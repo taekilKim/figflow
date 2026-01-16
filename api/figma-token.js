@@ -44,6 +44,12 @@ export default async function handler(req, res) {
     }
 
     console.log('[figma-token] Calling Figma API...')
+    console.log('[figma-token] Parameters:', {
+      clientIdLength: clientId.length,
+      clientIdPrefix: clientId.substring(0, 10),
+      redirectUri: redirect_uri,
+      codeLength: code.length
+    })
 
     // Figma API로 토큰 교환 요청
     const tokenResponse = await fetch('https://www.figma.com/api/oauth/token', {
