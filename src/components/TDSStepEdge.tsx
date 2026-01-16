@@ -45,7 +45,7 @@ function TDSStepEdge(props: EdgeProps) {
   // 🔥 [Fix] 줌 레벨에 따라 핸들 크기 동적 조정
   const { zoom } = useViewport()
   const scale = zoom < 1 ? (1 / zoom) : 1
-  const handleRadius = 5 * scale
+  const handleRadius = 8 * scale  // 5 → 8로 증가 (줌아웃 시 더 크게 표시)
 
   // 🔥 [Final Fix] Native Step Path with Direction Calculation
   // offset: 2 → 최소 직선 구간 확보 (방향 계산용) + 밀착 효과 유지
@@ -87,11 +87,14 @@ function TDSStepEdge(props: EdgeProps) {
             cy={sourceY}
             r={handleRadius}
             className="react-flow__edgeupdater react-flow__edgeupdater-source"
+            data-handlepos="source"
+            data-id={id}
             style={{
               fill: '#ffffff',
               stroke: '#3182F6',
               strokeWidth: 2 * scale,
               cursor: 'grab',
+              pointerEvents: 'all',
             }}
           />
           <circle
@@ -99,11 +102,14 @@ function TDSStepEdge(props: EdgeProps) {
             cy={targetY}
             r={handleRadius}
             className="react-flow__edgeupdater react-flow__edgeupdater-target"
+            data-handlepos="target"
+            data-id={id}
             style={{
               fill: '#ffffff',
               stroke: '#3182F6',
               strokeWidth: 2 * scale,
               cursor: 'grab',
+              pointerEvents: 'all',
             }}
           />
         </>
