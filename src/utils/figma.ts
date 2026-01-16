@@ -271,13 +271,28 @@ export async function getFigmaFileStructure(
   fileKey: string
 ): Promise<{ pages: FigmaPage[]; error?: string }> {
   try {
+    console.log('[FigFlow] Fetching Figma file:', fileKey)
+    console.log('[FigFlow] Access token:', accessToken ? `${accessToken.substring(0, 10)}...` : 'missing')
+
     const url = `https://api.figma.com/v1/files/${fileKey}`
     const response = await fetch(url, {
       headers: { 'X-Figma-Token': accessToken },
     })
 
+    console.log('[FigFlow] Figma API response:', response.status)
+
     if (!response.ok) {
-      return { pages: [], error: `API Error: ${response.status}` }
+      let errorMsg = `API Error: ${response.status}`
+
+      if (response.status === 403) {
+        errorMsg = '접근 권한이 없습니다. 본인의 Figma 파일이거나 접근 권한이 있는 파일인지 확인해주세요.'
+      } else if (response.status === 404) {
+        errorMsg = 'Figma 파일을 찾을 수 없습니다. URL을 확인해주세요.'
+      } else if (response.status === 401) {
+        errorMsg = '인증이 필요합니다. 다시 로그인해주세요.'
+      }
+
+      return { pages: [], error: errorMsg }
     }
 
     const data = await response.json()
@@ -327,7 +342,9 @@ export async function getFigmaFileStructure(
 const FIGMA_TOKEN_KEY = 'figflow_figma_token'
 
 export function saveFigmaToken(token: string): void {
+  console.log('[FigFlow] Saving Figma token:', token ? `${token.substring(0, 10)}...` : 'empty')
   localStorage.setItem(FIGMA_TOKEN_KEY, token)
+  console.log('[FigFlow] Token saved successfully')
 }
 
 export function getFigmaToken(): string | null {
