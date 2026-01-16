@@ -74,7 +74,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
 
   try {
     // Vercel Serverless Function으로 토큰 교환 요청
-    const response = await fetch('/api/figma/token', {
+    const response = await fetch('/api/figma-token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
