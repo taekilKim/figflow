@@ -78,6 +78,13 @@ export default async function handler(req, res) {
     }
 
     const tokenData = await tokenResponse.json()
+    console.log('[figma-token] Token response received:', {
+      hasAccessToken: !!tokenData.access_token,
+      tokenPrefix: tokenData.access_token ? tokenData.access_token.substring(0, 10) : 'none',
+      tokenLength: tokenData.access_token ? tokenData.access_token.length : 0,
+      hasRefreshToken: !!tokenData.refresh_token,
+      expiresIn: tokenData.expires_in
+    })
     console.log('[figma-token] Success - returning tokens')
 
     // access_token만 반환 (client_secret은 절대 클라이언트로 보내지 않음)
