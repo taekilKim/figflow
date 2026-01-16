@@ -188,24 +188,28 @@ optgroup {
 /* 6. 엣지 재연결 핸들 - Visible Size */
 .react-flow__edgeupdater {
   /* 히트박스(클릭 영역)는 여전히 크게 유지 */
+  r: 0 !important;
   stroke-width: calc(20px * var(--zoom-scale, 1)) !important;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, r 0.2s;
   z-index: 100000 !important; /* 핸들보다 위 */
+  pointer-events: none;
 }
 
 /* 시각적으로 보이는 점 (Circle) - Functional Size */
 .react-flow__edge.selected .react-flow__edgeupdater {
   opacity: 1;
-  fill: #fff;
-  stroke: #3182F6; /* TDS Blue */
-  stroke-width: calc(1px * var(--zoom-scale, 1));
-  r: calc(4px * var(--zoom-scale, 1)); /* 충분히 보이는 크기 */
+  fill: #fff !important;
+  stroke: #3182F6 !important; /* TDS Blue */
+  stroke-width: calc(2px * var(--zoom-scale, 1)) !important;
+  r: calc(5px * var(--zoom-scale, 1)) !important; /* 충분히 보이는 크기 */
+  pointer-events: all;
 }
 
 .react-flow__edge.selected .react-flow__edgeupdater:hover {
-  fill: var(--blue-500);
-  stroke: #fff;
+  fill: var(--blue-500) !important;
+  stroke: #fff !important;
+  r: calc(6px * var(--zoom-scale, 1)) !important;
   cursor: grab;
 }
 

@@ -506,7 +506,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   // storage 이벤트 감지하여 노드 및 엣지 업데이트
   useEffect(() => {
     const handleStorageChange = () => {
-      const project = loadProject()
+      const project = projectId ? getProjectById(projectId) : loadProject()
 
       // 노드 업데이트
       if (project?.nodes) {
@@ -547,7 +547,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
 
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
-  }, [setEdges, setNodes])
+  }, [setEdges, setNodes, projectId])
 
   // Figma-style 스페이스바 패닝 모드
   useEffect(() => {
@@ -1186,7 +1186,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           return {
             ...edge,
             type: 'step',
-            updatable: 'target',
+            updatable: true,
             style,
             markerEnd: getMarkerEnd(edge.data),
             markerStart: getMarkerStart(edge.data),
