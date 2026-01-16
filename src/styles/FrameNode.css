@@ -101,6 +101,15 @@
   border-top: 1px solid #e0e0e0;
   background: #fafafa;
   border-radius: 0 0 6px 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.frame-node:hover .frame-node-footer,
+.frame-node.selected .frame-node-footer {
+  opacity: 1;
+  pointer-events: all;
 }
 
 .frame-node-link {
