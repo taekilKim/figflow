@@ -34,9 +34,9 @@ FigFlow는 디자이너와 기획자가 Figma 화면을 캡처해서 붙여넣�
 
 ## 🌐 바로 사용해보기 (설치 불필요!)
 
-### 🔗 **서비스 주소: Coming Soon on Vercel!**
+### 🔗 **서비스 주소: https://figmaflow-phi.vercel.app**
 
-현재 Vercel로 마이그레이션 중입니다. 배포 후 URL이 업데이트됩니다.
+Vercel에서 실행 중입니다!
 
 **왜 Vercel인가요?**
 - ✅ SPA 라우팅 완벽 지원 (GitHub Pages는 404 에러 발생)
