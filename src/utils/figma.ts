@@ -2,6 +2,21 @@
  * Figma API 유틸리티
  */
 
+/**
+ * Token 타입에 따라 올바른 Authorization 헤더를 생성합니다
+ * - Personal Access Token (figd_로 시작): X-Figma-Token 헤더 사용
+ * - OAuth Access Token (그 외): Authorization: Bearer 헤더 사용
+ */
+function getAuthHeaders(accessToken: string): Record<string, string> {
+  if (accessToken.startsWith('figd_')) {
+    // Personal Access Token
+    return { 'X-Figma-Token': accessToken }
+  } else {
+    // OAuth Access Token
+    return { 'Authorization': `Bearer ${accessToken}` }
+  }
+}
+
 export interface FigmaImageOptions {
   fileKey: string
   nodeIds: string[]
@@ -33,7 +48,7 @@ export async function getFigmaImages(
 
     const response = await fetch(url, {
       headers: {
-        'X-Figma-Token': accessToken,
+        ...getAuthHeaders(accessToken),
       },
     })
 
@@ -72,7 +87,7 @@ export async function getFigmaFile(accessToken: string, fileKey: string) {
 
     const response = await fetch(url, {
       headers: {
-        'X-Figma-Token': accessToken,
+        ...getAuthHeaders(accessToken),
       },
     })
 
@@ -100,7 +115,7 @@ export async function getFigmaNodeName(
 
     const response = await fetch(url, {
       headers: {
-        'X-Figma-Token': accessToken,
+        ...getAuthHeaders(accessToken),
       },
     })
 
@@ -131,7 +146,7 @@ export async function getFigmaNodeDimensions(
 
     const response = await fetch(url, {
       headers: {
-        'X-Figma-Token': accessToken,
+        ...getAuthHeaders(accessToken),
       },
     })
 
@@ -176,7 +191,7 @@ export async function getFigmaFrameInfo(
       (async () => {
         const url = `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${nodeId}`
         const response = await fetch(url, {
-          headers: { 'X-Figma-Token': accessToken },
+          headers: getAuthHeaders(accessToken),
         })
         if (!response.ok) return null
         const data = await response.json()
@@ -276,7 +291,7 @@ export async function getFigmaFileStructure(
 
     const url = `https://api.figma.com/v1/files/${fileKey}`
     const response = await fetch(url, {
-      headers: { 'X-Figma-Token': accessToken },
+      headers: getAuthHeaders(accessToken),
     })
 
     console.log('[FigFlow] Figma API response:', response.status)
