@@ -34,16 +34,17 @@ FigFlow는 디자이너와 기획자가 Figma 화면을 캡처해서 붙여넣�
 
 ## 🌐 바로 사용해보기 (설치 불필요!)
 
-### 🔗 **서비스 주소: [https://taekilKim.github.io/figflow/](https://taekilKim.github.io/figflow/)**
+### 🔗 **서비스 주소: Coming Soon on Vercel!**
 
-위 링크를 클릭하면 설치 없이 바로 사용할 수 있습니다!
-- ✅ npm이나 설정이 전혀 필요 없습니다
-- ✅ 웹 브라우저만 있으면 OK
-- ✅ Figma Personal Access Token만 있으면 즉시 시작 가능
+현재 Vercel로 마이그레이션 중입니다. 배포 후 URL이 업데이트됩니다.
 
-**⚠️ 처음 사용 시 1분 설정 필요:**
-- [GitHub Pages 활성화 가이드 보기 →](GITHUB_PAGES_SETUP.md) (1분 소요)
-- [웹 사용 가이드 보기 →](WEB_DEPLOYMENT.md)
+**왜 Vercel인가요?**
+- ✅ SPA 라우팅 완벽 지원 (GitHub Pages는 404 에러 발생)
+- ✅ Serverless Function으로 안전한 OAuth 처리
+- ✅ 자동 HTTPS 및 빠른 CDN
+
+**배포 방법:**
+- 📖 [Vercel 배포 가이드 보기 →](VERCEL_DEPLOYMENT.md) (5분 소요)
 
 ## 핵심 개념
 
