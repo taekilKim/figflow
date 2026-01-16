@@ -1,10 +1,8 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
-
 /**
  * Vercel Serverless Function
  * Figma OAuth code를 access_token으로 교환
  */
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
