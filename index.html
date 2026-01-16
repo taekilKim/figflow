@@ -17,7 +17,7 @@
           sessionStorage.removeItem('redirect');
           // 유효한 경로인지 한 번 더 확인
           var url = new URL(redirect);
-          var validPaths = ['/figflow/auth/callback', '/figflow/workspace', '/figflow/flow/'];
+          var validPaths = ['/auth/callback', '/workspace', '/flow/'];
           var isValid = validPaths.some(function(path) {
             return url.pathname === path || url.pathname.startsWith(path);
           });
