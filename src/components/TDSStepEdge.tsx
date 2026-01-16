@@ -4,6 +4,7 @@ import {
   EdgeLabelRenderer,
   EdgeProps,
   getSmoothStepPath,
+  useViewport,
 } from '@xyflow/react'
 
 /**
@@ -41,6 +42,11 @@ function TDSStepEdge(props: EdgeProps) {
     selected,
   } = props
 
+  // 🔥 [Fix] 줌 레벨에 따라 핸들 크기 동적 조정
+  const { zoom } = useViewport()
+  const scale = zoom < 1 ? (1 / zoom) : 1
+  const handleRadius = 5 * scale
+
   // 🔥 [Final Fix] Native Step Path with Direction Calculation
   // offset: 2 → 최소 직선 구간 확보 (방향 계산용) + 밀착 효과 유지
   // borderRadius: 0 → 완전한 직각
@@ -73,30 +79,30 @@ function TDSStepEdge(props: EdgeProps) {
         style={style}
       />
 
-      {/* 🔥 [Fix] EdgeUpdater 핸들 직접 렌더링 */}
+      {/* 🔥 [Fix] EdgeUpdater 핸들 직접 렌더링 (줌 반응형) */}
       {selected && (
         <>
           <circle
             cx={sourceX}
             cy={sourceY}
-            r={5}
+            r={handleRadius}
             className="react-flow__edgeupdater react-flow__edgeupdater-source"
             style={{
               fill: '#ffffff',
               stroke: '#3182F6',
-              strokeWidth: 2,
+              strokeWidth: 2 * scale,
               cursor: 'grab',
             }}
           />
           <circle
             cx={targetX}
             cy={targetY}
-            r={5}
+            r={handleRadius}
             className="react-flow__edgeupdater react-flow__edgeupdater-target"
             style={{
               fill: '#ffffff',
               stroke: '#3182F6',
-              strokeWidth: 2,
+              strokeWidth: 2 * scale,
               cursor: 'grab',
             }}
           />
