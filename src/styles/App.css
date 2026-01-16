@@ -12,7 +12,7 @@
   left: 16px;
   top: 16px;
   bottom: 16px;
-  width: 280px;
+  width: 240px;
   background: var(--bg-white);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-float);
@@ -32,7 +32,7 @@
   right: 16px;
   top: 16px;
   bottom: 16px;
-  width: 320px;
+  width: 280px;
   background: var(--bg-white);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-float);
@@ -49,7 +49,7 @@
 }
 
 .panel-header h2 {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--grey-900);
   margin: 0;
