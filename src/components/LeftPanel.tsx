@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
 import { MagnifyingGlass, FrameCorners } from '@phosphor-icons/react'
 import { useReactFlow } from '@xyflow/react'
-import { loadProject } from '../utils/storage'
+import { loadProject, getProjectById } from '../utils/storage'
 import { FlowNodeData } from '../types'
 import '../styles/LeftPanel.css'
 
 interface LeftPanelProps {
   selectedNodeIds: string[]
+  projectId?: string
 }
 
-function LeftPanel({ selectedNodeIds }: LeftPanelProps) {
+function LeftPanel({ selectedNodeIds, projectId }: LeftPanelProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [nodes, setNodes] = useState<Array<{ id: string; data: FlowNodeData }>>([])
   const { setNodes: setFlowNodes } = useReactFlow()
@@ -17,7 +18,7 @@ function LeftPanel({ selectedNodeIds }: LeftPanelProps) {
   // localStorage에서 노드 목록 불러오기
   useEffect(() => {
     const loadNodes = () => {
-      const project = loadProject()
+      const project = projectId ? getProjectById(projectId) : loadProject()
       if (project?.nodes) {
         setNodes(project.nodes)
       }
@@ -36,7 +37,7 @@ function LeftPanel({ selectedNodeIds }: LeftPanelProps) {
       window.removeEventListener('storage', loadNodes)
       clearInterval(interval)
     }
-  }, [])
+  }, [projectId])
 
   // 패널에서 노드 클릭 시 캔버스의 선택 상태 업데이트
   const handleSelectNode = (nodeId: string, event: React.MouseEvent) => {

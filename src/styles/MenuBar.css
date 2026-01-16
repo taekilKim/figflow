@@ -1,0 +1,53 @@
+.menu-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+}
+
+.menu-bar-inner {
+  width: 100%;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+}
+
+.menu-items {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.menu-item {
+  padding: 4px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--grey-800);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.menu-item:hover:not(:disabled) {
+  background: var(--grey-100);
+  color: var(--grey-900);
+}
+
+.menu-item:active:not(:disabled) {
+  background: var(--grey-200);
+}
+
+.menu-item:disabled {
+  color: var(--grey-400);
+  cursor: not-allowed;
+}

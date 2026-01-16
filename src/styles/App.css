@@ -10,9 +10,9 @@
 .left-panel {
   position: absolute;
   left: 16px;
-  top: 16px;
+  top: 48px;
   bottom: 16px;
-  width: 280px;
+  width: 240px;
   background: var(--bg-white);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-float);
@@ -30,9 +30,9 @@
 .right-panel {
   position: absolute;
   right: 16px;
-  top: 16px;
+  top: 48px;
   bottom: 16px;
-  width: 320px;
+  width: 280px;
   background: var(--bg-white);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-float);
@@ -49,7 +49,7 @@
 }
 
 .panel-header h2 {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--grey-900);
   margin: 0;
@@ -64,7 +64,7 @@
 /* Toolbar - Floating at top center */
 .toolbar {
   position: absolute;
-  top: 16px;
+  top: 48px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
