@@ -10,7 +10,7 @@
 .left-panel {
   position: absolute;
   left: 16px;
-  top: 16px;
+  top: 48px;
   bottom: 16px;
   width: 240px;
   background: var(--bg-white);
@@ -30,7 +30,7 @@
 .right-panel {
   position: absolute;
   right: 16px;
-  top: 16px;
+  top: 48px;
   bottom: 16px;
   width: 280px;
   background: var(--bg-white);
@@ -64,7 +64,7 @@
 /* Toolbar - Floating at top center */
 .toolbar {
   position: absolute;
-  top: 16px;
+  top: 48px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
