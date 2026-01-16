@@ -4,16 +4,21 @@ import {
   EdgeLabelRenderer,
   EdgeProps,
   getSmoothStepPath,
+  useViewport,
 } from '@xyflow/react'
 
 /**
- * TDSStepEdge: Simplified Native Step Edge
+ * TDSStepEdge: Simplified Native Step Edge with Edge Updater Handles
  *
  * 🔥 Pivot: Smart Routing 완전 제거
  * - @tisoap/react-flow-smart-edge 폐기
  * - React Flow 내장 getSmoothStepPath 사용
  * - offset: 50 (프레임에서 50px 직선 브레이크아웃)
  * - borderRadius: 20 (부드러운 직각)
+ *
+ * 🔥 Fix: EdgeUpdater 핸들 추가
+ * - BaseEdge는 핸들을 렌더링하지 않음
+ * - SVG circle 요소로 직접 핸들 구현
  *
  * 장점:
  * - 갭 없음 (Native는 원래 핸들에 딱 붙음)
@@ -34,7 +39,13 @@ function TDSStepEdge(props: EdgeProps) {
     markerEnd,
     markerStart,
     label,
+    selected,
   } = props
+
+  // 🔥 [Fix] 줌 레벨에 따라 핸들 크기 동적 조정
+  const { zoom } = useViewport()
+  const scale = zoom < 1 ? (1 / zoom) : 1
+  const handleRadius = 5 * scale
 
   // 🔥 [Final Fix] Native Step Path with Direction Calculation
   // offset: 2 → 최소 직선 구간 확보 (방향 계산용) + 밀착 효과 유지
@@ -67,6 +78,36 @@ function TDSStepEdge(props: EdgeProps) {
         markerStart={markerStart}
         style={style}
       />
+
+      {/* 🔥 [Fix] EdgeUpdater 핸들 직접 렌더링 (줌 반응형) */}
+      {selected && (
+        <>
+          <circle
+            cx={sourceX}
+            cy={sourceY}
+            r={handleRadius}
+            className="react-flow__edgeupdater react-flow__edgeupdater-source"
+            style={{
+              fill: '#ffffff',
+              stroke: '#3182F6',
+              strokeWidth: 2 * scale,
+              cursor: 'grab',
+            }}
+          />
+          <circle
+            cx={targetX}
+            cy={targetY}
+            r={handleRadius}
+            className="react-flow__edgeupdater react-flow__edgeupdater-target"
+            style={{
+              fill: '#ffffff',
+              stroke: '#3182F6',
+              strokeWidth: 2 * scale,
+              cursor: 'grab',
+            }}
+          />
+        </>
+      )}
 
       {/* TDS 스타일 라벨 */}
       {label && (
