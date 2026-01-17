@@ -1,6 +1,5 @@
 import { memo } from 'react'
 import {
-  BaseEdge,
   EdgeLabelRenderer,
   EdgeProps,
   getSmoothStepPath,
@@ -70,13 +69,23 @@ function TDSStepEdge(props: EdgeProps) {
 
   return (
     <>
-      {/* 🔥 BaseEdge: markerEnd 반드시 전달 (화살표 렌더링 핵심) */}
-      <BaseEdge
+      {/* 🔥 [Fix] BaseEdge 대신 path 직접 렌더링 (edgeupdater 자동 생성을 위해) */}
+      {/* Interaction path: 클릭/호버 영역 확보 */}
+      <path
+        d={edgePath}
+        strokeWidth={20}
+        className="react-flow__edge-interaction"
+        style={{ stroke: 'transparent', fill: 'none' }}
+      />
+
+      {/* Visual path: 실제 표시되는 선 */}
+      <path
         id={id}
-        path={edgePath}
+        d={edgePath}
+        className="react-flow__edge-path"
+        style={style}
         markerEnd={markerEnd}
         markerStart={markerStart}
-        style={style}
       />
 
       {/* 🔥 [Fix] EdgeUpdater 핸들 직접 렌더링 (줌 반응형) */}
@@ -89,6 +98,8 @@ function TDSStepEdge(props: EdgeProps) {
             className="react-flow__edgeupdater react-flow__edgeupdater-source"
             data-handlepos="source"
             data-id={id}
+            data-nodeid={id.split('-')[0]}
+            data-handleid="source"
             style={{
               fill: '#ffffff',
               stroke: '#3182F6',
@@ -104,6 +115,8 @@ function TDSStepEdge(props: EdgeProps) {
             className="react-flow__edgeupdater react-flow__edgeupdater-target"
             data-handlepos="target"
             data-id={id}
+            data-nodeid={id.split('-')[1]?.split('_')[0]}
+            data-handleid="target"
             style={{
               fill: '#ffffff',
               stroke: '#3182F6',
