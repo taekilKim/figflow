@@ -185,45 +185,8 @@ optgroup {
   pointer-events: all; /* 🔥 Fix: 보일 때만 클릭 가능 */
 }
 
-/* 6. 엣지 재연결 핸들 - Button 요소 스타일링 */
-.react-flow__edgeupdater {
-  /* 🔥 줌 반응형 크기 (줌 아웃 시 커짐) */
-  width: calc(16px * var(--zoom-scale, 1)) !important;
-  height: calc(16px * var(--zoom-scale, 1)) !important;
-  min-width: 16px !important;
-  min-height: 16px !important;
-
-  /* 원형 버튼 스타일 */
-  background: #ffffff !important;
-  border: 2px solid #3182F6 !important;
-  border-radius: 50% !important;
-
-  /* 초기 상태: 완전히 숨김 */
-  opacity: 0 !important;
-  pointer-events: none !important;
-  transition: all 0.2s ease !important;
-  z-index: 100000 !important;
-  cursor: grab !important;
-
-  /* 중앙 정렬 */
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 !important;
-}
-
-/* 선택된 edge의 edgeupdater 표시 */
-.react-flow__edge.selected .react-flow__edgeupdater {
-  opacity: 1 !important;
-  pointer-events: all !important;
-}
-
-/* 호버 시 색상 반전 */
-.react-flow__edge.selected .react-flow__edgeupdater:hover {
-  background: #3182F6 !important;
-  border-color: #ffffff !important;
-  cursor: grab !important;
-}
+/* 6. 엣지 재연결 핸들 - React Flow 기본 스타일 테스트 */
+/* CSS를 제거하고 React Flow 기본 동작 확인 */
 
 /* 7. 패닝 모드 시 이벤트 차단 */
 .flow-canvas.panning .react-flow__node,

@@ -719,7 +719,17 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     [nodes, setEdges, getClosestHandles]
   )
 
-  // 🔥 [Fix] 연결선 재연결 종료 시 - 복제 방지를 위해 onReconnect는 제거하고 onReconnectEnd만 사용
+  // 🔥 [Critical Fix] React Flow가 edgeupdater를 렌더링하려면 onReconnect가 필수!
+  // 빈 함수라도 정의되어 있어야 edgeupdater가 DOM에 추가됨
+  const onReconnect = useCallback(
+    () => {
+      // 실제 로직은 onReconnectEnd에서 처리
+      // 이 함수는 React Flow가 edgeupdater를 렌더링하도록 하기 위한 것
+    },
+    []
+  )
+
+  // 🔥 [Fix] 연결선 재연결 종료 시 - 복제 방지를 위해 onReconnect는 비워두고 onReconnectEnd에서 처리
   // 엣지 재연결 종료 시 - 노드 바디에 드롭했을 때 처리 (Figma-like)
   const onReconnectEnd = useCallback(
     (event: MouseEvent | TouchEvent, edge: Edge, handleType: 'source' | 'target') => {
@@ -1216,6 +1226,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         onConnect={onConnect}
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
+        onReconnect={onReconnect}
         onReconnectEnd={onReconnectEnd}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
