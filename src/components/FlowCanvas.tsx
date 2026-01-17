@@ -1213,8 +1213,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
             type: 'smoothstep', // smoothstep은 step보다 부드러운 곡선
             updatable: true,
             style,
-            markerEnd: getMarkerEnd(edge.data),
-            markerStart: getMarkerStart(edge.data),
+            // markerEnd: getMarkerEnd(edge.data),  // TEST: 화살표 제거
+            // markerStart: getMarkerStart(edge.data),  // TEST: 화살표 제거
             labelStyle,
             labelBgStyle,
             labelBgPadding: [4, 8],
