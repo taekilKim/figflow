@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import {
+  BaseEdge,
   EdgeLabelRenderer,
   EdgeProps,
   getSmoothStepPath,
@@ -39,6 +40,7 @@ function TDSStepEdge(props: EdgeProps) {
     markerEnd,
     markerStart,
     label,
+    selected,
   } = props
 
   // 🔥 [Final Fix] Native Step Path with Direction Calculation
@@ -64,24 +66,51 @@ function TDSStepEdge(props: EdgeProps) {
 
   return (
     <>
-      {/* 🔥 [Fix] BaseEdge 대신 path 직접 렌더링 (edgeupdater 자동 생성을 위해) */}
-      {/* Interaction path: 클릭/호버 영역 확보 */}
-      <path
-        d={edgePath}
-        strokeWidth={20}
-        className="react-flow__edge-interaction"
-        style={{ stroke: 'transparent', fill: 'none' }}
-      />
-
-      {/* Visual path: 실제 표시되는 선 */}
-      <path
+      {/* BaseEdge: React Flow 표준 edge 렌더링 */}
+      <BaseEdge
         id={id}
-        d={edgePath}
-        className="react-flow__edge-path"
-        style={style}
+        path={edgePath}
         markerEnd={markerEnd}
         markerStart={markerStart}
+        style={style}
+        interactionWidth={20}
       />
+
+      {/* EdgeUpdater 핸들: foreignObject로 button 렌더링 */}
+      {selected && (
+        <>
+          <foreignObject
+            width={40}
+            height={40}
+            x={sourceX - 20}
+            y={sourceY - 20}
+            className="react-flow__edgeupdater-container"
+            requiredExtensions="http://www.w3.org/1999/xhtml"
+          >
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button
+                className="react-flow__edgeupdater react-flow__edgeupdater-source"
+                type="button"
+              />
+            </div>
+          </foreignObject>
+          <foreignObject
+            width={40}
+            height={40}
+            x={targetX - 20}
+            y={targetY - 20}
+            className="react-flow__edgeupdater-container"
+            requiredExtensions="http://www.w3.org/1999/xhtml"
+          >
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button
+                className="react-flow__edgeupdater react-flow__edgeupdater-target"
+                type="button"
+              />
+            </div>
+          </foreignObject>
+        </>
+      )}
 
       {/* TDS 스타일 라벨 */}
       {label && (
