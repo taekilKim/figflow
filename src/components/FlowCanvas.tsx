@@ -21,7 +21,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 // 🔥 Pivot: Smart Edge 제거, Native StepEdge 복귀
-import TDSStepEdge from './TDSStepEdge'  // 재활성화: 핸들 직접 렌더링 추가
+// import TDSStepEdge from './TDSStepEdge'  // 기본 edge 사용으로 주석처리
 import TDSControls from './TDSControls'
 import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
@@ -34,10 +34,10 @@ import { uniqueEdges } from '../utils/edgeUtils'
 import '../styles/FlowCanvas.css'
 
 // 🔥 Pivot: Native Step Edge 사용 (Smart Routing 제거)
-// 🔥 [Fix] TDSStepEdge 재활성화, 핸들 직접 렌더링
-const edgeTypes = {
-  step: TDSStepEdge,
-}
+// 🔥 [Fix] 기본 edge 사용으로 edgeupdater 자동 활성화
+// const edgeTypes = {
+//   step: TDSStepEdge,
+// }
 
 // 커스텀 노드 타입 등록
 const nodeTypes = {
@@ -1184,13 +1184,31 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         }))}
         edges={edges.map((edge) => {
           const style = getEdgeStyle(edge.data)
+
+          // TDS 라벨 스타일 계산
+          const edgeColor = edge.data?.color
+          const isDefaultColor = !edgeColor || edgeColor === '#555555' || edgeColor === '#555'
+          const labelBgStyle = {
+            fill: isDefaultColor ? '#FFFFFF' : edgeColor,
+            fillOpacity: 1,
+          }
+          const labelStyle = {
+            fill: isDefaultColor ? '#333D4B' : '#FFFFFF',
+            fontWeight: 600,
+            fontFamily: "'Pretendard Variable', Pretendard, sans-serif",
+          }
+
           return {
             ...edge,
-            type: 'step',
+            type: 'smoothstep', // smoothstep은 step보다 부드러운 곡선
             updatable: true,
             style,
             markerEnd: getMarkerEnd(edge.data),
             markerStart: getMarkerStart(edge.data),
+            labelStyle,
+            labelBgStyle,
+            labelBgPadding: [4, 8],
+            labelBgBorderRadius: 6,
           } as Edge<FlowEdgeData>
         })}
         onNodesChange={onNodesChange}
@@ -1203,10 +1221,10 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        connectionLineType={ConnectionLineType.Step}
+        // edgeTypes={edgeTypes} // 기본 edge 사용으로 주석처리
+        connectionLineType={ConnectionLineType.SmoothStep}
         defaultEdgeOptions={{
-          type: 'step',
+          type: 'smoothstep',
           animated: false,
           focusable: true,
           style: {
