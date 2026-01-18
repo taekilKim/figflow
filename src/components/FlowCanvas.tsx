@@ -21,7 +21,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 // 🔥 Pivot: Smart Edge 제거, Native StepEdge 복귀
-// import TDSStepEdge from './TDSStepEdge'  // 기본 edge 사용으로 주석처리
+import TDSStepEdge from './TDSStepEdge'
 import TDSControls from './TDSControls'
 import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
@@ -34,10 +34,10 @@ import { uniqueEdges } from '../utils/edgeUtils'
 import '../styles/FlowCanvas.css'
 
 // 🔥 Pivot: Native Step Edge 사용 (Smart Routing 제거)
-// 🔥 [Fix] 기본 edge 사용으로 edgeupdater 자동 활성화
-// const edgeTypes = {
-//   step: TDSStepEdge,
-// }
+// 🔥 [Fix] TDSStepEdge 사용 (foreignObject button으로 핸들 렌더링)
+const edgeTypes = {
+  step: TDSStepEdge,
+}
 
 // 커스텀 노드 타입 등록
 const nodeTypes = {
@@ -1185,35 +1185,14 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         edges={edges.map((edge) => {
           const style = getEdgeStyle(edge.data)
 
-          // TDS 라벨 스타일 계산
-          const edgeColor = edge.data?.color
-          const isDefaultColor = !edgeColor || edgeColor === '#555555' || edgeColor === '#555'
-
-          const labelBgStyle = {
-            fill: isDefaultColor ? '#FFFFFF' : edgeColor,
-            fillOpacity: 1,
-          }
-
-          // 기본 색상일 때는 fill을 설정하지 않음 (CSS 기본값 사용)
-          // 커스텀 색상일 때만 흰색 글씨 설정
-          const labelStyle: React.CSSProperties = {
-            ...(isDefaultColor ? {} : { fill: '#FFFFFF' }),
-            fontSize: '12px',
-            fontWeight: '600',
-            fontFamily: "'Pretendard Variable', Pretendard, sans-serif",
-          }
-
           return {
             ...edge,
-            type: 'smoothstep',
+            type: 'step',  // TDSStepEdge 사용
             updatable: true,
             style,
             markerEnd: getMarkerEnd(edge.data),
             markerStart: getMarkerStart(edge.data),
-            labelStyle,
-            labelBgStyle,
-            labelBgPadding: [4, 8],
-            labelBgBorderRadius: 6,
+            // labelStyle, labelBgStyle 등 제거 - TDSStepEdge가 자체 처리
           } as Edge<FlowEdgeData>
         })}
         onNodesChange={onNodesChange}
@@ -1226,10 +1205,10 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
-        // edgeTypes={edgeTypes} // 기본 edge 사용으로 주석처리
-        connectionLineType={ConnectionLineType.SmoothStep}
+        edgeTypes={edgeTypes}
+        connectionLineType={ConnectionLineType.Step}
         defaultEdgeOptions={{
-          type: 'smoothstep',
+          type: 'step',
           animated: false,
           focusable: true,
           style: {
