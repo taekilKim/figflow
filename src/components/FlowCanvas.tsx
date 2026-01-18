@@ -21,7 +21,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 // 🔥 Pivot: Smart Edge 제거, Native StepEdge 복귀
-// import TDSStepEdge from './TDSStepEdge'  // 기본 smoothstep edge 사용으로 주석 처리
+import TDSStepEdge from './TDSStepEdge'
 import TDSControls from './TDSControls'
 import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
@@ -34,11 +34,10 @@ import { uniqueEdges } from '../utils/edgeUtils'
 import '../styles/FlowCanvas.css'
 
 // 🔥 Pivot: Native Step Edge 사용 (Smart Routing 제거)
-// 🔥 [Fix] 기본 smoothstep edge 사용 (edgeupdater 자동 생성 및 드래그 작동)
-// TDSStepEdge는 이벤트 연결 문제로 주석 처리
-// const edgeTypes = {
-//   step: TDSStepEdge,
-// }
+// 🔥 [Fix] TDSStepEdge 사용 (onReconnect 필수, 라벨 색상 처리)
+const edgeTypes = {
+  step: TDSStepEdge,
+}
 
 // 커스텀 노드 타입 등록
 const nodeTypes = {
@@ -720,6 +719,15 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     [nodes, setEdges, getClosestHandles]
   )
 
+  // 🔥 [Critical] onReconnect 콜백 필수 - 이것이 없으면 edgeupdater가 DOM에 렌더링되지 않음
+  const onReconnect = useCallback(
+    (_oldEdge: Edge, _newConnection: Connection) => {
+      // React Flow가 edgeupdater를 렌더링하려면 이 콜백이 정의되어 있어야 함
+      // 실제 로직은 onReconnectEnd에서 처리하므로 여기서는 아무것도 하지 않음
+    },
+    []
+  )
+
   // 🔥 [Fix] 연결선 재연결 - onReconnect에서 직접 처리 (복제 방지)
   // 엣지 재연결 종료 시 - 노드 바디에 드롭했을 때 처리 (Figma-like)
   const onReconnectEnd = useCallback(
@@ -1185,30 +1193,14 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         }))}
         edges={edges.map((edge) => {
           const style = getEdgeStyle(edge.data)
-          const edgeColor = edge.data?.color
-          const hasCustomColor = edgeColor && edgeColor !== '#555555' && edgeColor !== '#555'
 
           return {
             ...edge,
-            type: 'smoothstep',
+            type: 'step',
             updatable: true,
             style,
             markerEnd: getMarkerEnd(edge.data),
             markerStart: getMarkerStart(edge.data),
-            // 라벨 배경 색상
-            labelBgStyle: {
-              fill: hasCustomColor ? edgeColor : '#FFFFFF',
-              fillOpacity: 1,
-            },
-            // 라벨 텍스트 색상: 커스텀 색상일 때만 흰색
-            labelStyle: hasCustomColor ? {
-              fill: '#FFFFFF',
-              fontSize: '12px',
-              fontWeight: '600',
-              fontFamily: "'Pretendard Variable', Pretendard, sans-serif",
-            } : undefined,  // 기본 색상일 때는 CSS 사용
-            labelBgPadding: [4, 8],
-            labelBgBorderRadius: 6,
           } as Edge<FlowEdgeData>
         })}
         onNodesChange={onNodesChange}
@@ -1216,15 +1208,16 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         onConnect={onConnect}
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
+        onReconnect={onReconnect}
         onReconnectEnd={onReconnectEnd}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
-        // edgeTypes={edgeTypes}  // 기본 smoothstep edge 사용
-        connectionLineType={ConnectionLineType.SmoothStep}
+        edgeTypes={edgeTypes}
+        connectionLineType={ConnectionLineType.Step}
         defaultEdgeOptions={{
-          type: 'smoothstep',
+          type: 'step',
           animated: false,
           focusable: true,
           style: {
