@@ -185,8 +185,20 @@ optgroup {
   pointer-events: all; /* 🔥 Fix: 보일 때만 클릭 가능 */
 }
 
-/* 6. 엣지 재연결 핸들 - React Flow 기본 스타일 테스트 */
-/* CSS를 제거하고 React Flow 기본 동작 확인 */
+/* 6. 엣지 재연결 핸들 - 보이도록 스타일링 */
+.react-flow__edgeupdater {
+  /* 🔥 중요: React Flow 기본값이 transparent라서 보이지 않음! */
+  fill: #ffffff !important;
+  stroke: #3182F6 !important;
+  stroke-width: 2 !important;
+  cursor: grab !important;
+  pointer-events: all !important;
+}
+
+.react-flow__edgeupdater:hover {
+  fill: #3182F6 !important;
+  stroke: #ffffff !important;
+}
 
 /* 7. 패닝 모드 시 이벤트 차단 */
 .flow-canvas.panning .react-flow__node,
