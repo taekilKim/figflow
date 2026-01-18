@@ -76,39 +76,35 @@ function TDSStepEdge(props: EdgeProps) {
         interactionWidth={20}
       />
 
-      {/* EdgeUpdater 핸들: foreignObject로 button 렌더링 */}
+      {/* EdgeUpdater 핸들: circle 직접 렌더링 */}
       {selected && (
         <>
-          <foreignObject
-            width={40}
-            height={40}
-            x={sourceX - 20}
-            y={sourceY - 20}
-            className="react-flow__edgeupdater-container"
-            requiredExtensions="http://www.w3.org/1999/xhtml"
-          >
-            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <button
-                className="react-flow__edgeupdater react-flow__edgeupdater-source"
-                type="button"
-              />
-            </div>
-          </foreignObject>
-          <foreignObject
-            width={40}
-            height={40}
-            x={targetX - 20}
-            y={targetY - 20}
-            className="react-flow__edgeupdater-container"
-            requiredExtensions="http://www.w3.org/1999/xhtml"
-          >
-            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <button
-                className="react-flow__edgeupdater react-flow__edgeupdater-target"
-                type="button"
-              />
-            </div>
-          </foreignObject>
+          <circle
+            cx={sourceX}
+            cy={sourceY}
+            r={8}
+            className="react-flow__edgeupdater react-flow__edgeupdater-source"
+            style={{
+              fill: '#ffffff',
+              stroke: '#3182F6',
+              strokeWidth: 2,
+              cursor: 'grab',
+              pointerEvents: 'all',
+            }}
+          />
+          <circle
+            cx={targetX}
+            cy={targetY}
+            r={8}
+            className="react-flow__edgeupdater react-flow__edgeupdater-target"
+            style={{
+              fill: '#ffffff',
+              stroke: '#3182F6',
+              strokeWidth: 2,
+              cursor: 'grab',
+              pointerEvents: 'all',
+            }}
+          />
         </>
       )}
 
