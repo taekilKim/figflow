@@ -719,18 +719,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     [nodes, setEdges, getClosestHandles]
   )
 
-  // 🔥 [Critical Fix] React Flow가 edgeupdater를 렌더링하려면 onReconnect가 필수!
-  // 하지만 실제 재연결은 onReconnectEnd에서 처리하므로 여기서는 아무것도 하지 않음
-  const onReconnect = useCallback(
-    (_oldEdge: Edge, _newConnection: Connection) => {
-      // 아무것도 하지 않음 - onReconnectEnd에서 처리
-      // 이 함수가 정의되어 있어야 edgeupdater가 DOM에 렌더링됨
-      console.log('onReconnect called but ignored - handled by onReconnectEnd')
-    },
-    []
-  )
-
-  // 🔥 [Fix] 연결선 재연결 종료 시 - 복제 방지를 위해 onReconnect는 비워두고 onReconnectEnd에서 처리
+  // 🔥 [Fix] 연결선 재연결 - onReconnect에서 직접 처리 (복제 방지)
   // 엣지 재연결 종료 시 - 노드 바디에 드롭했을 때 처리 (Figma-like)
   const onReconnectEnd = useCallback(
     (event: MouseEvent | TouchEvent, edge: Edge, handleType: 'source' | 'target') => {
@@ -1199,16 +1188,20 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           // TDS 라벨 스타일 계산
           const edgeColor = edge.data?.color
           const isDefaultColor = !edgeColor || edgeColor === '#555555' || edgeColor === '#555'
+
           const labelBgStyle = {
             fill: isDefaultColor ? '#FFFFFF' : edgeColor,
             fillOpacity: 1,
           }
-          const labelStyle = {
-            fill: isDefaultColor ? '#333D4B' : '#FFFFFF',
+
+          // 기본 색상일 때는 fill을 설정하지 않음 (CSS 기본값 사용)
+          // 커스텀 색상일 때만 흰색 글씨 설정
+          const labelStyle: React.CSSProperties = {
+            ...(isDefaultColor ? {} : { fill: '#FFFFFF' }),
             fontSize: '12px',
             fontWeight: '600',
             fontFamily: "'Pretendard Variable', Pretendard, sans-serif",
-          } as React.CSSProperties
+          }
 
           return {
             ...edge,
@@ -1228,7 +1221,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         onConnect={onConnect}
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
-        onReconnect={onReconnect}
         onReconnectEnd={onReconnectEnd}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
