@@ -720,11 +720,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   )
 
   // 🔥 [Critical Fix] React Flow가 edgeupdater를 렌더링하려면 onReconnect가 필수!
-  // 빈 함수라도 정의되어 있어야 edgeupdater가 DOM에 추가됨
+  // 하지만 실제 재연결은 onReconnectEnd에서 처리하므로 여기서는 아무것도 하지 않음
   const onReconnect = useCallback(
-    () => {
-      // 실제 로직은 onReconnectEnd에서 처리
-      // 이 함수는 React Flow가 edgeupdater를 렌더링하도록 하기 위한 것
+    (_oldEdge: Edge, _newConnection: Connection) => {
+      // 아무것도 하지 않음 - onReconnectEnd에서 처리
+      // 이 함수가 정의되어 있어야 edgeupdater가 DOM에 렌더링됨
+      console.log('onReconnect called but ignored - handled by onReconnectEnd')
     },
     []
   )
@@ -1204,18 +1205,18 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           }
           const labelStyle = {
             fill: isDefaultColor ? '#333D4B' : '#FFFFFF',
-            fontWeight: 600,
+            fontSize: '12px',
+            fontWeight: '600',
             fontFamily: "'Pretendard Variable', Pretendard, sans-serif",
-          }
+          } as React.CSSProperties
 
           return {
             ...edge,
-            type: 'smoothstep', // smoothstep은 step보다 부드러운 곡선
+            type: 'smoothstep',
             updatable: true,
             style,
-            // TEST: 화살표 완전 제거 (undefined로 명시적 설정)
-            markerEnd: undefined,
-            markerStart: undefined,
+            markerEnd: getMarkerEnd(edge.data),
+            markerStart: getMarkerStart(edge.data),
             labelStyle,
             labelBgStyle,
             labelBgPadding: [4, 8],
