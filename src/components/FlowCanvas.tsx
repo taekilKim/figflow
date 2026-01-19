@@ -681,6 +681,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
 
   const onConnectEnd: OnConnectEnd = useCallback(
     (event, connectionState) => {
+      // 🔥 재연결 중이면 스킵 (onReconnect가 이미 처리함)
+      if (isReconnecting.current) {
+        connectingNodeId.current = null
+        return
+      }
+
       if (!connectingNodeId.current) {
         return
       }
@@ -740,6 +746,13 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     [nodes, setEdges, getClosestHandles]
   )
 
+  // 🔥 재연결 추적 (onConnectEnd와 onReconnect 충돌 방지)
+  const isReconnecting = useRef(false)
+
+  const onReconnectStart = useCallback(() => {
+    isReconnecting.current = true
+  }, [])
+
   // 🔥 우선순위 0: 최소한의 reconnect 구현 (복제 방지, data 보존)
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
@@ -762,6 +775,11 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     },
     [setEdges]
   )
+
+  const onReconnectEnd = useCallback(() => {
+    // 재연결 완료 후 플래그 리셋
+    isReconnecting.current = false
+  }, [])
 
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
@@ -1192,6 +1210,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
         onReconnect={onReconnect}
+        onReconnectStart={onReconnectStart}
+        onReconnectEnd={onReconnectEnd}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
