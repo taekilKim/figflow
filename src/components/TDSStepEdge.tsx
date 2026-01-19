@@ -47,7 +47,7 @@ function TDSStepEdge(props: EdgeProps) {
   } = props
 
   // 🔥 [Final Fix] Native Step Path with Direction Calculation
-  // offset: 2 → 최소 직선 구간 확보 (방향 계산용) + 밀착 효과 유지
+  // offset: 25 → 수직/수평으로 일정 구간 진행 후 꺾임 (프레임에 바로 붙지 않음)
   // borderRadius: 0 → 완전한 직각
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -57,7 +57,7 @@ function TDSStepEdge(props: EdgeProps) {
     targetY,
     targetPosition,
     borderRadius: 0,  // 🔥 Final: 직각 유지
-    offset: 2,        // 🔥 [Fix] 0 -> 2px (방향 계산을 위한 최소 구간 확보 + 밀착 효과 유지)
+    offset: 25,       // 🔥 Update: 2 -> 25px (수직/수평 구간 확보, 프레임에 바로 붙지 않음)
   })
 
   // 라벨 색상 로직 (프리셋 적용)
