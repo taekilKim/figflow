@@ -741,90 +741,47 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     [nodes, setEdges, getClosestHandles]
   )
 
-  // 🔥 [Critical] onReconnect - 핸들을 다른 핸들에 드롭했을 때 처리
+  // 🔥 Reconnect: 단순화 버전 (reconnectEdge 사용하지 않고 직접 구현)
+  const edgeReconnectSuccessful = useRef(true)
+
+  const onReconnectStart = useCallback(() => {
+    edgeReconnectSuccessful.current = false
+  }, [])
+
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
-      setEdges((els) => {
-        // 기존 엣지 제거
-        const filtered = els.filter((e) => e.id !== oldEdge.id)
+      edgeReconnectSuccessful.current = true
 
-        // 새 엣지 생성 (기존 엣지의 data 보존!)
+      setEdges((els) => {
+        // 1. 기존 엣지 제거
+        const withoutOld = els.filter((e) => e.id !== oldEdge.id)
+
+        // 2. 새 엣지 생성 (기존 data 완전 보존)
         const newEdge: Edge<FlowEdgeData> = {
-          ...oldEdge,
+          ...(oldEdge as Edge<FlowEdgeData>), // 타입 명시
           id: `e${newConnection.source}-${newConnection.target}`,
           source: newConnection.source,
           target: newConnection.target,
           sourceHandle: newConnection.sourceHandle,
           targetHandle: newConnection.targetHandle,
-          // 🔥 중요: 기존 엣지의 data (arrowType, color, style 등) 보존
-          data: { ...oldEdge.data },
-        } as Edge<FlowEdgeData>
+          // data, style, markerEnd, markerStart는 oldEdge에서 복사됨
+        }
 
-        // uniqueEdges로 중복 방지
-        return uniqueEdges([...filtered, newEdge])
+        // 3. 중복 방지
+        return uniqueEdges([...withoutOld, newEdge])
       })
     },
     [setEdges]
   )
 
-  // 🔥 [Fix] 연결선 재연결 - 노드 바디에 드롭했을 때만 처리 (Figma-like)
-  // onReconnect가 이미 핸들→핸들 연결을 처리했으므로 중복 방지 필요
   const onReconnectEnd = useCallback(
-    (event: MouseEvent | TouchEvent, edge: Edge, handleType: 'source' | 'target') => {
-      const clientX = (event as MouseEvent).clientX || (event as TouchEvent).changedTouches?.[0]?.clientX
-      const clientY = (event as MouseEvent).clientY || (event as TouchEvent).changedTouches?.[0]?.clientY
-
-      if (!clientX || !clientY) return
-
-      // 좌표 아래 요소 탐색 (elementsFromPoint 사용)
-      const elements = document.elementsFromPoint(clientX, clientY)
-
-      // 🔥 중요: 핸들에 드롭한 경우는 onReconnect가 이미 처리했으므로 스킵
-      const handleElement = elements.find((el) => el.classList.contains('react-flow__handle'))
-      if (handleElement) {
-        return // 핸들→핸들 연결은 onReconnect에서 처리했으므로 중복 실행 방지
+    (_: MouseEvent | TouchEvent, _edge: Edge) => {
+      if (!edgeReconnectSuccessful.current) {
+        // 재연결이 실패한 경우 (선택사항: 엣지 삭제)
       }
-
-      const nodeElement = elements.find((el) => el.classList.contains('react-flow__node'))
-
-      if (nodeElement) {
-        const targetNodeId = nodeElement.getAttribute('data-id')
-
-        // 유효한 노드이고 기존 연결과 다를 경우 재연결
-        if (targetNodeId && targetNodeId !== edge.source && targetNodeId !== edge.target) {
-          const sourceNode = nodes.find((n) => n.id === (handleType === 'source' ? targetNodeId : edge.source))
-          const targetNode = nodes.find((n) => n.id === (handleType === 'target' ? targetNodeId : edge.target))
-
-          if (sourceNode && targetNode) {
-            const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
-
-            const newConnection: Connection = {
-              source: handleType === 'source' ? targetNodeId : edge.source,
-              target: handleType === 'target' ? targetNodeId : edge.target,
-              sourceHandle: handleType === 'source' ? sourceHandle : (edge.sourceHandle || null),
-              targetHandle: handleType === 'target' ? targetHandle : (edge.targetHandle || null),
-            }
-
-            // 🔥 [Fix] 복제 방지: reconnectEdge 대신 수동 제거 + uniqueEdges 사용
-            setEdges((els) => {
-              const filtered = els.filter((e) => e.id !== edge.id)
-              const newEdge: Edge<FlowEdgeData> = {
-                ...edge,
-                id: `e${newConnection.source}-${newConnection.target}`,
-                source: newConnection.source,
-                target: newConnection.target,
-                sourceHandle: newConnection.sourceHandle,
-                targetHandle: newConnection.targetHandle,
-                // 🔥 중요: 기존 엣지의 data (arrowType, color, style 등) 보존
-                data: { ...edge.data },
-              } as Edge<FlowEdgeData>
-              return uniqueEdges([...filtered, newEdge])
-            })
-          }
-        }
-      }
+      edgeReconnectSuccessful.current = true
     },
-    [nodes, setEdges, getClosestHandles]
+    [setEdges]
   )
 
   const onNodeClick = useCallback(
@@ -1256,6 +1213,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
         onReconnect={onReconnect}
+        onReconnectStart={onReconnectStart}
         onReconnectEnd={onReconnectEnd}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
