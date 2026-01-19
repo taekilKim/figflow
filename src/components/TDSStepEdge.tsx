@@ -44,7 +44,6 @@ function TDSStepEdge(props: EdgeProps) {
     markerEnd,
     markerStart,
     label,
-    selected,
   } = props
 
   // 🔥 [Final Fix] Native Step Path with Direction Calculation
