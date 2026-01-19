@@ -96,19 +96,19 @@ function RightPanel({ selectedNodeId, selectedEdgeId, projectId }: RightPanelPro
     if (updates.notes !== undefined) setNodeNotes(updates.notes)
   }
 
-  // 프리셋 적용
+  // 프리셋 적용 (🔥 arrowType 제거: 화살표 방향은 보존)
   const applyPreset = (presetId: string) => {
     const preset = presets.find((p) => p.id === presetId)
     if (preset) {
       updateEdge({
         style: preset.style,
-        arrowType: preset.arrowType,
+        // arrowType 제거: 기존 화살표 방향 유지
         color: preset.color,
       })
     }
   }
 
-  // 현재 스타일을 프리셋으로 저장
+  // 현재 스타일을 프리셋으로 저장 (🔥 arrowType 제거)
   const saveAsPreset = () => {
     if (!newPresetName.trim() || !edgeData) return
 
@@ -116,7 +116,7 @@ function RightPanel({ selectedNodeId, selectedEdgeId, projectId }: RightPanelPro
       id: `preset-${Date.now()}`,
       name: newPresetName.trim(),
       style: edgeData.style || 'solid',
-      arrowType: edgeData.arrowType || 'forward',
+      // arrowType 제거: 프리셋은 색상과 스타일만 저장
       color: edgeData.color || '#b0b0b0',
     }
 
