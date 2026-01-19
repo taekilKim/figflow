@@ -360,16 +360,23 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     return undefined
   }
 
-  // 엣지 로드 시 label 및 스타일 속성 설정
+  // 엣지 로드 시 label 및 스타일 속성 설정 + 기본값 설정
   const loadedEdges = loadedProject?.edges?.map((edge) => {
-    const style = getEdgeStyle(edge.data)
+    // 🔥 중요: localStorage의 기존 엣지에 arrowType이 없을 수 있으므로 기본값 설정
+    const edgeDataWithDefaults = {
+      ...edge.data,
+      arrowType: edge.data?.arrowType || 'forward',
+      style: edge.data?.style || 'solid',
+    }
+    const style = getEdgeStyle(edgeDataWithDefaults)
     return {
       ...edge,
       label: edge.label,
       type: 'step',
+      data: edgeDataWithDefaults,
       style,
-      markerEnd: getMarkerEnd(edge.data),
-      markerStart: getMarkerStart(edge.data),
+      markerEnd: getMarkerEnd(edgeDataWithDefaults),
+      markerStart: getMarkerStart(edgeDataWithDefaults),
     }
   }) || initialEdges
 
@@ -476,33 +483,40 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     return () => clearInterval(diagnosisInterval)
   }, [getEdges])
 
-  // 🚀 3단계: 강제 마이그레이션 (기존 엣지를 새 설정으로 업데이트)
+  // 🚀 마이그레이션: 기존 엣지에 arrowType, style 기본값 설정 및 localStorage 저장
   useEffect(() => {
-    console.log('🚀 Applying forced edge migration to existing edges...')
+    console.log('🚀 Migrating edges: setting default arrowType and style...')
 
-    setEdges((currentEdges) =>
-      currentEdges.map((edge) => ({
-        ...edge,
-        type: 'smart', // 타입 강제 변경
-        data: {
-          ...edge.data,
-          // SmartStepEdge 설정 강제 주입
-          smartEdge: {
-            nodePadding: 60,
-            gridRatio: 10,
-            lessCorners: true,
+    const project = projectId ? getProjectById(projectId) : loadProject()
+    if (!project) return
+
+    let needsUpdate = false
+    const migratedEdges = project.edges.map((edge) => {
+      // arrowType이나 style이 없으면 기본값 설정
+      if (!edge.data?.arrowType || !edge.data?.style) {
+        needsUpdate = true
+        return {
+          ...edge,
+          data: {
+            ...edge.data,
+            arrowType: edge.data?.arrowType || 'forward',
+            style: edge.data?.style || 'solid',
           },
-          // PathOptions 강제 주입
-          pathOptions: {
-            offset: 50,
-            borderRadius: 20,
-          }
         }
-      } as Edge<FlowEdgeData>))
-    )
+      }
+      return edge
+    })
 
-    console.log('✅ Existing edges have been migrated to new settings.')
-  }, []) // 마운트 시 1회만 실행
+    // 변경사항이 있으면 localStorage에 저장
+    if (needsUpdate) {
+      if (projectId) {
+        updateProject(projectId, { edges: migratedEdges })
+      } else {
+        saveProject({ ...project, edges: migratedEdges, updatedAt: Date.now() })
+      }
+      console.log('✅ Edges migrated and saved to localStorage.')
+    }
+  }, [projectId]) // projectId가 변경될 때마다 실행 (초기 로드 포함)
 
   // storage 이벤트 감지하여 노드 및 엣지 업데이트
   useEffect(() => {
@@ -753,8 +767,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     [setEdges]
   )
 
-  // 🔥 [Fix] 연결선 재연결 - onReconnect에서 직접 처리 (복제 방지)
-  // 엣지 재연결 종료 시 - 노드 바디에 드롭했을 때 처리 (Figma-like)
+  // 🔥 [Fix] 연결선 재연결 - 노드 바디에 드롭했을 때만 처리 (Figma-like)
+  // onReconnect가 이미 핸들→핸들 연결을 처리했으므로 중복 방지 필요
   const onReconnectEnd = useCallback(
     (event: MouseEvent | TouchEvent, edge: Edge, handleType: 'source' | 'target') => {
       const clientX = (event as MouseEvent).clientX || (event as TouchEvent).changedTouches?.[0]?.clientX
@@ -764,6 +778,13 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
 
       // 좌표 아래 요소 탐색 (elementsFromPoint 사용)
       const elements = document.elementsFromPoint(clientX, clientY)
+
+      // 🔥 중요: 핸들에 드롭한 경우는 onReconnect가 이미 처리했으므로 스킵
+      const handleElement = elements.find((el) => el.classList.contains('react-flow__handle'))
+      if (handleElement) {
+        return // 핸들→핸들 연결은 onReconnect에서 처리했으므로 중복 실행 방지
+      }
+
       const nodeElement = elements.find((el) => el.classList.contains('react-flow__node'))
 
       if (nodeElement) {
