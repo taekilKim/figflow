@@ -30,7 +30,6 @@ import FigmaFileImportDialog from './FigmaFileImportDialog'
 import { FlowNodeData, FlowEdgeData } from '../types'
 import { saveProject, loadProject, getProjectById, updateProject } from '../utils/storage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
-import { uniqueEdges } from '../utils/edgeUtils'
 import '../styles/FlowCanvas.css'
 
 // 🔥 Pivot: Native Step Edge 사용 (Smart Routing 제거)
@@ -741,45 +740,24 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     [nodes, setEdges, getClosestHandles]
   )
 
-  // 🔥 Reconnect: 단순화 버전 (reconnectEdge 사용하지 않고 직접 구현)
-  const edgeReconnectSuccessful = useRef(true)
-
-  const onReconnectStart = useCallback(() => {
-    edgeReconnectSuccessful.current = false
-  }, [])
-
+  // 🔥 우선순위 0: 최소한의 reconnect 구현 (복제 방지, data 보존)
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
-      edgeReconnectSuccessful.current = true
-
-      setEdges((els) => {
-        // 1. 기존 엣지 제거
-        const withoutOld = els.filter((e) => e.id !== oldEdge.id)
-
-        // 2. 새 엣지 생성 (기존 data 완전 보존)
-        const newEdge: Edge<FlowEdgeData> = {
-          ...(oldEdge as Edge<FlowEdgeData>), // 타입 명시
-          id: `e${newConnection.source}-${newConnection.target}`,
-          source: newConnection.source,
-          target: newConnection.target,
-          sourceHandle: newConnection.sourceHandle,
-          targetHandle: newConnection.targetHandle,
-          // data, style, markerEnd, markerStart는 oldEdge에서 복사됨
-        }
-
-        // 3. 중복 방지
-        return uniqueEdges([...withoutOld, newEdge])
-      })
-    },
-    [setEdges]
-  )
-
-  const onReconnectEnd = useCallback(
-    (_: MouseEvent | TouchEvent, _edge: Edge) => {
-      if (!edgeReconnectSuccessful.current) {
-        // 재연결이 실패한 경우 (선택사항: 엣지 삭제)
-      }
-      edgeReconnectSuccessful.current = true
+      setEdges((edges) =>
+        edges.map((edge) => {
+          if (edge.id === oldEdge.id) {
+            // 기존 엣지를 새 연결로 업데이트 (id는 유지, 복제 없음)
+            return {
+              ...edge, // 모든 속성 보존 (data, style, markerEnd, markerStart 등)
+              source: newConnection.source,
+              target: newConnection.target,
+              sourceHandle: newConnection.sourceHandle,
+              targetHandle: newConnection.targetHandle,
+            }
+          }
+          return edge
+        })
+      )
     },
     [setEdges]
   )
@@ -1213,8 +1191,6 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
         onReconnect={onReconnect}
-        onReconnectStart={onReconnectStart}
-        onReconnectEnd={onReconnectEnd}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
