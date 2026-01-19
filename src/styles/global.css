@@ -185,17 +185,30 @@ optgroup {
   pointer-events: all; /* 🔥 Fix: 보일 때만 클릭 가능 */
 }
 
-/* 6. 엣지 재연결 핸들 - 보이도록 스타일링 */
+/* 6. 엣지 재연결 핸들 - 선택 시에만 표시, 동적 크기 */
 .react-flow__edgeupdater {
-  /* 🔥 중요: React Flow 기본값이 transparent라서 보이지 않음! */
+  /* 🔥 기본 상태: 완전히 숨김 */
+  opacity: 0 !important;
+  pointer-events: none !important;
+
+  /* 🔥 동적 크기: 줌 아웃 시 커짐 (역수 적용) */
+  r: calc(8px * var(--zoom-scale, 1)) !important;
+
+  /* 스타일링 */
   fill: #ffffff !important;
   stroke: #3182F6 !important;
   stroke-width: 2 !important;
   cursor: grab !important;
+  transition: opacity 0.2s, fill 0.2s, stroke 0.2s;
+}
+
+/* 🔥 선택된 엣지의 핸들만 표시 */
+.react-flow__edge.selected .react-flow__edgeupdater {
+  opacity: 1 !important;
   pointer-events: all !important;
 }
 
-.react-flow__edgeupdater:hover {
+.react-flow__edge.selected .react-flow__edgeupdater:hover {
   fill: #3182F6 !important;
   stroke: #ffffff !important;
 }

@@ -7,25 +7,29 @@ import {
 } from '@xyflow/react'
 
 /**
- * TDSStepEdge: Simplified Native Step Edge with TDS Label Styling
+ * TDSStepEdge: Native Step Edge with TDS Label Styling
  *
- * 🔥 Pivot: Smart Routing 완전 제거
- * - @tisoap/react-flow-smart-edge 폐기
+ * 🔥 Architecture:
  * - React Flow 내장 getSmoothStepPath 사용
  * - offset: 2 (최소 직선 구간 + 밀착 효과)
  * - borderRadius: 0 (완전한 직각)
  *
- * 🔥 Fix: EdgeUpdater는 React Flow가 자동 렌더링
- * - updatable: true 설정 시 ReactFlow가 자동으로 edgeupdater button 생성
- * - CSS로 스타일링 (global.css의 .react-flow__edgeupdater)
- * - 드래그 기능은 React Flow 내부 시스템이 처리
+ * 🔥 EdgeUpdater (재연결 핸들):
+ * - React Flow가 자동 렌더링 (updatable: true + onReconnect 필수)
+ * - CSS로 제어 (global.css의 .react-flow__edge.selected .react-flow__edgeupdater)
+ * - 선택된 엣지에만 표시, 줌 레벨에 따라 동적 크기 조정
+ * - 드래그 기능은 React Flow 내부 시스템이 자동 처리
+ *
+ * 🔥 TDS Label Styling:
+ * - EdgeLabelRenderer로 HTML 기반 라벨 렌더링
+ * - 색상별 배경/텍스트 (기본: 흰배경/어두운텍스트, 커스텀: 색배경/흰텍스트)
+ * - 동적 폰트 크기 (줌 레벨 반영)
  *
  * 장점:
- * - 갭 없음 (Native는 원래 핸들에 딱 붙음)
- * - 예측 가능한 동작
+ * - React Flow 네이티브 시스템 활용 → 안정성 극대화
+ * - 핸들 드래그/재연결 자동 작동
  * - 화살표 자동 렌더링
- * - TDS 라벨 스타일 (색상별 배경/텍스트)
- * - 안정성 극대화
+ * - 갭 없이 핸들에 딱 붙는 엣지
  */
 function TDSStepEdge(props: EdgeProps) {
   const {
@@ -76,37 +80,6 @@ function TDSStepEdge(props: EdgeProps) {
         interactionWidth={20}
       />
 
-      {/* EdgeUpdater 핸들: circle 직접 렌더링 */}
-      {selected && (
-        <>
-          <circle
-            cx={sourceX}
-            cy={sourceY}
-            r={8}
-            className="react-flow__edgeupdater react-flow__edgeupdater-source"
-            style={{
-              fill: '#ffffff',
-              stroke: '#3182F6',
-              strokeWidth: 2,
-              cursor: 'grab',
-              pointerEvents: 'all',
-            }}
-          />
-          <circle
-            cx={targetX}
-            cy={targetY}
-            r={8}
-            className="react-flow__edgeupdater react-flow__edgeupdater-target"
-            style={{
-              fill: '#ffffff',
-              stroke: '#3182F6',
-              strokeWidth: 2,
-              cursor: 'grab',
-              pointerEvents: 'all',
-            }}
-          />
-        </>
-      )}
 
       {/* TDS 스타일 라벨 */}
       {label && (
