@@ -746,9 +746,10 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
       setEdges((edges) =>
         edges.map((edge) => {
           if (edge.id === oldEdge.id) {
-            // 기존 엣지를 새 연결로 업데이트 (id는 유지, 복제 없음)
+            // 기존 엣지를 새 연결로 업데이트 (id도 새 연결에 맞게 변경!)
             return {
               ...edge, // 모든 속성 보존 (data, style, markerEnd, markerStart 등)
+              id: `e${newConnection.source}-${newConnection.target}`, // 🔥 id 업데이트!
               source: newConnection.source,
               target: newConnection.target,
               sourceHandle: newConnection.sourceHandle,

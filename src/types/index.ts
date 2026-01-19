@@ -55,12 +55,13 @@ export interface FlowEdgeData extends Record<string, unknown> {
 
 /**
  * 엣지 프리셋
+ * 🔥 arrowType 제거: 프리셋은 색상과 스타일만 변경, 화살표 방향은 보존
  */
 export interface EdgePreset {
   id: string;
   name: string;
   style: EdgeStyle;
-  arrowType: ArrowType;
+  arrowType?: ArrowType; // optional for backward compatibility
   color: string;
 }
 
