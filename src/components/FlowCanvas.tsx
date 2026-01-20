@@ -750,8 +750,16 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   // 🔥 재연결 추적 (onConnectEnd와 onReconnect 충돌 방지)
   const isReconnecting = useRef(false)
 
-  const onReconnectStart = useCallback(() => {
+  const onReconnectStart = useCallback((_event: React.MouseEvent, edge: Edge, handleType: 'source' | 'target') => {
     console.log('🔵 [onReconnectStart] 재연결 시작')
+    console.log('  - 드래그 중인 핸들:', handleType, '(source=시작지, target=목적지)')
+    console.log('  - 재연결 대상 edge:', {
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      sourceHandle: edge.sourceHandle,
+      targetHandle: edge.targetHandle,
+    })
     isReconnecting.current = true
   }, [])
 
@@ -1246,7 +1254,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           return {
             ...edge,
             type: 'step',
-            updatable: 'target',  // 🔥 target handle도 재연결 가능하도록 명시
+            updatable: true,  // 🔥 양쪽 모두 재연결 가능
             style,
             markerEnd: getMarkerEnd(edge.data),
             markerStart: getMarkerStart(edge.data),
