@@ -109,19 +109,19 @@ function FrameNode({ data, selected }: NodeProps) {
         </a>
       </div>
 
-      {/* Handles positioned at frame center edges */}
+      {/* Handles positioned closer to frame edges */}
       {/* Top Center */}
       <Handle
         type="target"
         position={Position.Top}
         id="target-top"
-        style={{ top: 0, left: '50%', transform: 'translate(-50%, -50%)' }}
+        style={{ top: 0, left: '50%', transform: 'translate(-50%, -25%)' }}
       />
       <Handle
         type="source"
         position={Position.Top}
         id="source-top"
-        style={{ top: 0, left: '50%', transform: 'translate(-50%, -50%)' }}
+        style={{ top: 0, left: '50%', transform: 'translate(-50%, -25%)' }}
       />
 
       {/* Bottom Center */}
@@ -129,13 +129,13 @@ function FrameNode({ data, selected }: NodeProps) {
         type="target"
         position={Position.Bottom}
         id="target-bottom"
-        style={{ bottom: 0, left: '50%', transform: 'translate(-50%, 50%)' }}
+        style={{ bottom: 0, left: '50%', transform: 'translate(-50%, 25%)' }}
       />
       <Handle
         type="source"
         position={Position.Bottom}
         id="source-bottom"
-        style={{ bottom: 0, left: '50%', transform: 'translate(-50%, 50%)' }}
+        style={{ bottom: 0, left: '50%', transform: 'translate(-50%, 25%)' }}
       />
 
       {/* Left Center */}
@@ -143,13 +143,13 @@ function FrameNode({ data, selected }: NodeProps) {
         type="target"
         position={Position.Left}
         id="target-left"
-        style={{ top: '50%', left: 0, transform: 'translate(-50%, -50%)' }}
+        style={{ top: '50%', left: 0, transform: 'translate(-25%, -50%)' }}
       />
       <Handle
         type="source"
         position={Position.Left}
         id="source-left"
-        style={{ top: '50%', left: 0, transform: 'translate(-50%, -50%)' }}
+        style={{ top: '50%', left: 0, transform: 'translate(-25%, -50%)' }}
       />
 
       {/* Right Center */}
@@ -157,13 +157,13 @@ function FrameNode({ data, selected }: NodeProps) {
         type="target"
         position={Position.Right}
         id="target-right"
-        style={{ top: '50%', right: 0, transform: 'translate(50%, -50%)' }}
+        style={{ top: '50%', right: 0, transform: 'translate(25%, -50%)' }}
       />
       <Handle
         type="source"
         position={Position.Right}
         id="source-right"
-        style={{ top: '50%', right: 0, transform: 'translate(50%, -50%)' }}
+        style={{ top: '50%', right: 0, transform: 'translate(25%, -50%)' }}
       />
     </div>
   )
