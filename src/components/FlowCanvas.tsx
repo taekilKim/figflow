@@ -28,6 +28,7 @@ import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, Al
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
 import FigmaFileImportDialog from './FigmaFileImportDialog'
+import { useDeviceType, isTouchDevice } from '../hooks/useDeviceType'
 import { FlowNodeData, FlowEdgeData } from '../types'
 import { saveProject, loadProject, getProjectById, updateProject } from '../utils/storage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
@@ -299,6 +300,10 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   // React Flow 훅 (단축키용)
   const { zoomTo, fitView, getNodes } = useReactFlow()
 
+  // 🔥 반응형: 디바이스 타입 감지
+  const deviceType = useDeviceType()
+  const isTouch = isTouchDevice()
+
   // 초기 로드 시 localStorage에서 데이터 복원
   // projectId가 있으면 해당 프로젝트를, 없으면 기존 방식(단일 프로젝트) 사용
   const loadedProject = projectId ? getProjectById(projectId) : loadProject()
@@ -307,6 +312,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   )
 
   // Figma-style 인터랙션: 스페이스바로 패닝 모드 전환
+  // 🔥 태블릿에서는 터치 제스처로 패닝
   const [isPanning, setIsPanning] = useState(false)
 
   // 선택된 노드 ID 추적 (정렬 툴바 및 좌측 패널 동기화용)
@@ -1406,8 +1412,14 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         edgesReconnectable={true}
         reconnectRadius={200}  // 🔥 재연결 인식 범위 대폭 확대 (프레임 전체 인식)
         connectionRadius={200}  // 🔥 연결 인식 범위 대폭 확대
-        panOnDrag={isPanning}
-        selectionOnDrag={true}  // 🔥 Fix 3: 드래그로 바로 선택
+        panOnDrag={
+          deviceType === 'tablet' && isTouch
+            ? [2]  // 🔥 태블릿: 두 손가락으로 패닝
+            : deviceType === 'mobile'
+            ? true  // 🔥 모바일: 드래그로 패닝 (열람 모드)
+            : isPanning  // 🔥 데스크탑: 스페이스바 패닝
+        }
+        selectionOnDrag={deviceType !== 'mobile'}  // 🔥 모바일에서는 선택 드래그 비활성화
         panOnScroll={true}
         selectionMode={SelectionMode.Partial}
         selectionKeyCode={null}  // 🔥 Fix 3: 드래그하면 바로 선택 (Shift 불필요)

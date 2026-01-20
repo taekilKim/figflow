@@ -4,6 +4,8 @@
   height: 100vh;
   background: var(--bg-base);
   position: relative;
+  /* 터치 디바이스에서 자연스러운 스크롤 */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Floating Card Layout */
@@ -20,6 +22,7 @@
   flex-direction: column;
   overflow: hidden;
   z-index: 10;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .flow-canvas {
@@ -40,6 +43,7 @@
   flex-direction: column;
   overflow: hidden;
   z-index: 10;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 /* Panel Header */
@@ -142,4 +146,86 @@
 
 .btn-tonal:hover {
   background-color: #D6E6FD;
+}
+
+/* ========================================
+   반응형 디자인
+   ======================================== */
+
+/* 모바일 (0-768px): 열람 모드 */
+@media (max-width: 768px) {
+  /* 패널 숨김 (열람에 집중) */
+  .left-panel,
+  .right-panel {
+    display: none;
+  }
+
+  /* Toolbar 간소화 */
+  .toolbar {
+    top: 8px;
+    padding: 6px 8px;
+    gap: 4px;
+  }
+
+  .toolbar-button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .toolbar-divider {
+    display: none;
+  }
+
+  /* 핸들 터치 친화적 크기 */
+  .react-flow__handle {
+    width: 16px !important;
+    height: 16px !important;
+  }
+}
+
+/* 태블릿 (769px-1024px): 터치 모드 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* 패널 축소 */
+  .left-panel {
+    width: 200px;
+    left: 8px;
+  }
+
+  .right-panel {
+    width: 200px;
+    right: 8px;
+  }
+
+  /* Toolbar 조정 */
+  .toolbar {
+    top: 40px;
+  }
+
+  /* 터치 친화적 핸들 크기 증가 */
+  .react-flow__handle {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .react-flow__edgeupdater {
+    r: calc(12px * var(--zoom-scale, 1)) !important;
+  }
+
+  /* 패널 콘텐츠 간소화 */
+  .panel-header {
+    padding: 12px 16px;
+  }
+
+  .panel-header h2 {
+    font-size: 14px;
+  }
+
+  .panel-content {
+    padding: 12px 16px;
+  }
+}
+
+/* 데스크탑 (1025px+): 기본 모드 유지 */
+@media (min-width: 1025px) {
+  /* 현재 스타일 유지 */
 }
