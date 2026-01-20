@@ -456,32 +456,32 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     console.log('🔧 디버깅 툴 로드 완료. window.flowDebug.check()를 입력해보세요.')
   }, [setEdges, getEdges, nodes])
 
-  // 🔍 2단계: 런타임 진단 (실시간 상태 확인)
-  useEffect(() => {
-    const diagnosisInterval = setInterval(() => {
-      // 1. CSS 변수 주입 확인
-      const container = document.querySelector('.flow-canvas')
-      const computedStyle = container ? getComputedStyle(container) : null
-      const zoomScale = computedStyle ? computedStyle.getPropertyValue('--zoom-scale') : 'Not Found'
+  // 🔍 2단계: 런타임 진단 (실시간 상태 확인) - 비활성화
+  // useEffect(() => {
+  //   const diagnosisInterval = setInterval(() => {
+  //     // 1. CSS 변수 주입 확인
+  //     const container = document.querySelector('.flow-canvas')
+  //     const computedStyle = container ? getComputedStyle(container) : null
+  //     const zoomScale = computedStyle ? computedStyle.getPropertyValue('--zoom-scale') : 'Not Found'
 
-      // 2. 엣지 속성 확인
-      const currentEdges = getEdges()
-      const firstEdge = currentEdges[0]
+  //     // 2. 엣지 속성 확인
+  //     const currentEdges = getEdges()
+  //     const firstEdge = currentEdges[0]
 
-      console.log('--- 🔍 FigFlow Diagnosis ---')
-      console.log('1. CSS --zoom-scale:', zoomScale) // 숫자가 나와야 함
-      console.log('2. Edge Count:', currentEdges.length)
+  //     console.log('--- 🔍 FigFlow Diagnosis ---')
+  //     console.log('1. CSS --zoom-scale:', zoomScale) // 숫자가 나와야 함
+  //     console.log('2. Edge Count:', currentEdges.length)
 
-      if (firstEdge) {
-        console.log('3. Edge Type:', firstEdge.type) // 'smart'여야 함
-        console.log('4. Edge PathOptions:', (firstEdge.data as any)?.pathOptions) // offset: 50이 있어야 함
-        console.log('5. Edge SmartEdge:', firstEdge.data?.smartEdge) // nodePadding: 60이 있어야 함
-      }
-      console.log('----------------------------')
-    }, 5000) // 5초마다 진단
+  //     if (firstEdge) {
+  //       console.log('3. Edge Type:', firstEdge.type) // 'smart'여야 함
+  //       console.log('4. Edge PathOptions:', (firstEdge.data as any)?.pathOptions) // offset: 50이 있어야 함
+  //       console.log('5. Edge SmartEdge:', firstEdge.data?.smartEdge) // nodePadding: 60이 있어야 함
+  //     }
+  //     console.log('----------------------------')
+  //   }, 5000) // 5초마다 진단
 
-    return () => clearInterval(diagnosisInterval)
-  }, [getEdges])
+  //   return () => clearInterval(diagnosisInterval)
+  // }, [getEdges])
 
   // 🚀 마이그레이션: 기존 엣지에 arrowType, style 기본값 설정 및 localStorage 저장
   useEffect(() => {
