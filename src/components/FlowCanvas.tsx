@@ -1246,7 +1246,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           return {
             ...edge,
             type: 'step',
-            updatable: true,
+            updatable: 'target',  // 🔥 target handle도 재연결 가능하도록 명시
             style,
             markerEnd: getMarkerEnd(edge.data),
             markerStart: getMarkerStart(edge.data),
