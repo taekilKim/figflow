@@ -859,7 +859,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           const isNewEdge = !els.find((e) => e.id === edge.id)
 
           if (isNewEdge) {
-            return {
+            const newEdge = {
               ...edge,
               data: oldEdge.data,
               style: oldEdge.style,
@@ -867,7 +867,21 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
               markerEnd: oldEdge.markerEnd,
               markerStart: oldEdge.markerStart,
               type: oldEdge.type,
-            } as Edge<FlowEdgeData>
+              updatable: true,  // 🔥 명시적으로 updatable 설정
+            } as Edge<FlowEdgeData> & { updatable: boolean }
+
+            console.log('  - 새 edge 생성:', {
+              id: newEdge.id,
+              source: newEdge.source,
+              target: newEdge.target,
+              sourceHandle: newEdge.sourceHandle,
+              targetHandle: newEdge.targetHandle,
+              updatable: (newEdge as any).updatable,
+              markerEnd: newEdge.markerEnd,
+              markerStart: newEdge.markerStart,
+            })
+
+            return newEdge
           }
           return edge as Edge<FlowEdgeData>
         }) as Edge<FlowEdgeData>[]
