@@ -767,7 +767,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     }
   }, [])
 
-  // 🔥 우선순위 0: React Flow 공식 reconnectEdge 사용 + data 보존
+  // 🔥 우선순위 0: React Flow 공식 reconnectEdge 사용 + data 보존 + 자동 handle 선택
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
       console.log('🟢 [onReconnect] 재연결 시작')
@@ -779,17 +779,32 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         targetHandle: oldEdge.targetHandle,
         data: oldEdge.data,
       })
-      console.log('  - newConnection:', newConnection)
+      console.log('  - newConnection (원본):', newConnection)
 
       // onReconnect가 정상 호출되었으므로 reconnectInfo 초기화
       reconnectInfo.current = null
+
+      // 🔥 가장 가까운 handle 자동 선택
+      const sourceNode = nodes.find((n) => n.id === newConnection.source)
+      const targetNode = nodes.find((n) => n.id === newConnection.target)
+
+      let finalConnection = newConnection
+      if (sourceNode && targetNode) {
+        const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
+        finalConnection = {
+          ...newConnection,
+          sourceHandle,
+          targetHandle,
+        }
+        console.log('  - newConnection (자동 handle 선택 후):', finalConnection)
+      }
 
       setEdges((els) => {
         console.log('  - 현재 edges 개수:', els.length)
         console.log('  - 현재 edges IDs:', els.map((e) => e.id))
 
         // React Flow 공식 reconnectEdge 사용
-        const reconnected = reconnectEdge(oldEdge, newConnection, els)
+        const reconnected = reconnectEdge(oldEdge, finalConnection, els)
         console.log('  - reconnectEdge 반환값 개수:', reconnected.length)
         console.log('  - reconnectEdge 반환값 IDs:', reconnected.map((e) => e.id))
 
@@ -827,7 +842,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         return result
       })
     },
-    [setEdges]
+    [setEdges, nodes, getClosestHandles]
   )
 
   const onReconnectEnd = useCallback(() => {
@@ -838,11 +853,26 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
       const { oldEdge, newConnection } = reconnectInfo.current
       console.log('🔴 [MANUAL RECONNECT] onReconnect가 호출되지 않아 수동 재연결 실행')
       console.log('  - oldEdge:', oldEdge.id)
-      console.log('  - newConnection:', newConnection)
+      console.log('  - newConnection (원본):', newConnection)
+
+      // 🔥 가장 가까운 handle 자동 선택
+      const sourceNode = nodes.find((n) => n.id === newConnection.source)
+      const targetNode = nodes.find((n) => n.id === newConnection.target)
+
+      let finalConnection = newConnection
+      if (sourceNode && targetNode) {
+        const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
+        finalConnection = {
+          ...newConnection,
+          sourceHandle,
+          targetHandle,
+        }
+        console.log('  - newConnection (자동 handle 선택 후):', finalConnection)
+      }
 
       setEdges((els) => {
         // React Flow 공식 reconnectEdge 사용
-        const reconnected = reconnectEdge(oldEdge, newConnection, els)
+        const reconnected = reconnectEdge(oldEdge, finalConnection, els)
 
         // 새로 생성된 엣지에 oldEdge의 속성 복사
         const result = reconnected.map((edge) => {
@@ -884,7 +914,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     // 재연결 완료 후 플래그 및 info 리셋
     isReconnecting.current = false
     reconnectInfo.current = null
-  }, [setEdges])
+  }, [setEdges, nodes, getClosestHandles])
 
   // 🔥 우선순위 0: 모든 재연결 허용 (validation 우회)
   const isValidConnection = useCallback((connection: Edge<FlowEdgeData> | Connection) => {
@@ -1354,7 +1384,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           }
         }}
         edgesReconnectable={true}
-        reconnectRadius={30}
+        reconnectRadius={200}  // 🔥 재연결 인식 범위 대폭 확대 (프레임 전체 인식)
+        connectionRadius={200}  // 🔥 연결 인식 범위 대폭 확대
         panOnDrag={isPanning}
         selectionOnDrag={true}  // 🔥 Fix 3: 드래그로 바로 선택
         panOnScroll={true}
