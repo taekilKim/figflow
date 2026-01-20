@@ -751,22 +751,40 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   const isReconnecting = useRef(false)
 
   const onReconnectStart = useCallback(() => {
+    console.log('🔵 [onReconnectStart] 재연결 시작')
     isReconnecting.current = true
   }, [])
 
   // 🔥 우선순위 0: React Flow 공식 reconnectEdge 사용 + data 보존
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
+      console.log('🟢 [onReconnect] 재연결 시작')
+      console.log('  - oldEdge:', {
+        id: oldEdge.id,
+        source: oldEdge.source,
+        target: oldEdge.target,
+        sourceHandle: oldEdge.sourceHandle,
+        targetHandle: oldEdge.targetHandle,
+        data: oldEdge.data,
+      })
+      console.log('  - newConnection:', newConnection)
+
       setEdges((els) => {
+        console.log('  - 현재 edges 개수:', els.length)
+        console.log('  - 현재 edges IDs:', els.map((e) => e.id))
+
         // React Flow 공식 reconnectEdge 사용
         const reconnected = reconnectEdge(oldEdge, newConnection, els)
+        console.log('  - reconnectEdge 반환값 개수:', reconnected.length)
+        console.log('  - reconnectEdge 반환값 IDs:', reconnected.map((e) => e.id))
 
         // 새로 생성된 엣지에 oldEdge의 속성 복사
-        return reconnected.map((edge) => {
+        const result = reconnected.map((edge) => {
           // 새 엣지 감지: 이전 배열에 없던 id
           const isNewEdge = !els.find((e) => e.id === edge.id)
 
           if (isNewEdge) {
+            console.log('  - 새 엣지 감지:', edge.id, '(oldEdge:', oldEdge.id, ')')
             // 새 엣지에 oldEdge의 모든 속성 복사
             return {
               ...edge,
@@ -780,12 +798,25 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           }
           return edge as Edge<FlowEdgeData>
         }) as Edge<FlowEdgeData>[]
+
+        console.log('  - 최종 반환 edges 개수:', result.length)
+        console.log('  - 최종 반환 edges IDs:', result.map((e) => e.id))
+        console.log('  - 최종 반환 edges 상세:', result.map((e) => ({
+          id: e.id,
+          source: e.source,
+          target: e.target,
+          sourceHandle: e.sourceHandle,
+          targetHandle: e.targetHandle,
+        })))
+
+        return result
       })
     },
     [setEdges]
   )
 
   const onReconnectEnd = useCallback(() => {
+    console.log('🟡 [onReconnectEnd] 재연결 종료')
     // 재연결 완료 후 플래그 리셋
     isReconnecting.current = false
   }, [])
