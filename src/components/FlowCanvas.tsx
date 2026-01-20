@@ -784,19 +784,29 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
       // onReconnect가 정상 호출되었으므로 reconnectInfo 초기화
       reconnectInfo.current = null
 
-      // 🔥 가장 가까운 handle 자동 선택
-      const sourceNode = nodes.find((n) => n.id === newConnection.source)
-      const targetNode = nodes.find((n) => n.id === newConnection.target)
+      // 🔥 노드가 바뀌었을 때만 자동 handle 선택
+      const sourceChanged = oldEdge.source !== newConnection.source
+      const targetChanged = oldEdge.target !== newConnection.target
+      const nodeChanged = sourceChanged || targetChanged
 
       let finalConnection = newConnection
-      if (sourceNode && targetNode) {
-        const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
-        finalConnection = {
-          ...newConnection,
-          sourceHandle,
-          targetHandle,
+      if (nodeChanged) {
+        // 다른 노드로 옮길 때 → 자동 handle 선택
+        const sourceNode = nodes.find((n) => n.id === newConnection.source)
+        const targetNode = nodes.find((n) => n.id === newConnection.target)
+
+        if (sourceNode && targetNode) {
+          const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
+          finalConnection = {
+            ...newConnection,
+            sourceHandle,
+            targetHandle,
+          }
+          console.log('  - 다른 노드로 옮김 → 자동 handle 선택:', finalConnection)
         }
-        console.log('  - newConnection (자동 handle 선택 후):', finalConnection)
+      } else {
+        // 같은 노드 내에서 handle 변경 → 사용자 의도 존중
+        console.log('  - 같은 노드 내 handle 변경 → 사용자 선택 유지:', newConnection)
       }
 
       setEdges((els) => {
@@ -855,19 +865,29 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
       console.log('  - oldEdge:', oldEdge.id)
       console.log('  - newConnection (원본):', newConnection)
 
-      // 🔥 가장 가까운 handle 자동 선택
-      const sourceNode = nodes.find((n) => n.id === newConnection.source)
-      const targetNode = nodes.find((n) => n.id === newConnection.target)
+      // 🔥 노드가 바뀌었을 때만 자동 handle 선택
+      const sourceChanged = oldEdge.source !== newConnection.source
+      const targetChanged = oldEdge.target !== newConnection.target
+      const nodeChanged = sourceChanged || targetChanged
 
       let finalConnection = newConnection
-      if (sourceNode && targetNode) {
-        const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
-        finalConnection = {
-          ...newConnection,
-          sourceHandle,
-          targetHandle,
+      if (nodeChanged) {
+        // 다른 노드로 옮길 때 → 자동 handle 선택
+        const sourceNode = nodes.find((n) => n.id === newConnection.source)
+        const targetNode = nodes.find((n) => n.id === newConnection.target)
+
+        if (sourceNode && targetNode) {
+          const { sourceHandle, targetHandle } = getClosestHandles(sourceNode, targetNode)
+          finalConnection = {
+            ...newConnection,
+            sourceHandle,
+            targetHandle,
+          }
+          console.log('  - 수동 재연결: 다른 노드로 옮김 → 자동 handle 선택:', finalConnection)
         }
-        console.log('  - newConnection (자동 handle 선택 후):', finalConnection)
+      } else {
+        // 같은 노드 내에서 handle 변경 → 사용자 의도 존중
+        console.log('  - 수동 재연결: 같은 노드 내 handle 변경 → 사용자 선택 유지:', newConnection)
       }
 
       setEdges((els) => {
