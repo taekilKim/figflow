@@ -296,8 +296,8 @@ const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPan
 }
 
 function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }: FlowCanvasProps) {
-  // React Flow 훅 (단축키 및 디버깅용)
-  const { getEdges, zoomTo, fitView, getNodes } = useReactFlow()
+  // React Flow 훅 (단축키용)
+  const { zoomTo, fitView, getNodes } = useReactFlow()
 
   // 초기 로드 시 localStorage에서 데이터 복원
   // projectId가 있으면 해당 프로젝트를, 없으면 기존 방식(단일 프로젝트) 사용
@@ -389,72 +389,62 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   const connectingNodeId = useRef<string | null>(null)
   const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null)
 
-  // 🔧 Real-time Debugging Tool (Console Backdoor) - 완전체
-  useEffect(() => {
-    // @ts-ignore - Intentional global debug tool
-    window.flowDebug = {
-      // ✅ 엣지 상태 확인
-      check: () => {
-        const currentEdges = getEdges()
-        console.log('📊 총 엣지 개수:', currentEdges.length)
-        if (currentEdges.length > 0) {
-          console.log('🔍 첫 번째 엣지 설정:', currentEdges[0].data?.smartEdge)
-          console.log('🎨 첫 번째 엣지 스타일:', currentEdges[0].style)
-        } else {
-          console.log('⚠️ 현재 연결된 엣지가 없습니다.')
-        }
-      },
-
-      // 간격 조절
-      setPadding: (padding: number) => {
-        setEdges((currentEdges) =>
-          currentEdges.map(edge => ({
-            ...edge,
-            data: {
-              ...edge.data,
-              smartEdge: {
-                ...(edge.data?.smartEdge || {}),
-                nodePadding: padding
-              }
-            }
-          } as Edge<FlowEdgeData>))
-        )
-        console.log(`✅ nodePadding을 ${padding}px로 변경했습니다.`)
-      },
-
-      // 그리드 비율 조절
-      setGrid: (ratio: number) => {
-        setEdges((currentEdges) =>
-          currentEdges.map(edge => ({
-            ...edge,
-            data: {
-              ...edge.data,
-              smartEdge: {
-                ...(edge.data?.smartEdge || {}),
-                gridRatio: ratio
-              }
-            }
-          } as Edge<FlowEdgeData>))
-        )
-        console.log(`✅ gridRatio를 ${ratio}로 변경했습니다.`)
-      },
-
-      // 현재 엣지 목록 반환
-      getEdges: () => {
-        const currentEdges = getEdges()
-        console.log('Current edges:', currentEdges)
-        return currentEdges
-      },
-
-      // 현재 노드 목록 반환
-      getNodes: () => {
-        console.log('Current nodes:', nodes)
-        return nodes
-      }
-    }
-
-    console.log('🔧 디버깅 툴 로드 완료. window.flowDebug.check()를 입력해보세요.')
-  }, [setEdges, getEdges, nodes])
+  // 🔧 Real-time Debugging Tool - 비활성화
+  // useEffect(() => {
+  //   // @ts-ignore - Intentional global debug tool
+  //   window.flowDebug = {
+  //     check: () => {
+  //       const currentEdges = getEdges()
+  //       console.log('📊 총 엣지 개수:', currentEdges.length)
+  //       if (currentEdges.length > 0) {
+  //         console.log('🔍 첫 번째 엣지 설정:', currentEdges[0].data?.smartEdge)
+  //         console.log('🎨 첫 번째 엣지 스타일:', currentEdges[0].style)
+  //       } else {
+  //         console.log('⚠️ 현재 연결된 엣지가 없습니다.')
+  //       }
+  //     },
+  //     setPadding: (padding: number) => {
+  //       setEdges((currentEdges) =>
+  //         currentEdges.map(edge => ({
+  //           ...edge,
+  //           data: {
+  //             ...edge.data,
+  //             smartEdge: {
+  //               ...(edge.data?.smartEdge || {}),
+  //               nodePadding: padding
+  //             }
+  //           }
+  //         } as Edge<FlowEdgeData>))
+  //       )
+  //       console.log(`✅ nodePadding을 ${padding}px로 변경했습니다.`)
+  //     },
+  //     setGrid: (ratio: number) => {
+  //       setEdges((currentEdges) =>
+  //         currentEdges.map(edge => ({
+  //           ...edge,
+  //           data: {
+  //             ...edge.data,
+  //             smartEdge: {
+  //               ...(edge.data?.smartEdge || {}),
+  //               gridRatio: ratio
+  //             }
+  //           }
+  //         } as Edge<FlowEdgeData>))
+  //       )
+  //       console.log(`✅ gridRatio를 ${ratio}로 변경했습니다.`)
+  //     },
+  //     getEdges: () => {
+  //       const currentEdges = getEdges()
+  //       console.log('Current edges:', currentEdges)
+  //       return currentEdges
+  //     },
+  //     getNodes: () => {
+  //       console.log('Current nodes:', nodes)
+  //       return nodes
+  //     }
+  //   }
+  //   console.log('🔧 디버깅 툴 로드 완료. window.flowDebug.check()를 입력해보세요.')
+  // }, [setEdges, getEdges, nodes])
 
   // 🔍 2단계: 런타임 진단 (실시간 상태 확인) - 비활성화
   // useEffect(() => {
@@ -859,7 +849,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           const isNewEdge = !els.find((e) => e.id === edge.id)
 
           if (isNewEdge) {
-            return {
+            const newEdge = {
               ...edge,
               data: oldEdge.data,
               style: oldEdge.style,
@@ -867,7 +857,21 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
               markerEnd: oldEdge.markerEnd,
               markerStart: oldEdge.markerStart,
               type: oldEdge.type,
-            } as Edge<FlowEdgeData>
+              updatable: true,  // 🔥 명시적으로 updatable 설정
+            } as Edge<FlowEdgeData> & { updatable: boolean }
+
+            console.log('  - 새 edge 생성:', {
+              id: newEdge.id,
+              source: newEdge.source,
+              target: newEdge.target,
+              sourceHandle: newEdge.sourceHandle,
+              targetHandle: newEdge.targetHandle,
+              updatable: (newEdge as any).updatable,
+              markerEnd: newEdge.markerEnd,
+              markerStart: newEdge.markerStart,
+            })
+
+            return newEdge
           }
           return edge as Edge<FlowEdgeData>
         }) as Edge<FlowEdgeData>[]
