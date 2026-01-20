@@ -753,27 +753,30 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     isReconnecting.current = true
   }, [])
 
-  // 🔥 우선순위 0: 최소한의 reconnect 구현 (복제 방지, data 보존)
+  // 🔥 우선순위 0: reconnect 구현 (배열 순서 유지로 React Flow 최적화 보장)
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
       setEdges((edges) => {
         const newId = `e${newConnection.source}-${newConnection.target}`
 
-        // 1. 기존 엣지 제거 및 중복 id 제거
-        const filtered = edges.filter((e) => e.id !== oldEdge.id && e.id !== newId)
+        // 1. 중복 id 먼저 제거 (newId와 같은 엣지가 이미 있으면 제거)
+        const withoutDuplicate = edges.filter((e) => e.id !== newId)
 
-        // 2. 새 엣지 생성 (기존 data 완전 보존)
-        const newEdge: Edge<FlowEdgeData> = {
-          ...(oldEdge as Edge<FlowEdgeData>),
-          id: newId,
-          source: newConnection.source,
-          target: newConnection.target,
-          sourceHandle: newConnection.sourceHandle,
-          targetHandle: newConnection.targetHandle,
-        }
-
-        // 3. 새 엣지 추가
-        return [...filtered, newEdge]
+        // 2. oldEdge를 찾아서 newEdge로 교체 (배열 순서 유지!)
+        return withoutDuplicate.map((edge) => {
+          if (edge.id === oldEdge.id) {
+            // 기존 엣지를 새 연결로 업데이트
+            return {
+              ...edge, // 모든 속성 보존 (data, style, markerEnd, markerStart 등)
+              id: newId,
+              source: newConnection.source,
+              target: newConnection.target,
+              sourceHandle: newConnection.sourceHandle,
+              targetHandle: newConnection.targetHandle,
+            }
+          }
+          return edge
+        })
       })
     },
     [setEdges]
