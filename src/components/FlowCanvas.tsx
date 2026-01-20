@@ -7,6 +7,7 @@ import {
   Edge,
   Connection,
   addEdge,
+  reconnectEdge,
   useNodesState,
   useEdgesState,
   BackgroundVariant,
@@ -753,30 +754,32 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     isReconnecting.current = true
   }, [])
 
-  // 🔥 우선순위 0: reconnect 구현 (배열 순서 유지로 React Flow 최적화 보장)
+  // 🔥 우선순위 0: React Flow 공식 reconnectEdge 사용 + data 보존
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
-      setEdges((edges) => {
-        const newId = `e${newConnection.source}-${newConnection.target}`
+      setEdges((els) => {
+        // React Flow 공식 reconnectEdge 사용
+        const reconnected = reconnectEdge(oldEdge, newConnection, els)
 
-        // 1. 중복 id 먼저 제거 (newId와 같은 엣지가 이미 있으면 제거)
-        const withoutDuplicate = edges.filter((e) => e.id !== newId)
+        // 새로 생성된 엣지에 oldEdge의 속성 복사
+        return reconnected.map((edge) => {
+          // 새 엣지 감지: 이전 배열에 없던 id
+          const isNewEdge = !els.find((e) => e.id === edge.id)
 
-        // 2. oldEdge를 찾아서 newEdge로 교체 (배열 순서 유지!)
-        return withoutDuplicate.map((edge) => {
-          if (edge.id === oldEdge.id) {
-            // 기존 엣지를 새 연결로 업데이트
+          if (isNewEdge) {
+            // 새 엣지에 oldEdge의 모든 속성 복사
             return {
-              ...edge, // 모든 속성 보존 (data, style, markerEnd, markerStart 등)
-              id: newId,
-              source: newConnection.source,
-              target: newConnection.target,
-              sourceHandle: newConnection.sourceHandle,
-              targetHandle: newConnection.targetHandle,
-            }
+              ...edge,
+              data: (oldEdge as Edge<FlowEdgeData>).data,
+              style: oldEdge.style,
+              label: oldEdge.label,
+              markerEnd: oldEdge.markerEnd,
+              markerStart: oldEdge.markerStart,
+              type: oldEdge.type,
+            } as Edge<FlowEdgeData>
           }
-          return edge
-        })
+          return edge as Edge<FlowEdgeData>
+        }) as Edge<FlowEdgeData>[]
       })
     },
     [setEdges]
