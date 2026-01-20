@@ -821,6 +821,14 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     isReconnecting.current = false
   }, [])
 
+  // 🔥 우선순위 0: 모든 재연결 허용 (validation 우회)
+  const isValidConnection = useCallback((connection: Edge<FlowEdgeData> | Connection) => {
+    console.log('🟣 [isValidConnection] 연결 검증:', connection)
+    // 모든 연결 허용
+    return true
+  }, [])
+
+
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       onNodeSelect(node.id)
@@ -1252,6 +1260,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         onReconnect={onReconnect}
         onReconnectStart={onReconnectStart}
         onReconnectEnd={onReconnectEnd}
+        isValidConnection={isValidConnection}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
