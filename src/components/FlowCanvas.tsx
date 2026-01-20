@@ -750,6 +750,13 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   // 🔥 재연결 추적 (onConnectEnd와 onReconnect 충돌 방지)
   const isReconnecting = useRef(false)
 
+  // 🔥 재연결 정보 저장 (onReconnect가 호출되지 않을 때 수동 처리용)
+  const reconnectInfo = useRef<{
+    oldEdge: Edge<FlowEdgeData>
+    newConnection: Connection | null
+    handleType: 'source' | 'target'
+  } | null>(null)
+
   const onReconnectStart = useCallback((_event: React.MouseEvent, edge: Edge, handleType: 'source' | 'target') => {
     console.log('🔵 [onReconnectStart] 재연결 시작')
     console.log('  - 드래그 중인 핸들:', handleType, '(source=시작지, target=목적지)')
@@ -761,6 +768,13 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
       targetHandle: edge.targetHandle,
     })
     isReconnecting.current = true
+
+    // 재연결 정보 저장
+    reconnectInfo.current = {
+      oldEdge: edge as Edge<FlowEdgeData>,
+      newConnection: null,
+      handleType,
+    }
   }, [])
 
   // 🔥 우선순위 0: React Flow 공식 reconnectEdge 사용 + data 보존
@@ -776,6 +790,9 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         data: oldEdge.data,
       })
       console.log('  - newConnection:', newConnection)
+
+      // onReconnect가 정상 호출되었으므로 reconnectInfo 초기화
+      reconnectInfo.current = null
 
       setEdges((els) => {
         console.log('  - 현재 edges 개수:', els.length)
@@ -825,13 +842,55 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
 
   const onReconnectEnd = useCallback(() => {
     console.log('🟡 [onReconnectEnd] 재연결 종료')
-    // 재연결 완료 후 플래그 리셋
+
+    // onReconnect가 호출되지 않았으면 수동으로 재연결 실행
+    if (reconnectInfo.current && reconnectInfo.current.newConnection) {
+      const { oldEdge, newConnection } = reconnectInfo.current
+      console.log('🔴 [MANUAL RECONNECT] onReconnect가 호출되지 않아 수동 재연결 실행')
+      console.log('  - oldEdge:', oldEdge.id)
+      console.log('  - newConnection:', newConnection)
+
+      setEdges((els) => {
+        // React Flow 공식 reconnectEdge 사용
+        const reconnected = reconnectEdge(oldEdge, newConnection, els)
+
+        // 새로 생성된 엣지에 oldEdge의 속성 복사
+        const result = reconnected.map((edge) => {
+          const isNewEdge = !els.find((e) => e.id === edge.id)
+
+          if (isNewEdge) {
+            return {
+              ...edge,
+              data: oldEdge.data,
+              style: oldEdge.style,
+              label: oldEdge.label,
+              markerEnd: oldEdge.markerEnd,
+              markerStart: oldEdge.markerStart,
+              type: oldEdge.type,
+            } as Edge<FlowEdgeData>
+          }
+          return edge as Edge<FlowEdgeData>
+        }) as Edge<FlowEdgeData>[]
+
+        console.log('  - 수동 재연결 완료. 새 edge ID:', result.find(e => !els.find(old => old.id === e.id))?.id)
+        return result
+      })
+    }
+
+    // 재연결 완료 후 플래그 및 info 리셋
     isReconnecting.current = false
-  }, [])
+    reconnectInfo.current = null
+  }, [setEdges])
 
   // 🔥 우선순위 0: 모든 재연결 허용 (validation 우회)
   const isValidConnection = useCallback((connection: Edge<FlowEdgeData> | Connection) => {
     console.log('🟣 [isValidConnection] 연결 검증:', connection)
+
+    // 재연결 중이면 마지막 connection 정보 저장
+    if (reconnectInfo.current) {
+      reconnectInfo.current.newConnection = connection as Connection
+    }
+
     // 모든 연결 허용
     return true
   }, [])
