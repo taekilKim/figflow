@@ -28,7 +28,9 @@ import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, Al
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
 import FigmaFileImportDialog from './FigmaFileImportDialog'
+import { PerformanceMonitor } from './PerformanceMonitor'
 import { useDeviceType, isTouchDevice } from '../hooks/useDeviceType'
+import { useAutoSave, formatLastSaved } from '../hooks/useAutoSave'
 import { FlowNodeData, FlowEdgeData } from '../types'
 import { saveProject, loadProject, getProjectById, updateProject } from '../utils/storage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
@@ -584,36 +586,49 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     }
   }, [])
 
-  // 노드나 엣지가 변경될 때마다 자동 저장
+  // 🔥 자동 저장: 10초마다 변경사항 저장 (성능 최적화)
+  const { lastSaved, saveNow } = useAutoSave({
+    data: { nodes, edges },
+    onSave: () => {
+      const project = {
+        id: loadedProject?.id || 'default-project',
+        name: loadedProject?.name || 'FigFlow Project',
+        nodes: nodes.map((node) => ({
+          id: node.id,
+          type: node.type || 'frameNode',
+          position: node.position,
+          data: node.data as FlowNodeData,
+        })),
+        edges: edges.map((edge) => ({
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          sourceHandle: edge.sourceHandle,
+          targetHandle: edge.targetHandle,
+          label: typeof edge.label === 'string' ? edge.label : undefined,
+          data: edge.data || { sourceType: 'manual' as const },
+        })),
+        createdAt: loadedProject?.createdAt || Date.now(),
+        updatedAt: Date.now(),
+      }
+      // projectId가 있으면 updateProject, 없으면 saveProject (기존 호환성)
+      if (projectId) {
+        updateProject(projectId, { nodes: project.nodes, edges: project.edges })
+      } else {
+        saveProject(project)
+      }
+    },
+    interval: 10000, // 10초마다 자동 저장
+  })
+
+  // 저장 상태 텍스트를 1초마다 업데이트 (상대 시간 표시용)
+  const [, forceUpdate] = useState(0)
   useEffect(() => {
-    const project = {
-      id: loadedProject?.id || 'default-project',
-      name: loadedProject?.name || 'FigFlow Project',
-      nodes: nodes.map((node) => ({
-        id: node.id,
-        type: node.type || 'frameNode',
-        position: node.position,
-        data: node.data as FlowNodeData,
-      })),
-      edges: edges.map((edge) => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        sourceHandle: edge.sourceHandle,
-        targetHandle: edge.targetHandle,
-        label: typeof edge.label === 'string' ? edge.label : undefined,
-        data: edge.data || { sourceType: 'manual' as const },
-      })),
-      createdAt: loadedProject?.createdAt || Date.now(),
-      updatedAt: Date.now(),
-    }
-    // projectId가 있으면 updateProject, 없으면 saveProject (기존 호환성)
-    if (projectId) {
-      updateProject(projectId, { nodes: project.nodes, edges: project.edges })
-    } else {
-      saveProject(project)
-    }
-  }, [nodes, edges, projectId, loadedProject])
+    const interval = setInterval(() => {
+      forceUpdate(prev => prev + 1)
+    }, 1000) // 1초마다 리렌더링
+    return () => clearInterval(interval)
+  }, [])
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -1064,35 +1079,9 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   }, [zoomTo, fitView, getNodes])
 
   const handleSave = useCallback(() => {
-    const project = {
-      id: loadedProject?.id || 'default-project',
-      name: loadedProject?.name || 'FigFlow Project',
-      nodes: nodes.map((node) => ({
-        id: node.id,
-        type: node.type || 'frameNode',
-        position: node.position,
-        data: node.data as FlowNodeData,
-      })),
-      edges: edges.map((edge) => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        sourceHandle: edge.sourceHandle,
-        targetHandle: edge.targetHandle,
-        label: typeof edge.label === 'string' ? edge.label : undefined,
-        data: edge.data || { sourceType: 'manual' as const },
-      })),
-      createdAt: loadedProject?.createdAt || Date.now(),
-      updatedAt: Date.now(),
-    }
-    // projectId가 있으면 updateProject, 없으면 saveProject (기존 호환성)
-    if (projectId) {
-      updateProject(projectId, { nodes: project.nodes, edges: project.edges })
-    } else {
-      saveProject(project)
-    }
+    saveNow() // 자동 저장 훅의 즉시 저장 함수 호출
     alert('프로젝트가 저장되었습니다!')
-  }, [nodes, edges, projectId, loadedProject])
+  }, [saveNow])
 
   const handleSync = useCallback(async () => {
     const token = getFigmaToken()
@@ -1217,8 +1206,12 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
 
     // 노드 추가
     setNodes((nds) => [...nds, newNode])
+
+    // 🔥 중요 액션: 노드 추가 후 즉시 저장
+    saveNow()
+
     alert(`"${frameData.title}" 프레임이 추가되었습니다! 썸네일과 함께 캔버스에 표시됩니다.`)
-  }, [setNodes])
+  }, [setNodes, saveNow])
 
   // 배치 프레임 가져오기 (파일 전체 import)
   const handleBatchImport = useCallback(async (
@@ -1317,13 +1310,17 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
 
       // 진행도 숨기기
       setImportProgress(null)
+
+      // 🔥 중요 액션: 파일 import 완료 후 즉시 저장
+      saveNow()
+
       alert(`${selectedFrames.length}개의 프레임이 추가되었습니다!`)
     } catch (error) {
       console.error('Batch import failed:', error)
       setImportProgress(null)
       alert('프레임 가져오기 실패: ' + (error instanceof Error ? error.message : '알 수 없는 오류'))
     }
-  }, [setNodes])
+  }, [setNodes, saveNow])
 
   return (
     <>
@@ -1355,6 +1352,14 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           <FloppyDisk size={20} weight="bold" />
           저장
         </button>
+        <span style={{
+          fontSize: '12px',
+          color: '#666',
+          marginLeft: '8px',
+          alignSelf: 'center',
+        }}>
+          {formatLastSaved(lastSaved)}
+        </span>
         <button className="toolbar-button">
           <Export size={20} weight="bold" />
           Export
@@ -1432,13 +1437,24 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         style={{
           cursor: isPanning ? 'grab' : 'default',
         }}
+        onlyRenderVisibleElements={true}
+        nodesDraggable={deviceType !== 'mobile'}
+        nodesConnectable={deviceType !== 'mobile'}
+        elevateNodesOnSelect={false}
+        autoPanOnNodeDrag={deviceType === 'desktop'}
+        zoomOnDoubleClick={deviceType !== 'mobile'}
+        // 🔥 성능 최적화: 불필요한 인터랙션 비활성화
+        edgesFocusable={false}
+        elevateEdgesOnSelect={false}
+        selectNodesOnDrag={false}
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
 
         {/* 🔥 [Fix 6, 7] TDSControls: left 312px, bottom 16px */}
         <TDSControls style={{ left: 312, bottom: 16 }} />
 
-        {/* 🔥 [Fix 3, 4, 5] MiniMap: right 352px, bottom 16px */}
+        {/* 🔥 [Fix 3, 4, 5] MiniMap: 모바일에서 숨김 (메모리 절약) */}
+        {deviceType !== 'mobile' && (
         <MiniMap
           nodeColor="#e2e2e2"
           maskColor="rgba(240, 240, 240, 0.6)"
@@ -1458,6 +1474,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
             zIndex: 5,
           }}
         />
+        )}
 
         {/* 🔥 [Fix 3] ZoomIndicator를 MiniMap 밖으로 독립 배치 (렌더링 보장) */}
         <div style={{
@@ -1503,6 +1520,9 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           </div>
         </div>
       )}
+
+      {/* 🔥 성능 모니터링 (개발 모드에서만 표시) */}
+      <PerformanceMonitor />
     </>
   )
 }
