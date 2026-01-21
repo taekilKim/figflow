@@ -4,6 +4,7 @@ import {
   EdgeLabelRenderer,
   EdgeProps,
   getSmoothStepPath,
+  useViewport,
 } from '@xyflow/react'
 
 /**
@@ -46,6 +47,9 @@ function TDSStepEdge(props: EdgeProps) {
     label,
   } = props
 
+  // 🔥 성능 최적화: 줌 레벨에 따라 엣지 복잡도 동적 조절
+  const { zoom } = useViewport()
+
   // 🔥 [Final Fix] Native Step Path with Direction Calculation
   // offset: 25 → 수직/수평으로 일정 구간 진행 후 꺾임 (프레임에 바로 붙지 않음)
   // borderRadius: 0 → 완전한 직각
@@ -60,8 +64,15 @@ function TDSStepEdge(props: EdgeProps) {
     offset: 25,       // 🔥 Update: 2 -> 25px (수직/수평 구간 확보, 프레임에 바로 붙지 않음)
   })
 
+  // 🔥 동적 복잡도 조절: 줌 레벨에 따라 스타일 단순화
+  const dynamicStyle = {
+    ...style,
+    strokeWidth: zoom > 0.7 ? (style.strokeWidth || 2) : 1, // 줌 아웃 시 얇게
+    transition: zoom > 0.5 ? 'stroke 0.2s, stroke-width 0.2s' : 'none', // 줌 아웃 시 애니메이션 비활성화
+  }
+
   // 라벨 색상 로직 (프리셋 적용)
-  const edgeColor = style?.stroke as string | undefined
+  const edgeColor = dynamicStyle?.stroke as string | undefined
   const isDefaultColor = !edgeColor || edgeColor === '#555555' || edgeColor === '#555'
   const labelBg = isDefaultColor ? '#FFFFFF' : edgeColor
   const labelColor = isDefaultColor ? '#333D4B' : '#FFFFFF'
@@ -75,7 +86,7 @@ function TDSStepEdge(props: EdgeProps) {
         path={edgePath}
         markerEnd={markerEnd}
         markerStart={markerStart}
-        style={style}
+        style={dynamicStyle}
         interactionWidth={20}
       />
 

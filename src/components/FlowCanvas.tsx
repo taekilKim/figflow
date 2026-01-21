@@ -28,6 +28,7 @@ import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, Al
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
 import FigmaFileImportDialog from './FigmaFileImportDialog'
+import { PerformanceMonitor } from './PerformanceMonitor'
 import { useDeviceType, isTouchDevice } from '../hooks/useDeviceType'
 import { useAutoSave, formatLastSaved } from '../hooks/useAutoSave'
 import { FlowNodeData, FlowEdgeData } from '../types'
@@ -1442,6 +1443,10 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         elevateNodesOnSelect={false}
         autoPanOnNodeDrag={deviceType === 'desktop'}
         zoomOnDoubleClick={deviceType !== 'mobile'}
+        // 🔥 성능 최적화: 불필요한 인터랙션 비활성화
+        edgesFocusable={false}
+        elevateEdgesOnSelect={false}
+        selectNodesOnDrag={false}
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
 
@@ -1515,6 +1520,9 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           </div>
         </div>
       )}
+
+      {/* 🔥 성능 모니터링 (개발 모드에서만 표시) */}
+      <PerformanceMonitor />
     </>
   )
 }
