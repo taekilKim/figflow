@@ -1,10 +1,14 @@
 import { memo } from 'react'
-import { Handle, Position, NodeProps } from '@xyflow/react'
+import { Handle, Position, NodeProps, useViewport } from '@xyflow/react'
 import { FlowNodeData } from '../types'
 import '../styles/FrameNode.css'
 
 function FrameNode({ data, selected }: NodeProps) {
   const { figma, meta } = data as FlowNodeData
+
+  // 🔥 LOD (Level of Detail): 줌 레벨에 따라 디테일 조정
+  const { zoom } = useViewport()
+  const showDetails = zoom > 0.5  // 50% 이하로 줌 아웃하면 디테일 숨김 (메모리 절약)
 
   return (
     <div
@@ -43,8 +47,16 @@ function FrameNode({ data, selected }: NodeProps) {
 
       {/* Frame content */}
       <div className="frame-node-thumbnail">
-        {meta.thumbnailUrl ? (
-          <img src={meta.thumbnailUrl} alt={meta.title} />
+        {meta.thumbnailUrl && showDetails ? (
+          <img
+            src={meta.thumbnailUrl}
+            alt={meta.title}
+            loading="lazy"  // 🔥 Lazy loading (피그마 스타일)
+            decoding="async"  // 🔥 비동기 디코딩 (메인 스레드 차단 방지)
+            style={{
+              backgroundColor: '#f5f5f5',  // 로딩 중 배경색
+            }}
+          />
         ) : (
           <div className="frame-node-placeholder">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
@@ -75,7 +87,8 @@ function FrameNode({ data, selected }: NodeProps) {
         )}
       </div>
 
-      {meta.notes && (
+      {/* 🔥 LOD: 줌 아웃 시 노트와 링크 숨김 (성능 향상) */}
+      {showDetails && meta.notes && (
         <div className="frame-node-notes">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <path
@@ -97,6 +110,7 @@ function FrameNode({ data, selected }: NodeProps) {
         </div>
       )}
 
+      {showDetails && (
       <div className="frame-node-footer">
         <a
           href={figma.nodeUrl}
@@ -108,6 +122,7 @@ function FrameNode({ data, selected }: NodeProps) {
           Figma에서 열기
         </a>
       </div>
+      )}
 
       {/* Handles positioned closer to frame edges */}
       {/* Top Center */}

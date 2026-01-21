@@ -1432,13 +1432,20 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         style={{
           cursor: isPanning ? 'grab' : 'default',
         }}
+        onlyRenderVisibleElements={true}
+        nodesDraggable={deviceType !== 'mobile'}
+        nodesConnectable={deviceType !== 'mobile'}
+        elevateNodesOnSelect={false}
+        autoPanOnNodeDrag={deviceType === 'desktop'}
+        zoomOnDoubleClick={deviceType !== 'mobile'}
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
 
         {/* 🔥 [Fix 6, 7] TDSControls: left 312px, bottom 16px */}
         <TDSControls style={{ left: 312, bottom: 16 }} />
 
-        {/* 🔥 [Fix 3, 4, 5] MiniMap: right 352px, bottom 16px */}
+        {/* 🔥 [Fix 3, 4, 5] MiniMap: 모바일에서 숨김 (메모리 절약) */}
+        {deviceType !== 'mobile' && (
         <MiniMap
           nodeColor="#e2e2e2"
           maskColor="rgba(240, 240, 240, 0.6)"
@@ -1458,6 +1465,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
             zIndex: 5,
           }}
         />
+        )}
 
         {/* 🔥 [Fix 3] ZoomIndicator를 MiniMap 밖으로 독립 배치 (렌더링 보장) */}
         <div style={{
