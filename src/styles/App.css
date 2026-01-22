@@ -12,7 +12,7 @@
 .left-panel {
   position: absolute;
   left: 16px;
-  top: 48px;
+  top: 56px;
   bottom: 16px;
   width: 240px;
   background: var(--bg-white);
@@ -33,7 +33,7 @@
 .right-panel {
   position: absolute;
   right: 16px;
-  top: 48px;
+  top: 56px;
   bottom: 16px;
   width: 280px;
   background: var(--bg-white);
@@ -68,7 +68,7 @@
 /* Toolbar - Floating at top center */
 .toolbar {
   position: absolute;
-  top: 48px;
+  top: 56px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -162,7 +162,7 @@
 
   /* Toolbar 간소화 */
   .toolbar {
-    top: 8px;
+    top: 40px;
     padding: 6px 8px;
     gap: 4px;
   }
@@ -198,7 +198,7 @@
 
   /* Toolbar 조정 */
   .toolbar {
-    top: 40px;
+    top: 48px;
   }
 
   /* 터치 친화적 핸들 크기 증가 */
