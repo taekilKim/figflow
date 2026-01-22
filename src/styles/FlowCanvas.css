@@ -177,7 +177,7 @@
 /* --- 정렬 툴바 (Alignment Toolbar) --- */
 .alignment-toolbar {
   position: absolute;
-  top: 80px;
+  top: 108px;
   left: 50%;
   transform: translateX(-50%);
   background: white;
