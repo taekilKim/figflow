@@ -14,7 +14,8 @@ export interface FrameMeta {
   title: string;
   status?: 'draft' | 'review' | 'approved' | 'deprecated';
   notes?: string;
-  thumbnailUrl?: string;
+  thumbnailUrl?: string; // High-res thumbnail (scale=1)
+  thumbnailUrlLowRes?: string; // Low-res thumbnail (scale=0.5) for zoomed-out view
   lastSyncedAt?: number;
   dimensions?: { width: number; height: number };
 }

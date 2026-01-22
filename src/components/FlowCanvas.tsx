@@ -1116,20 +1116,27 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         })
       })
 
-      // 각 파일에 대해 이미지 가져오기
-      const updates: Array<{ nodeIndex: number; thumbnailUrl: string }> = []
+      // 각 파일에 대해 이미지 가져오기 (저해상도 + 고해상도)
+      const updates: Array<{ nodeIndex: number; thumbnailUrl: string; thumbnailUrlLowRes: string }> = []
 
       for (const [fileKey, fileNodes] of nodesByFile) {
         const nodeIds = fileNodes.map((n) => n.nodeId)
-        const results = await getFigmaImages(finalToken, { fileKey, nodeIds })
 
-        results.forEach((result, idx) => {
+        // 🔥 병렬로 저해상도(scale=0.5)와 고해상도(scale=1) 썸네일 가져오기
+        const [resultsLowRes, resultsHighRes] = await Promise.all([
+          getFigmaImages(finalToken, { fileKey, nodeIds, scale: 0.5 }),
+          getFigmaImages(finalToken, { fileKey, nodeIds, scale: 1 }),
+        ])
+
+        resultsHighRes.forEach((result, idx) => {
           if (result.imageUrl) {
             const nodeIndex = nodes.findIndex((n) => n.id === fileNodes[idx].node.id)
-            if (nodeIndex !== -1) {
+            const lowResUrl = resultsLowRes[idx]?.imageUrl
+            if (nodeIndex !== -1 && lowResUrl) {
               updates.push({
                 nodeIndex,
                 thumbnailUrl: result.imageUrl,
+                thumbnailUrlLowRes: lowResUrl,
               })
             }
           }
@@ -1139,7 +1146,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
       // 노드 업데이트
       if (updates.length > 0) {
         const updatedNodes = [...nodes]
-        updates.forEach(({ nodeIndex, thumbnailUrl }) => {
+        updates.forEach(({ nodeIndex, thumbnailUrl, thumbnailUrlLowRes }) => {
           const node = updatedNodes[nodeIndex]
           const data = node.data as FlowNodeData
           updatedNodes[nodeIndex] = {
@@ -1149,6 +1156,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
               meta: {
                 ...data.meta,
                 thumbnailUrl,
+                thumbnailUrlLowRes,
                 lastSyncedAt: Date.now(),
               },
             },
@@ -1240,21 +1248,33 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
 
       console.log('Fetching images...')
 
-      // 각 프레임을 개별적으로 처리하여 진행도 표시
-      const imageResults: Array<{ nodeId: string; imageUrl: string | null }> = []
+      // 각 프레임을 개별적으로 처리하여 진행도 표시 (저해상도 + 고해상도)
+      const imageResults: Array<{ nodeId: string; imageUrl: string | null; imageUrlLowRes: string | null }> = []
 
       for (let i = 0; i < selectedFrames.length; i++) {
         const frame = selectedFrames[i]
         setImportProgress({ current: i + 1, total: selectedFrames.length })
 
-        const result = await getFigmaImages(accessToken, {
-          fileKey,
-          nodeIds: [frame.nodeId],
-          scale: 1,
-        })
+        // 🔥 병렬로 저해상도(scale=0.5)와 고해상도(scale=1) 썸네일 가져오기
+        const [resultLowRes, resultHighRes] = await Promise.all([
+          getFigmaImages(accessToken, {
+            fileKey,
+            nodeIds: [frame.nodeId],
+            scale: 0.5,
+          }),
+          getFigmaImages(accessToken, {
+            fileKey,
+            nodeIds: [frame.nodeId],
+            scale: 1,
+          }),
+        ])
 
-        if (result[0]) {
-          imageResults.push(result[0])
+        if (resultHighRes[0]) {
+          imageResults.push({
+            nodeId: frame.nodeId,
+            imageUrl: resultHighRes[0].imageUrl,
+            imageUrlLowRes: resultLowRes[0]?.imageUrl || null,
+          })
         }
       }
 
@@ -1274,7 +1294,9 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         const x = startX + col * (450 + spacing)
         const y = startY + row * (900 + spacing)
 
-        const thumbnailUrl = imageResults.find(r => r.nodeId === frame.nodeId)?.imageUrl
+        const imageResult = imageResults.find(r => r.nodeId === frame.nodeId)
+        const thumbnailUrl = imageResult?.imageUrl
+        const thumbnailUrlLowRes = imageResult?.imageUrlLowRes
 
         return {
           id: `node-${Date.now()}-${index}`,
@@ -1293,6 +1315,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
               title: frame.name,
               status: 'draft',
               thumbnailUrl: thumbnailUrl || undefined,
+              thumbnailUrlLowRes: thumbnailUrlLowRes || undefined,
               lastSyncedAt: Date.now(),
               dimensions: { width: frame.width, height: frame.height },
             },

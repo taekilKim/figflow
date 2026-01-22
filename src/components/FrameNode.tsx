@@ -8,7 +8,14 @@ function FrameNode({ data, selected }: NodeProps) {
 
   // 🔥 LOD (Level of Detail): 줌 레벨에 따라 디테일 조정
   const { zoom } = useViewport()
-  const showDetails = zoom > 0.5  // 50% 이하로 줌 아웃하면 디테일 숨김 (메모리 절약)
+  const showDetails = zoom > 0.5  // 50% 이하로 줌 아웃하면 노트/링크 숨김 (성능 향상)
+
+  // 🔥 Thumbnail LOD: 줌 레벨에 따라 저해상도/고해상도 썸네일 선택
+  // 75% 이하로 줌 아웃하면 저해상도, 그 이상이면 고해상도
+  const useLowResThumbnail = zoom <= 0.75
+  const thumbnailUrl = useLowResThumbnail && meta.thumbnailUrlLowRes
+    ? meta.thumbnailUrlLowRes
+    : meta.thumbnailUrl
 
   return (
     <div
@@ -47,9 +54,9 @@ function FrameNode({ data, selected }: NodeProps) {
 
       {/* Frame content */}
       <div className="frame-node-thumbnail">
-        {meta.thumbnailUrl && showDetails ? (
+        {thumbnailUrl ? (
           <img
-            src={meta.thumbnailUrl}
+            src={thumbnailUrl}
             alt={meta.title}
             loading="lazy"  // 🔥 Lazy loading (피그마 스타일)
             decoding="async"  // 🔥 비동기 디코딩 (메인 스레드 차단 방지)
