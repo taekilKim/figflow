@@ -369,3 +369,46 @@ export function getFigmaToken(): string | null {
 export function clearFigmaToken(): void {
   localStorage.removeItem(FIGMA_TOKEN_KEY)
 }
+
+/**
+ * Figma 사용자 정보 타입
+ */
+export interface FigmaUser {
+  id: string
+  handle: string
+  img_url: string
+  email: string
+}
+
+/**
+ * 현재 인증된 Figma 사용자 정보를 가져옵니다
+ * https://www.figma.com/developers/api#users-endpoints
+ */
+export async function getFigmaUser(accessToken: string): Promise<FigmaUser | null> {
+  try {
+    const url = 'https://api.figma.com/v1/me'
+
+    const response = await fetch(url, {
+      headers: {
+        ...getAuthHeaders(accessToken),
+      },
+    })
+
+    if (!response.ok) {
+      console.error('Failed to fetch Figma user:', response.status, response.statusText)
+      return null
+    }
+
+    const data = await response.json()
+
+    return {
+      id: data.id,
+      handle: data.handle,
+      img_url: data.img_url,
+      email: data.email,
+    }
+  } catch (error) {
+    console.error('Failed to fetch Figma user:', error)
+    return null
+  }
+}
