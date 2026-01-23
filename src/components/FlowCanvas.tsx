@@ -24,13 +24,14 @@ import '@xyflow/react/dist/style.css'
 // 🔥 Pivot: Smart Edge 제거, Native StepEdge 복귀
 import TDSStepEdge from './TDSStepEdge'
 import TDSControls from './TDSControls'
-import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom } from '@phosphor-icons/react'
+import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom, Cloud, CloudCheck, CloudWarning } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
 import FigmaFileImportDialog from './FigmaFileImportDialog'
 import { PerformanceMonitor } from './PerformanceMonitor'
 import { useDeviceType, isTouchDevice } from '../hooks/useDeviceType'
 import { useAutoSave, formatLastSaved } from '../hooks/useAutoSave'
+import { useCloudSync } from '../hooks/useCloudSync'
 import { FlowNodeData, FlowEdgeData } from '../types'
 import { saveProject, loadProject, getProjectById, updateProject } from '../utils/storage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
@@ -301,6 +302,9 @@ const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPan
 function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }: FlowCanvasProps) {
   // React Flow 훅 (단축키용)
   const { zoomTo, fitView, getNodes } = useReactFlow()
+
+  // 🔥 클라우드 동기화
+  const { status: cloudStatus, syncToCloud } = useCloudSync()
 
   // 🔥 반응형: 디바이스 타입 감지
   const deviceType = useDeviceType()
@@ -589,7 +593,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   // 🔥 자동 저장: 10초마다 변경사항 저장 (성능 최적화)
   const { lastSaved, saveNow } = useAutoSave({
     data: { nodes, edges },
-    onSave: () => {
+    onSave: async () => {
       const project = {
         id: loadedProject?.id || 'default-project',
         name: loadedProject?.name || 'FigFlow Project',
@@ -616,6 +620,16 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         updateProject(projectId, { nodes: project.nodes, edges: project.edges })
       } else {
         saveProject(project)
+      }
+
+      // 🔥 클라우드 동기화 (Figma 로그인 시)
+      if (cloudStatus.isEnabled && cloudStatus.figmaUser) {
+        try {
+          await syncToCloud(project)
+          console.log('Project synced to cloud')
+        } catch (error) {
+          console.error('Failed to sync to cloud:', error)
+        }
       }
     },
     interval: 10000, // 10초마다 자동 저장
@@ -1380,8 +1394,31 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
           color: '#666',
           marginLeft: '8px',
           alignSelf: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
         }}>
-          {formatLastSaved(lastSaved)}
+          <span>{formatLastSaved(lastSaved)}</span>
+          {cloudStatus.isEnabled && cloudStatus.figmaUser && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              {cloudStatus.isSyncing ? (
+                <>
+                  <Cloud size={14} weight="bold" />
+                  <span>동기화 중...</span>
+                </>
+              ) : cloudStatus.error ? (
+                <>
+                  <CloudWarning size={14} weight="bold" color="#ff4444" />
+                  <span style={{ color: '#ff4444' }}>동기화 실패</span>
+                </>
+              ) : cloudStatus.lastSynced ? (
+                <>
+                  <CloudCheck size={14} weight="bold" color="#4CAF50" />
+                  <span style={{ color: '#4CAF50' }}>클라우드 저장됨</span>
+                </>
+              ) : null}
+            </span>
+          )}
         </span>
         <button className="toolbar-button">
           <Export size={20} weight="bold" />

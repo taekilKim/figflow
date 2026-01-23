@@ -66,6 +66,7 @@ Vercel에서 실행 중입니다!
 - ✅ **플로우차트 편집**: 노드 드래그, 연결 생성/삭제, 줌/팬
 - ✅ **Figma 싱크**: Figma Images API를 통해 썸네일 자동 갱신
 - ✅ **로컬 저장**: localStorage 기반 프로젝트 저장/복원 (새로고침해도 데이터 유지)
+- ✅ **🔥 클라우드 동기화**: Firebase 연동으로 Figma 계정 기반 프로젝트 저장
 - ✅ **3패널 레이아웃**: 프레임 목록 / 캔버스 / 속성 패널
 - ✅ **상태 관리**: 프레임별 상태(draft/review/approved/deprecated)
 - ✅ **메모 기능**: 각 프레임과 연결선에 메모 추가
@@ -74,6 +75,7 @@ Vercel에서 실행 중입니다!
 - **Frontend**: React 18 + TypeScript
 - **Build Tool**: Vite 6
 - **Flow Editor**: React Flow (@xyflow/react)
+- **Backend**: Firebase Firestore (클라우드 동기화)
 - **Styling**: CSS
 
 ## 🚀 빠른 시작 (5분 안에 시작하기)
@@ -176,6 +178,75 @@ npm run preview
 1. [Figma Settings > Personal Access Tokens](https://www.figma.com/developers/api#access-tokens)에서 토큰 생성
 2. FigFlow에서 **Sync** 버튼 클릭 시 토큰 입력
 3. 토큰은 브라우저 localStorage에 안전하게 저장됨
+
+### 🔥 Firebase 클라우드 동기화 설정 (선택사항)
+
+Figma 계정으로 로그인하여 프로젝트를 클라우드에 저장할 수 있습니다.
+
+#### Step 1: Firebase 프로젝트 생성
+
+1. [Firebase Console](https://console.firebase.google.com/)에 접속
+2. "프로젝트 추가" 클릭
+3. 프로젝트 이름 입력 (예: "figflow-cloud")
+4. Google Analytics는 선택사항 (필요시 활성화)
+5. 프로젝트 생성 완료
+
+#### Step 2: Firestore Database 설정
+
+1. Firebase Console에서 "Firestore Database" 선택
+2. "데이터베이스 만들기" 클릭
+3. 보안 규칙: **테스트 모드**로 시작 (나중에 변경 가능)
+4. 위치: asia-northeast3 (서울) 선택 권장
+5. 완료
+
+#### Step 3: 웹 앱 추가 및 설정
+
+1. Firebase Console 프로젝트 개요 → "앱 추가" → 웹(</>) 클릭
+2. 앱 닉네임 입력 (예: "FigFlow Web")
+3. Firebase Hosting은 체크 해제 (Vercel 사용)
+4. "앱 등록" 클릭
+5. **Firebase SDK 구성** 정보 복사:
+   ```javascript
+   const firebaseConfig = {
+     apiKey: "AIza...",
+     authDomain: "your-project.firebaseapp.com",
+     projectId: "your-project",
+     storageBucket: "your-project.appspot.com",
+     messagingSenderId: "123456789",
+     appId: "1:123456789:web:abc123"
+   };
+   ```
+
+#### Step 4: 환경 변수 설정
+
+1. 프로젝트 루트에 `.env` 파일 생성 (`.env.example` 참고)
+2. Firebase 구성 정보를 환경 변수로 입력:
+   ```bash
+   # Figma OAuth (기존)
+   VITE_FIGMA_CLIENT_ID=your_client_id_here
+   VITE_FIGMA_CLIENT_SECRET=your_client_secret_here
+
+   # Firebase Configuration
+   VITE_FIREBASE_API_KEY=AIza...
+   VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your-project
+   VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+   VITE_FIREBASE_APP_ID=1:123456789:web:abc123
+   ```
+3. 서버 재시작: `npm run dev`
+
+#### Step 5: Figma로 로그인
+
+1. 앱 실행 후 Figma 계정으로 로그인
+2. 프로젝트가 자동으로 클라우드에 동기화됩니다
+3. 상태바에서 동기화 상태 확인 (클라우드 아이콘)
+
+**주요 기능:**
+- ✅ Figma 계정으로 로그인하면 자동으로 프로젝트 동기화
+- ✅ 10초마다 자동 저장 (로컬 + 클라우드)
+- ✅ 여러 기기에서 동일한 프로젝트 접근 가능
+- ✅ Firebase가 설정되지 않은 경우 로컬 저장만 사용
 
 ### 플로우차트 만들기
 
