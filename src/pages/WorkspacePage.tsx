@@ -24,7 +24,7 @@ function WorkspacePage() {
   const [figmaToken, setFigmaToken] = useState<string | null>(null)
   const [isMerging, setIsMerging] = useState(false)
 
-  const { status: cloudStatus, syncToCloud, syncFromCloud, deleteFromCloud, syncAll } = useCloudSync()
+  const { status: cloudStatus, syncToCloud, syncFromCloud, deleteFromCloud } = useCloudSync()
 
   // 로컬과 클라우드 프로젝트 병합
   const mergeProjects = useCallback((localProjects: ProjectData[], cloudProjects: ProjectData[]): ProjectData[] => {
@@ -53,14 +53,27 @@ function WorkspacePage() {
     if (cloudStatus.isEnabled && cloudStatus.figmaUser) {
       setIsMerging(true)
       try {
-        // 로컬 프로젝트를 먼저 클라우드에 업로드 (기존 로컬 전용 프로젝트 동기화)
-        if (localProjects.length > 0) {
-          await syncAll()
+        // 1. 클라우드에서 먼저 가져오기
+        const cloudProjects = await syncFromCloud()
+        const cloudProjectIds = new Set(cloudProjects.map(p => p.id))
+
+        // 2. 병합 (클라우드가 최신이면 클라우드 사용)
+        const merged = mergeProjects(localProjects, cloudProjects)
+
+        // 3. 클라우드에 없는 로컬 프로젝트만 업로드
+        const localOnlyProjects = localProjects.filter(p => !cloudProjectIds.has(p.id))
+        for (const project of localOnlyProjects) {
+          await syncToCloud(project)
         }
 
-        // 클라우드에서 프로젝트 가져와서 병합
-        const cloudProjects = await syncFromCloud()
-        const merged = mergeProjects(localProjects, cloudProjects)
+        // 4. 로컬이 더 최신인 프로젝트 업로드
+        for (const localProject of localProjects) {
+          const cloudProject = cloudProjects.find(p => p.id === localProject.id)
+          if (cloudProject && localProject.updatedAt > cloudProject.updatedAt) {
+            await syncToCloud(localProject)
+          }
+        }
+
         merged.sort((a, b) => b.updatedAt - a.updatedAt)
         setProjects(merged)
       } catch (error) {
@@ -76,7 +89,7 @@ function WorkspacePage() {
       localProjects.sort((a, b) => b.updatedAt - a.updatedAt)
       setProjects(localProjects)
     }
-  }, [cloudStatus.isEnabled, cloudStatus.figmaUser, syncFromCloud, syncAll, mergeProjects])
+  }, [cloudStatus.isEnabled, cloudStatus.figmaUser, syncFromCloud, syncToCloud, mergeProjects])
 
   // 클라우드 상태가 변경되면 토큰도 다시 확인 (만료 시 자동 삭제됨)
   useEffect(() => {
