@@ -4,7 +4,6 @@ import { ReactFlowProvider } from '@xyflow/react'
 import FlowCanvas from '../components/FlowCanvas'
 import LeftPanel from '../components/LeftPanel'
 import RightPanel from '../components/RightPanel'
-import MenuBar from '../components/MenuBar'
 import { getProjectById } from '../utils/storage'
 import '../styles/App.css'
 
@@ -43,7 +42,6 @@ function FlowPage() {
   return (
     <ReactFlowProvider>
       <div className="app-container">
-        <MenuBar />
         <LeftPanel selectedNodeIds={selectedNodeIds} projectId={id} />
         <FlowCanvas
           onNodeSelect={setSelectedNodeId}
