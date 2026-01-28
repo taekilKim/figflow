@@ -395,7 +395,14 @@ export async function getFigmaUser(accessToken: string): Promise<FigmaUser | nul
     })
 
     if (!response.ok) {
-      console.error('Failed to fetch Figma user:', response.status, response.statusText)
+      console.error('Failed to fetch Figma user:', response.status)
+
+      // 401/403 에러는 토큰이 만료되었거나 유효하지 않음
+      if (response.status === 401 || response.status === 403) {
+        console.warn('Figma token expired or invalid, clearing token...')
+        clearFigmaToken()
+      }
+
       return null
     }
 

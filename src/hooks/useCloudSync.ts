@@ -57,7 +57,15 @@ export function useCloudSync(): UseCloudSyncReturn {
       try {
         const user = await getFigmaUser(token);
         if (!user) {
-          throw new Error('Failed to get Figma user info');
+          // 토큰이 유효하지 않음 (이미 figma.ts에서 토큰 삭제됨)
+          console.warn('Figma token invalid, cloud sync disabled');
+          setStatus((prev) => ({
+            ...prev,
+            isEnabled: false,
+            figmaUser: null,
+            error: null, // 에러 표시 대신 조용히 비활성화
+          }));
+          return;
         }
 
         // 사용자 프로필 동기화
@@ -75,6 +83,7 @@ export function useCloudSync(): UseCloudSyncReturn {
         console.error('Failed to initialize cloud sync:', error);
         setStatus((prev) => ({
           ...prev,
+          isEnabled: false,
           error: error instanceof Error ? error.message : 'Unknown error',
         }));
       }

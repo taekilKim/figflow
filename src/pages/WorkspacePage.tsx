@@ -72,9 +72,10 @@ function WorkspacePage() {
     }
   }, [cloudStatus.isEnabled, cloudStatus.figmaUser, syncFromCloud, mergeProjects])
 
+  // 클라우드 상태가 변경되면 토큰도 다시 확인 (만료 시 자동 삭제됨)
   useEffect(() => {
     setFigmaToken(getFigmaToken())
-  }, [])
+  }, [cloudStatus.isEnabled])
 
   // 클라우드 상태가 변경되면 프로젝트 다시 로드
   useEffect(() => {

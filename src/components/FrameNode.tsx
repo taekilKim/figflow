@@ -54,11 +54,7 @@ function FrameNode({ data, selected }: NodeProps) {
 
       {/* Frame content - 썸네일은 항상 표시 (버드아이뷰에서도 필요) */}
       <div className="frame-node-thumbnail">
-<<<<<<< Updated upstream
         {thumbnailUrl ? (
-=======
-        {meta.thumbnailUrl ? (
->>>>>>> Stashed changes
           <img
             src={thumbnailUrl}
             alt={meta.title}
