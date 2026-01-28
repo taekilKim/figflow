@@ -63,7 +63,7 @@ export default function TDSControls({ style }: TDSControlsProps) {
           data-tooltip-content="확대 (Zoom In)"
           aria-label="확대"
         >
-          <Plus size={20} weight="bold" />
+          <Plus size={16} weight="bold" />
         </button>
 
         {/* Zoom Out */}
@@ -74,7 +74,7 @@ export default function TDSControls({ style }: TDSControlsProps) {
           data-tooltip-content="축소 (Zoom Out)"
           aria-label="축소"
         >
-          <Minus size={20} weight="bold" />
+          <Minus size={16} weight="bold" />
         </button>
 
         <div className="tds-control-divider" />
@@ -87,7 +87,7 @@ export default function TDSControls({ style }: TDSControlsProps) {
           data-tooltip-content="100% 줌 (⌘0)"
           aria-label="100% 줌"
         >
-          <Crosshair size={20} weight="bold" />
+          <Crosshair size={16} weight="bold" />
         </button>
 
         {/* Fit View All (Cmd+1) */}
@@ -98,7 +98,7 @@ export default function TDSControls({ style }: TDSControlsProps) {
           data-tooltip-content="전체 보기 (⌘1)"
           aria-label="전체 보기"
         >
-          <FrameCorners size={20} weight="bold" />
+          <FrameCorners size={16} weight="bold" />
         </button>
 
         {/* Fit Selection (Cmd+2) */}
@@ -109,7 +109,7 @@ export default function TDSControls({ style }: TDSControlsProps) {
           data-tooltip-content="선택 프레임에 맞추기 (⌘2)"
           aria-label="선택 프레임에 맞추기"
         >
-          <Selection size={20} weight="bold" />
+          <Selection size={16} weight="bold" />
         </button>
       </div>
 

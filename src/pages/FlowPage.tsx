@@ -15,6 +15,10 @@ function FlowPage() {
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([])
   const [projectLoaded, setProjectLoaded] = useState(false)
 
+  // 패널 가시성 상태
+  const [showSidePanels, setShowSidePanels] = useState(true)
+  const [showMinimap, setShowMinimap] = useState(true)
+
   useEffect(() => {
     // 프로젝트 ID가 있으면 로드
     if (id) {
@@ -42,18 +46,24 @@ function FlowPage() {
   return (
     <ReactFlowProvider>
       <div className="app-container">
-        <LeftPanel selectedNodeIds={selectedNodeIds} projectId={id} />
+        {showSidePanels && <LeftPanel selectedNodeIds={selectedNodeIds} projectId={id} />}
         <FlowCanvas
           onNodeSelect={setSelectedNodeId}
           onEdgeSelect={setSelectedEdgeId}
           onSelectionChange={setSelectedNodeIds}
           projectId={id}
+          showMinimap={showMinimap}
+          showSidePanels={showSidePanels}
+          onToggleSidePanels={() => setShowSidePanels(prev => !prev)}
+          onToggleMinimap={() => setShowMinimap(prev => !prev)}
         />
-        <RightPanel
-          selectedNodeId={selectedNodeId}
-          selectedEdgeId={selectedEdgeId}
-          projectId={id}
-        />
+        {showSidePanels && (
+          <RightPanel
+            selectedNodeId={selectedNodeId}
+            selectedEdgeId={selectedEdgeId}
+            projectId={id}
+          />
+        )}
       </div>
     </ReactFlowProvider>
   )

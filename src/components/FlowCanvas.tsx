@@ -67,6 +67,10 @@ interface FlowCanvasProps {
   onEdgeSelect: (edgeId: string | null) => void
   onSelectionChange?: (nodeIds: string[]) => void
   projectId?: string
+  showMinimap?: boolean
+  showSidePanels?: boolean
+  onToggleSidePanels?: () => void
+  onToggleMinimap?: () => void
 }
 
 // 초기 데모 데이터
@@ -302,7 +306,7 @@ const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPan
   )
 }
 
-function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }: FlowCanvasProps) {
+function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId, showMinimap = true, showSidePanels = true, onToggleSidePanels, onToggleMinimap }: FlowCanvasProps) {
   // React Flow 훅 (단축키용)
   const { zoomTo, fitView, getNodes, getViewport, setViewport } = useReactFlow()
 
@@ -1452,6 +1456,10 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         onImportFile={() => setIsFileImportDialogOpen(true)}
         projectName={loadedProject?.name}
         isSyncing={isSyncing}
+        showSidePanels={showSidePanels}
+        showMinimap={showMinimap}
+        onToggleSidePanels={onToggleSidePanels}
+        onToggleMinimap={onToggleMinimap}
       />
       <div className="toolbar">
         <button
@@ -1603,8 +1611,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         {/* TDSControls: 좌측 하단 */}
         <TDSControls style={{ left: 16, bottom: 16 }} />
 
-        {/* MiniMap: 모바일에서 숨김 */}
-        {deviceType !== 'mobile' && (
+        {/* MiniMap: 모바일에서 숨김, showMinimap 토글 */}
+        {deviceType !== 'mobile' && showMinimap && (
         <MiniMap
           nodeColor="#e2e2e2"
           maskColor="rgba(240, 240, 240, 0.6)"
@@ -1616,7 +1624,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
             height: 120,
             width: 200,
             bottom: 16,
-            right: 352,
+            right: showSidePanels ? 312 : 16,
             margin: 0,
             border: '1px solid #E5E8EB',
             borderRadius: '12px',
@@ -1627,11 +1635,11 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         )}
 
         {/* ZoomIndicator: MiniMap 우상단 모서리 */}
-        {deviceType !== 'mobile' && (
+        {deviceType !== 'mobile' && showMinimap && (
         <div style={{
           position: 'absolute',
           bottom: 16 + 120 - 6 - 24,  // MiniMap 상단에서 6px 아래
-          right: 352 + 6,  // MiniMap 우측에서 6px 안쪽
+          right: (showSidePanels ? 312 : 16) + 6,  // MiniMap 우측에서 6px 안쪽
           zIndex: 6,
         }}>
           <ZoomIndicator />

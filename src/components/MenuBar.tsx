@@ -11,6 +11,10 @@ interface MenuBarProps {
   onImportFile?: () => void
   projectName?: string
   isSyncing?: boolean
+  showSidePanels?: boolean
+  showMinimap?: boolean
+  onToggleSidePanels?: () => void
+  onToggleMinimap?: () => void
 }
 
 interface MenuItem {
@@ -20,9 +24,10 @@ interface MenuItem {
   shortcut?: string
   divider?: boolean
   submenu?: MenuItem[]
+  checked?: boolean
 }
 
-function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSyncing }: MenuBarProps) {
+function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSyncing, showSidePanels = true, showMinimap = true, onToggleSidePanels, onToggleMinimap }: MenuBarProps) {
   const navigate = useNavigate()
   const { fitView, zoomIn, zoomOut, setViewport, getViewport, getNodes, zoomTo } = useReactFlow()
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
@@ -38,6 +43,24 @@ function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSync
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // 키보드 단축키: Cmd+\ (사이드 패널), Cmd+M (미니맵)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey) {
+        if (e.key === '\\') {
+          e.preventDefault()
+          onToggleSidePanels?.()
+        }
+        if (e.key === 'm' || e.key === 'M') {
+          e.preventDefault()
+          onToggleMinimap?.()
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onToggleSidePanels, onToggleMinimap])
 
   const handleExport = async (format: ExportFormat) => {
     setActiveMenu(null)
@@ -115,6 +138,9 @@ function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSync
       { label: '줌아웃', action: () => { zoomOut(); setActiveMenu(null) }, shortcut: '⌘-' },
     ],
     윈도우: [
+      { label: '사이드 패널', action: () => { onToggleSidePanels?.(); setActiveMenu(null) }, shortcut: '⌘\\', checked: showSidePanels },
+      { label: '미니맵', action: () => { onToggleMinimap?.(); setActiveMenu(null) }, shortcut: '⌘M', checked: showMinimap },
+      { label: '', divider: true },
       { label: '작업내역 보기', disabled: true },
     ],
     도움말: [
@@ -154,7 +180,14 @@ function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSync
         }}
         disabled={item.disabled}
       >
-        <span>{item.label}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {item.checked !== undefined && (
+            <span style={{ width: '16px', textAlign: 'center' }}>
+              {item.checked ? '✓' : ''}
+            </span>
+          )}
+          {item.label}
+        </span>
         {item.shortcut && <span className="shortcut">{item.shortcut}</span>}
       </button>
     )

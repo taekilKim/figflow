@@ -58,11 +58,6 @@
   margin: 2px 0;
 }
 
-.tds-control-button svg {
-  width: 16px;
-  height: 16px;
-}
-
 /* TDS Tooltip Override (react-tooltip 스타일 보완) */
 .tds-tooltip {
   font-family: 'Pretendard Variable', Pretendard, sans-serif !important;
