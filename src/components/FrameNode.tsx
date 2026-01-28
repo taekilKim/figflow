@@ -60,6 +60,7 @@ function FrameNode({ data, selected }: NodeProps) {
             alt={meta.title}
             loading="lazy"
             decoding="async"
+            crossOrigin="anonymous"
             style={{
               backgroundColor: '#f5f5f5',
               // 🔥 줌 아웃 시 이미지 렌더링 최적화 (브라우저가 자동으로 저해상도로 렌더링)

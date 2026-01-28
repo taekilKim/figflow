@@ -8,6 +8,26 @@ export interface ExportOptions {
 }
 
 /**
+ * 이미지 URL을 fetch로 다운로드하여 base64로 변환
+ */
+async function fetchImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url, { mode: 'cors' })
+    if (!response.ok) return null
+
+    const blob = await response.blob()
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.onerror = () => resolve(null)
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return null
+  }
+}
+
+/**
  * 외부 이미지를 base64 데이터 URL로 변환 (CORS 우회)
  */
 async function convertImagesToBase64(element: HTMLElement): Promise<() => void> {
@@ -15,10 +35,18 @@ async function convertImagesToBase64(element: HTMLElement): Promise<() => void> 
   const originalSrcs: { img: HTMLImageElement; src: string }[] = []
 
   const conversions = Array.from(images).map(async (img) => {
-    if (!img.src || img.src.startsWith('data:')) return
+    if (!img.src || img.src.startsWith('data:') || img.src.startsWith('blob:')) return
 
     try {
-      // 이미 로드된 이미지인 경우 canvas로 변환
+      // 방법 1: fetch로 이미지 다운로드 후 base64 변환 (더 안정적)
+      const dataUrl = await fetchImageAsBase64(img.src)
+      if (dataUrl) {
+        originalSrcs.push({ img, src: img.src })
+        img.src = dataUrl
+        return
+      }
+
+      // 방법 2: canvas를 통한 변환 (fallback)
       if (img.complete && img.naturalWidth > 0) {
         const canvas = document.createElement('canvas')
         canvas.width = img.naturalWidth
@@ -27,11 +55,10 @@ async function convertImagesToBase64(element: HTMLElement): Promise<() => void> 
         if (ctx) {
           ctx.drawImage(img, 0, 0)
           try {
-            const dataUrl = canvas.toDataURL('image/png')
+            const canvasDataUrl = canvas.toDataURL('image/png')
             originalSrcs.push({ img, src: img.src })
-            img.src = dataUrl
+            img.src = canvasDataUrl
           } catch {
-            // CORS 이슈로 변환 실패 - 원본 유지
             console.warn('Could not convert image to base64 (CORS):', img.src)
           }
         }
