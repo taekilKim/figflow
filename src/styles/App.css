@@ -68,7 +68,7 @@
 /* Toolbar - Floating at top center */
 .toolbar {
   position: absolute;
-  top: 56px;
+  top: 38px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;

@@ -24,7 +24,7 @@ import '@xyflow/react/dist/style.css'
 // 🔥 Pivot: Smart Edge 제거, Native StepEdge 복귀
 import TDSStepEdge from './TDSStepEdge'
 import TDSControls from './TDSControls'
-import { Plus, FileArrowDown, ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom, Cloud, CloudCheck, CloudWarning } from '@phosphor-icons/react'
+import { ArrowsClockwise, FloppyDisk, Export, AlignLeft, AlignCenterHorizontal, AlignRight, AlignTop, AlignCenterVertical, AlignBottom, Cloud, CloudCheck, CloudWarning } from '@phosphor-icons/react'
 import FrameNode from './FrameNode'
 import AddFrameDialog from './AddFrameDialog'
 import FigmaFileImportDialog from './FigmaFileImportDialog'
@@ -36,6 +36,7 @@ import { FlowNodeData, FlowEdgeData } from '../types'
 import { saveProject, loadProject, getProjectById, updateProject } from '../utils/storage'
 import { loadProjectFromCloud } from '../utils/cloudStorage'
 import { exportCanvas, ExportFormat } from '../utils/export'
+import MenuBar from './MenuBar'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
 import '../styles/FlowCanvas.css'
 
@@ -1439,29 +1440,22 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
 
   return (
     <>
+      <MenuBar
+        onSave={handleSave}
+        onSync={handleSync}
+        onAddFrame={() => setIsAddDialogOpen(true)}
+        onImportFile={() => setIsFileImportDialogOpen(true)}
+        projectName={loadedProject?.name}
+        isSyncing={isSyncing}
+      />
       <div className="toolbar">
-        <button
-          className="toolbar-button primary"
-          onClick={() => setIsAddDialogOpen(true)}
-        >
-          <Plus size={20} weight="bold" />
-          프레임 추가
-        </button>
-        <button
-          className="toolbar-button primary"
-          onClick={() => setIsFileImportDialogOpen(true)}
-        >
-          <FileArrowDown size={20} weight="bold" />
-          파일 가져오기
-        </button>
-        <div className="toolbar-divider" />
         <button
           className="toolbar-button"
           onClick={handleSync}
           disabled={isSyncing}
         >
           <ArrowsClockwise size={20} weight="bold" />
-          {isSyncing ? '싱크 중...' : 'Sync'}
+          {isSyncing ? '동기화 중...' : '동기화'}
         </button>
         <button className="toolbar-button" onClick={handleSave}>
           <FloppyDisk size={20} weight="bold" />
@@ -1505,7 +1499,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
             disabled={isExporting}
           >
             <Export size={20} weight="bold" />
-            {isExporting ? 'Exporting...' : 'Export'}
+            {isExporting ? '내보내는 중...' : '내보내기'}
           </button>
           {showExportMenu && (
             <div className="export-menu">
