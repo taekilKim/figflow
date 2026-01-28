@@ -24,7 +24,7 @@ function WorkspacePage() {
   const [figmaToken, setFigmaToken] = useState<string | null>(null)
   const [isMerging, setIsMerging] = useState(false)
 
-  const { status: cloudStatus, syncToCloud, syncFromCloud, deleteFromCloud } = useCloudSync()
+  const { status: cloudStatus, syncToCloud, syncFromCloud, deleteFromCloud, syncAll } = useCloudSync()
 
   // 로컬과 클라우드 프로젝트 병합
   const mergeProjects = useCallback((localProjects: ProjectData[], cloudProjects: ProjectData[]): ProjectData[] => {
@@ -53,6 +53,12 @@ function WorkspacePage() {
     if (cloudStatus.isEnabled && cloudStatus.figmaUser) {
       setIsMerging(true)
       try {
+        // 로컬 프로젝트를 먼저 클라우드에 업로드 (기존 로컬 전용 프로젝트 동기화)
+        if (localProjects.length > 0) {
+          await syncAll()
+        }
+
+        // 클라우드에서 프로젝트 가져와서 병합
         const cloudProjects = await syncFromCloud()
         const merged = mergeProjects(localProjects, cloudProjects)
         merged.sort((a, b) => b.updatedAt - a.updatedAt)
@@ -70,7 +76,7 @@ function WorkspacePage() {
       localProjects.sort((a, b) => b.updatedAt - a.updatedAt)
       setProjects(localProjects)
     }
-  }, [cloudStatus.isEnabled, cloudStatus.figmaUser, syncFromCloud, mergeProjects])
+  }, [cloudStatus.isEnabled, cloudStatus.figmaUser, syncFromCloud, syncAll, mergeProjects])
 
   // 클라우드 상태가 변경되면 토큰도 다시 확인 (만료 시 자동 삭제됨)
   useEffect(() => {

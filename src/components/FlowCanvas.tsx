@@ -629,12 +629,13 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
 
       // 🔥 클라우드 동기화 (Figma 로그인 시) - ref 사용으로 최신 상태 보장
       const { cloudStatus: currentCloudStatus, syncToCloud: currentSyncToCloud } = cloudSyncRef.current
+      console.log('[AutoSave] Cloud sync enabled:', currentCloudStatus.isEnabled, 'user:', currentCloudStatus.figmaUser?.handle || 'none')
       if (currentCloudStatus.isEnabled && currentCloudStatus.figmaUser) {
         try {
           await currentSyncToCloud(project)
-          console.log('Project synced to cloud')
+          console.log('[AutoSave] ✅ Project synced to cloud')
         } catch (error) {
-          console.error('Failed to sync to cloud:', error)
+          console.error('[AutoSave] ❌ Failed to sync to cloud:', error)
         }
       }
     },
