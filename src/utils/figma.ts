@@ -4,11 +4,12 @@
 
 /**
  * Token 타입에 따라 올바른 Authorization 헤더를 생성합니다
- * - Personal Access Token (figd_로 시작): X-Figma-Token 헤더 사용
+ * - Personal Access Token (figd_, figu_ 등 fig로 시작): X-Figma-Token 헤더 사용
  * - OAuth Access Token (그 외): Authorization: Bearer 헤더 사용
  */
 function getAuthHeaders(accessToken: string): Record<string, string> {
-  if (accessToken.startsWith('figd_')) {
+  // Figma Personal Access Token 형식: figd_, figu_, figo_ 등
+  if (accessToken.startsWith('fig')) {
     // Personal Access Token
     return { 'X-Figma-Token': accessToken }
   } else {
@@ -395,7 +396,14 @@ export async function getFigmaUser(accessToken: string): Promise<FigmaUser | nul
     })
 
     if (!response.ok) {
-      console.error('Failed to fetch Figma user:', response.status, response.statusText)
+      console.error('Failed to fetch Figma user:', response.status)
+
+      // 401/403 에러는 토큰이 만료되었거나 유효하지 않음
+      if (response.status === 401 || response.status === 403) {
+        console.warn('Figma token expired or invalid, clearing token...')
+        clearFigmaToken()
+      }
+
       return null
     }
 

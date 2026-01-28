@@ -52,16 +52,18 @@ function FrameNode({ data, selected }: NodeProps) {
         </span>
       </div>
 
-      {/* Frame content */}
+      {/* Frame content - 썸네일은 항상 표시 (버드아이뷰에서도 필요) */}
       <div className="frame-node-thumbnail">
         {thumbnailUrl ? (
           <img
             src={thumbnailUrl}
             alt={meta.title}
-            loading="lazy"  // 🔥 Lazy loading (피그마 스타일)
-            decoding="async"  // 🔥 비동기 디코딩 (메인 스레드 차단 방지)
+            loading="lazy"
+            decoding="async"
             style={{
-              backgroundColor: '#f5f5f5',  // 로딩 중 배경색
+              backgroundColor: '#f5f5f5',
+              // 🔥 줌 아웃 시 이미지 렌더링 최적화 (브라우저가 자동으로 저해상도로 렌더링)
+              imageRendering: zoom < 0.5 ? 'pixelated' : 'auto',
             }}
           />
         ) : (

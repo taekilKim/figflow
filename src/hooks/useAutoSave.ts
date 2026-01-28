@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 
 export interface UseAutoSaveOptions {
   data: unknown
-  onSave: () => void
+  onSave: () => void | Promise<void>
   interval?: number // 밀리초 (기본값: 10000 = 10초)
   enabled?: boolean // 자동 저장 활성화 여부
 }
@@ -39,24 +39,30 @@ export function useAutoSave({
   const [isSaving, setIsSaving] = useState(false)
   const lastDataRef = useRef<string>('')
 
+  // 🔥 onSave를 ref로 관리하여 stale closure 문제 해결
+  const onSaveRef = useRef(onSave)
+  useEffect(() => {
+    onSaveRef.current = onSave
+  }, [onSave])
+
   // 데이터 변경 감지 (JSON 직렬화로 비교)
   const dataString = JSON.stringify(data)
 
   // 저장 함수
-  const saveNow = () => {
+  const saveNow = useCallback(async () => {
     if (!enabled) return
 
     setIsSaving(true)
     try {
-      onSave()
-      lastDataRef.current = dataString
+      await onSaveRef.current()
+      lastDataRef.current = JSON.stringify(data)
       setLastSaved(Date.now())
     } catch (error) {
       console.error('자동 저장 실패:', error)
     } finally {
       setIsSaving(false)
     }
-  }
+  }, [enabled, data])
 
   // 정기적 자동 저장 (interval마다)
   useEffect(() => {
@@ -76,7 +82,7 @@ export function useAutoSave({
     }, interval)
 
     return () => clearInterval(intervalId)
-  }, [data, interval, enabled])
+  }, [data, dataString, interval, enabled, saveNow])
 
   // 브라우저 종료 시 마지막 저장 (beforeunload)
   useEffect(() => {

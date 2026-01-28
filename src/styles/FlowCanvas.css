@@ -175,9 +175,10 @@
 }
 
 /* --- 정렬 툴바 (Alignment Toolbar) --- */
+/* 🔥 상단 툴바(top: 48px, height: ~50px) 아래에 배치 */
 .alignment-toolbar {
   position: absolute;
-  top: 108px;
+  top: 110px;
   left: 50%;
   transform: translateX(-50%);
   background: white;

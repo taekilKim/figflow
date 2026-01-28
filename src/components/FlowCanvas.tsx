@@ -305,6 +305,11 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
 
   // 🔥 클라우드 동기화
   const { status: cloudStatus, syncToCloud } = useCloudSync()
+  // 🔥 stale closure 방지를 위한 ref
+  const cloudSyncRef = useRef({ cloudStatus, syncToCloud })
+  useEffect(() => {
+    cloudSyncRef.current = { cloudStatus, syncToCloud }
+  }, [cloudStatus, syncToCloud])
 
   // 🔥 반응형: 디바이스 타입 감지
   const deviceType = useDeviceType()
@@ -622,10 +627,11 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         saveProject(project)
       }
 
-      // 🔥 클라우드 동기화 (Figma 로그인 시)
-      if (cloudStatus.isEnabled && cloudStatus.figmaUser) {
+      // 🔥 클라우드 동기화 (Figma 로그인 시) - ref 사용으로 최신 상태 보장
+      const { cloudStatus: currentCloudStatus, syncToCloud: currentSyncToCloud } = cloudSyncRef.current
+      if (currentCloudStatus.isEnabled && currentCloudStatus.figmaUser) {
         try {
-          await syncToCloud(project)
+          await currentSyncToCloud(project)
           console.log('Project synced to cloud')
         } catch (error) {
           console.error('Failed to sync to cloud:', error)

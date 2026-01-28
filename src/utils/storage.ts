@@ -90,22 +90,30 @@ export function createProject(name: string): ProjectData {
 }
 
 /**
- * 프로젝트 업데이트
+ * 프로젝트 업데이트 (없으면 추가)
  */
 export function updateProject(id: string, updates: Partial<ProjectData>): void {
   const projects = getAllProjects()
   const index = projects.findIndex(p => p.id === id)
 
   if (index === -1) {
-    console.error(`Project not found: ${id}`)
-    return
-  }
-
-  projects[index] = {
-    ...projects[index],
-    ...updates,
-    id, // ID는 변경 불가
-    updatedAt: Date.now(),
+    // 프로젝트가 없으면 새로 추가 (클라우드에서 가져온 경우)
+    const newProject: ProjectData = {
+      id,
+      name: updates.name || 'Untitled',
+      nodes: updates.nodes || [],
+      edges: updates.edges || [],
+      createdAt: updates.createdAt || Date.now(),
+      updatedAt: updates.updatedAt || Date.now(),
+    }
+    projects.push(newProject)
+  } else {
+    projects[index] = {
+      ...projects[index],
+      ...updates,
+      id, // ID는 변경 불가
+      updatedAt: updates.updatedAt || Date.now(),
+    }
   }
 
   saveAllProjects(projects)
