@@ -1,5 +1,5 @@
 import { useReactFlow } from '@xyflow/react'
-import { Plus, Minus, FrameCorners, Selection } from '@phosphor-icons/react'
+import { Plus, Minus, FrameCorners, Selection, Crosshair } from '@phosphor-icons/react'
 import { Tooltip } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
 import '../styles/TDSControls.css'
@@ -12,6 +12,11 @@ import '../styles/TDSControls.css'
  * 2. 모든 버튼에 Tooltip 제공 (사용자 경험 향상)
  * 3. TDS 디자인 원칙: 둥근 모서리, 그림자, 호버 효과
  * 4. Phosphor Icons 사용으로 시각적 일관성 유지
+ *
+ * 단축키:
+ * - Cmd+0: 100%로 줌 초기화
+ * - Cmd+1: 전체 보기
+ * - Cmd+2: 선택 프레임에 맞추기
  */
 
 interface TDSControlsProps {
@@ -29,25 +34,17 @@ export default function TDSControls({ style }: TDSControlsProps) {
     zoomOut({ duration: 400 })
   }
 
-  // 🔥 [Fix] Ctrl+1 토글: 100% ↔ 전체화면
-  const handleFitView = () => {
-    const viewport = document.querySelector('.react-flow__viewport')
-    if (viewport) {
-      const transform = window.getComputedStyle(viewport).transform
-      const matrix = new DOMMatrix(transform)
-      const zoom = matrix.a // scale value
-
-      if (Math.abs(zoom - 1) < 0.01) {
-        // 현재 100%이면 → 전체화면
-        fitView({ padding: 0.2, duration: 800 })
-      } else {
-        // 현재 100%가 아니면 → 100%로
-        zoomTo(1, { duration: 800 })
-      }
-    }
+  // Cmd+0: 100%로 줌 초기화
+  const handleZoomReset = () => {
+    zoomTo(1, { duration: 800 })
   }
 
-  // 🔥 Ctrl+2와 동일한 동작: 선택된 노드들로 핏
+  // Cmd+1: 전체 보기
+  const handleFitView = () => {
+    fitView({ padding: 0.1, duration: 800 })
+  }
+
+  // Cmd+2: 선택된 노드들로 핏
   const handleFitSelection = () => {
     const selectedNodes = getNodes().filter((n) => n.selected)
     if (selectedNodes.length > 0) {
@@ -82,24 +79,35 @@ export default function TDSControls({ style }: TDSControlsProps) {
 
         <div className="tds-control-divider" />
 
-        {/* Fit View (100% ↔ 전체화면 토글) */}
+        {/* 100% Zoom Reset (Cmd+0) */}
+        <button
+          className="tds-control-button"
+          onClick={handleZoomReset}
+          data-tooltip-id="tds-tooltip"
+          data-tooltip-content="100% 줌 (⌘0)"
+          aria-label="100% 줌"
+        >
+          <Crosshair size={20} weight="bold" />
+        </button>
+
+        {/* Fit View All (Cmd+1) */}
         <button
           className="tds-control-button"
           onClick={handleFitView}
           data-tooltip-id="tds-tooltip"
-          data-tooltip-content="100% / 전체화면 토글 (Ctrl+1 / Cmd+1)"
-          aria-label="100% / 전체화면 토글"
+          data-tooltip-content="전체 보기 (⌘1)"
+          aria-label="전체 보기"
         >
           <FrameCorners size={20} weight="bold" />
         </button>
 
-        {/* Fit Selection (선택 요소에 맞추기) */}
+        {/* Fit Selection (Cmd+2) */}
         <button
           className="tds-control-button"
           onClick={handleFitSelection}
           data-tooltip-id="tds-tooltip"
-          data-tooltip-content="선택 요소 보기 (Ctrl+2 / Cmd+2)"
-          aria-label="선택 요소 보기"
+          data-tooltip-content="선택 프레임에 맞추기 (⌘2)"
+          aria-label="선택 프레임에 맞추기"
         >
           <Selection size={20} weight="bold" />
         </button>

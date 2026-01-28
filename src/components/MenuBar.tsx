@@ -24,7 +24,7 @@ interface MenuItem {
 
 function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSyncing }: MenuBarProps) {
   const navigate = useNavigate()
-  const { fitView, zoomIn, zoomOut, setViewport, getViewport } = useReactFlow()
+  const { fitView, zoomIn, zoomOut, setViewport, getViewport, getNodes, zoomTo } = useReactFlow()
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const menuBarRef = useRef<HTMLDivElement>(null)
 
@@ -51,8 +51,8 @@ function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSync
       // 2. 모든 노드가 보이도록 fitView 호출
       fitView({ padding: 0.1, duration: 0 })
 
-      // 3. fitView 완료 대기
-      await new Promise(resolve => setTimeout(resolve, 100))
+      // 3. fitView 완료 및 이미지 렌더링 대기
+      await new Promise(resolve => setTimeout(resolve, 500))
 
       // 4. 캡처
       await exportCanvas(flowContainer, format, { filename: projectName || 'figflow-export', scale: 2 })
@@ -64,8 +64,18 @@ function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSync
     }
   }
 
+  // Cmd+0: 100%로 줌
   const handleZoomReset = () => {
-    setViewport({ x: 0, y: 0, zoom: 1 })
+    zoomTo(1, { duration: 800 })
+    setActiveMenu(null)
+  }
+
+  // Cmd+2: 선택 프레임에 맞추기
+  const handleFitSelection = () => {
+    const selectedNodes = getNodes().filter((n) => n.selected)
+    if (selectedNodes.length > 0) {
+      fitView({ nodes: selectedNodes, padding: 0.2, duration: 800 })
+    }
     setActiveMenu(null)
   }
 
@@ -97,12 +107,12 @@ function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSync
       { label: '잘라내기', shortcut: '⌘X', disabled: true },
     ],
     보기: [
-      { label: '선택 프레임에 맞추기', action: () => { fitView({ padding: 0.2 }); setActiveMenu(null) }, shortcut: '⌘1' },
-      { label: '전체 보기', action: () => { fitView({ padding: 0.1 }); setActiveMenu(null) }, shortcut: '⌘0' },
+      { label: '100% 비율로 줌', action: handleZoomReset, shortcut: '⌘0' },
+      { label: '전체 보기', action: () => { fitView({ padding: 0.1, duration: 800 }); setActiveMenu(null) }, shortcut: '⌘1' },
+      { label: '선택 프레임에 맞추기', action: handleFitSelection, shortcut: '⌘2' },
       { label: '', divider: true },
       { label: '줌인', action: () => { zoomIn(); setActiveMenu(null) }, shortcut: '⌘+' },
       { label: '줌아웃', action: () => { zoomOut(); setActiveMenu(null) }, shortcut: '⌘-' },
-      { label: '100% 비율로 줌 초기화', action: handleZoomReset },
     ],
     윈도우: [
       { label: '작업내역 보기', disabled: true },

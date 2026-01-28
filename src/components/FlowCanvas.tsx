@@ -719,8 +719,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
       // 2. 모든 노드가 보이도록 fitView 호출
       fitView({ padding: 0.1, duration: 0 })
 
-      // 3. fitView 애니메이션 완료 대기
-      await new Promise(resolve => setTimeout(resolve, 100))
+      // 3. fitView 완료 및 이미지 렌더링 대기 (더 긴 대기 시간)
+      await new Promise(resolve => setTimeout(resolve, 500))
 
       // 4. 캡처
       const filename = loadedProject?.name || 'figflow-export'
@@ -1145,33 +1145,25 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     }
   }, [nodes, edges, setNodes, setEdges, onNodeSelect, onEdgeSelect])
 
-  // 🔥 [Fix] 줌 단축키: Ctrl+1 (토글: 100% ↔ 전체화면), Ctrl+2 (선택 요소 핏)
+  // 🔥 줌 단축키: Cmd+0 (100%), Cmd+1 (전체 보기), Cmd+2 (선택 요소 핏)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.metaKey) {
+        // Cmd+0: 100%로 줌 초기화
+        if (event.key === '0') {
+          event.preventDefault()
+          zoomTo(1, { duration: 800 })
+        }
+        // Cmd+1: 전체 보기
         if (event.key === '1') {
           event.preventDefault()
-          // 🔥 토글 로직: 현재 줌이 1(100%)이면 전체화면, 아니면 100%로
-          const viewport = document.querySelector('.react-flow__viewport')
-          if (viewport) {
-            const transform = window.getComputedStyle(viewport).transform
-            const matrix = new DOMMatrix(transform)
-            const zoom = matrix.a // scale value
-
-            if (Math.abs(zoom - 1) < 0.01) {
-              // 현재 100%이면 → 전체화면
-              fitView({ padding: 0.2, duration: 800 })
-            } else {
-              // 현재 100%가 아니면 → 100%로
-              zoomTo(1, { duration: 800 })
-            }
-          }
+          fitView({ padding: 0.1, duration: 800 })
         }
+        // Cmd+2: 선택 프레임에 맞추기
         if (event.key === '2') {
           event.preventDefault()
           const selectedNodes = getNodes().filter((n) => n.selected)
           if (selectedNodes.length > 0) {
-            // 선택된 노드들로 핏 (padding 0.2)
             fitView({ nodes: selectedNodes, padding: 0.2, duration: 800 })
           }
         }

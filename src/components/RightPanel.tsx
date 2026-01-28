@@ -43,6 +43,7 @@ function RightPanel({ selectedNodeId, selectedEdgeId, projectId }: RightPanelPro
   useEffect(() => {
     if (!selectedEdgeId) {
       setEdgeData(null)
+      setEdgeLabel('')
       return
     }
 
@@ -52,7 +53,15 @@ function RightPanel({ selectedNodeId, selectedEdgeId, projectId }: RightPanelPro
       if (edge) {
         setEdgeData(edge.data || { sourceType: 'manual' })
         setEdgeLabel(edge.label || '')
+      } else {
+        // 엣지가 아직 저장소에 없는 경우 기본값 설정
+        setEdgeData({ sourceType: 'manual', arrowType: 'forward', style: 'solid' })
+        setEdgeLabel('')
       }
+    } else {
+      // 프로젝트가 없는 경우에도 기본값 설정
+      setEdgeData({ sourceType: 'manual', arrowType: 'forward', style: 'solid' })
+      setEdgeLabel('')
     }
   }, [selectedEdgeId, projectId])
 
