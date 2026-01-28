@@ -35,6 +35,7 @@ import { useCloudSync } from '../hooks/useCloudSync'
 import { FlowNodeData, FlowEdgeData } from '../types'
 import { saveProject, loadProject, getProjectById, updateProject } from '../utils/storage'
 import { loadProjectFromCloud } from '../utils/cloudStorage'
+import { exportCanvas, ExportFormat } from '../utils/export'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
 import '../styles/FlowCanvas.css'
 
@@ -450,6 +451,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   const [isFileImportDialogOpen, setIsFileImportDialogOpen] = useState(false)
   const connectingNodeId = useRef<string | null>(null)
   const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null)
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
   // 🔧 Real-time Debugging Tool - 비활성화
   // useEffect(() => {
@@ -695,6 +698,29 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
     }, 1000) // 1초마다 리렌더링
     return () => clearInterval(interval)
   }, [])
+
+  // Export 핸들러
+  const handleExport = useCallback(async (format: ExportFormat) => {
+    setShowExportMenu(false)
+
+    // ReactFlow 뷰포트 요소 찾기
+    const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
+    if (!viewport) {
+      alert('내보낼 캔버스를 찾을 수 없습니다.')
+      return
+    }
+
+    setIsExporting(true)
+    try {
+      const filename = loadedProject?.name || 'figflow-export'
+      await exportCanvas(viewport, format, { filename, scale: 2 })
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('내보내기에 실패했습니다.')
+    } finally {
+      setIsExporting(false)
+    }
+  }, [loadedProject?.name])
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -1472,10 +1498,23 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
             </span>
           )}
         </span>
-        <button className="toolbar-button">
-          <Export size={20} weight="bold" />
-          Export
-        </button>
+        <div className="export-button-wrapper">
+          <button
+            className="toolbar-button"
+            onClick={() => setShowExportMenu(!showExportMenu)}
+            disabled={isExporting}
+          >
+            <Export size={20} weight="bold" />
+            {isExporting ? 'Exporting...' : 'Export'}
+          </button>
+          {showExportMenu && (
+            <div className="export-menu">
+              <button onClick={() => handleExport('png')}>PNG로 내보내기</button>
+              <button onClick={() => handleExport('jpg')}>JPG로 내보내기</button>
+              <button onClick={() => handleExport('pdf')}>PDF로 내보내기</button>
+            </div>
+          )}
+        </div>
       </div>
 
       <FlowWrapper isPanning={isPanning}>
