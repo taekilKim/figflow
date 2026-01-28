@@ -34,6 +34,7 @@ import { useAutoSave, formatLastSaved } from '../hooks/useAutoSave'
 import { useCloudSync } from '../hooks/useCloudSync'
 import { FlowNodeData, FlowEdgeData } from '../types'
 import { saveProject, loadProject, getProjectById, updateProject } from '../utils/storage'
+import { loadProjectFromCloud } from '../utils/cloudStorage'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
 import '../styles/FlowCanvas.css'
 
@@ -402,6 +403,50 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   )
   const [isSyncing, setIsSyncing] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+
+  // 🔥 페이지 로드 시 클라우드에서 최신 데이터 확인
+  useEffect(() => {
+    const checkCloudData = async () => {
+      if (!cloudStatus.isEnabled || !cloudStatus.figmaUser || !projectId) {
+        return
+      }
+
+      try {
+        console.log('[FlowCanvas] Checking cloud for latest data...')
+        const cloudProject = await loadProjectFromCloud(cloudStatus.figmaUser.id, projectId)
+
+        if (!cloudProject) {
+          console.log('[FlowCanvas] No cloud data found')
+          return
+        }
+
+        const localUpdatedAt = loadedProject?.updatedAt || 0
+        console.log('[FlowCanvas] Local updatedAt:', localUpdatedAt, 'Cloud updatedAt:', cloudProject.updatedAt)
+
+        // 클라우드가 더 최신이면 상태 업데이트
+        if (cloudProject.updatedAt > localUpdatedAt) {
+          console.log('[FlowCanvas] ✅ Cloud data is newer, updating...')
+
+          // 로컬에도 저장
+          updateProject(projectId, cloudProject)
+
+          // 상태 업데이트
+          if (cloudProject.nodes) {
+            setNodes(cloudProject.nodes as Node<FlowNodeData>[])
+          }
+          if (cloudProject.edges) {
+            setEdges(cloudProject.edges as Edge<FlowEdgeData>[])
+          }
+        } else {
+          console.log('[FlowCanvas] Local data is up to date')
+        }
+      } catch (error) {
+        console.error('[FlowCanvas] Failed to check cloud data:', error)
+      }
+    }
+
+    checkCloudData()
+  }, [cloudStatus.isEnabled, cloudStatus.figmaUser, projectId])
   const [isFileImportDialogOpen, setIsFileImportDialogOpen] = useState(false)
   const connectingNodeId = useRef<string | null>(null)
   const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null)
