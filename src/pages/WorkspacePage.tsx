@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Lightning, Trash, FolderOpen, Export, FileArrowUp } from '@phosphor-icons/react'
+import { Plus, Lightning, Trash, FolderOpen, Export, FileArrowUp, CloudCheck, CloudSlash, CircleNotch } from '@phosphor-icons/react'
 import {
   getAllProjects,
   createProject,
@@ -8,9 +8,11 @@ import {
   exportProject,
   importProject,
   setCurrentProjectId,
+  updateProject,
 } from '../utils/storage'
 import { getFigmaToken, saveFigmaToken, clearFigmaToken } from '../utils/figma'
 import { startFigmaOAuth, isOAuthAvailable } from '../utils/figmaAuth'
+import { useCloudSync } from '../hooks/useCloudSync'
 import { ProjectData } from '../types'
 import '../styles/WorkspacePage.css'
 
@@ -20,25 +22,81 @@ function WorkspacePage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [newProjectName, setNewProjectName] = useState('')
   const [figmaToken, setFigmaToken] = useState<string | null>(null)
+  const [isMerging, setIsMerging] = useState(false)
+
+  const { status: cloudStatus, syncToCloud, syncFromCloud, deleteFromCloud } = useCloudSync()
+
+  // 로컬과 클라우드 프로젝트 병합
+  const mergeProjects = useCallback((localProjects: ProjectData[], cloudProjects: ProjectData[]): ProjectData[] => {
+    const projectMap = new Map<string, ProjectData>()
+
+    // 로컬 프로젝트 먼저 추가
+    localProjects.forEach(p => projectMap.set(p.id, p))
+
+    // 클라우드 프로젝트 병합 (더 최신이면 덮어쓰기)
+    cloudProjects.forEach(cloudProject => {
+      const localProject = projectMap.get(cloudProject.id)
+      if (!localProject || cloudProject.updatedAt > localProject.updatedAt) {
+        projectMap.set(cloudProject.id, cloudProject)
+        // 로컬에도 저장
+        updateProject(cloudProject.id, cloudProject)
+      }
+    })
+
+    return Array.from(projectMap.values())
+  }, [])
+
+  const loadProjects = useCallback(async () => {
+    const localProjects = getAllProjects()
+
+    // 클라우드 동기화가 활성화된 경우
+    if (cloudStatus.isEnabled && cloudStatus.figmaUser) {
+      setIsMerging(true)
+      try {
+        const cloudProjects = await syncFromCloud()
+        const merged = mergeProjects(localProjects, cloudProjects)
+        merged.sort((a, b) => b.updatedAt - a.updatedAt)
+        setProjects(merged)
+      } catch (error) {
+        console.error('Failed to sync from cloud:', error)
+        // 클라우드 실패 시 로컬만 표시
+        localProjects.sort((a, b) => b.updatedAt - a.updatedAt)
+        setProjects(localProjects)
+      } finally {
+        setIsMerging(false)
+      }
+    } else {
+      // 클라우드 비활성화 시 로컬만 표시
+      localProjects.sort((a, b) => b.updatedAt - a.updatedAt)
+      setProjects(localProjects)
+    }
+  }, [cloudStatus.isEnabled, cloudStatus.figmaUser, syncFromCloud, mergeProjects])
 
   useEffect(() => {
-    loadProjects()
     setFigmaToken(getFigmaToken())
   }, [])
 
-  const loadProjects = () => {
-    const allProjects = getAllProjects()
-    // 최근 수정순으로 정렬
-    allProjects.sort((a, b) => b.updatedAt - a.updatedAt)
-    setProjects(allProjects)
-  }
+  // 클라우드 상태가 변경되면 프로젝트 다시 로드
+  useEffect(() => {
+    loadProjects()
+  }, [loadProjects])
 
-  const handleCreateProject = () => {
+  const handleCreateProject = async () => {
     if (!newProjectName.trim()) return
 
     const newProject = createProject(newProjectName.trim())
     setNewProjectName('')
     setShowCreateDialog(false)
+
+    // 클라우드에 동기화
+    if (cloudStatus.isEnabled) {
+      try {
+        await syncToCloud(newProject)
+      } catch (error) {
+        console.error('Failed to sync new project to cloud:', error)
+      }
+    }
+
     loadProjects()
 
     // 새 프로젝트 페이지로 이동
@@ -50,9 +108,19 @@ function WorkspacePage() {
     navigate(`/flow/${id}`)
   }
 
-  const handleDeleteProject = (id: string, name: string) => {
+  const handleDeleteProject = async (id: string, name: string) => {
     if (confirm(`"${name}" 프로젝트를 삭제하시겠습니까?`)) {
       deleteProject(id)
+
+      // 클라우드에서도 삭제
+      if (cloudStatus.isEnabled) {
+        try {
+          await deleteFromCloud(id)
+        } catch (error) {
+          console.error('Failed to delete project from cloud:', error)
+        }
+      }
+
       loadProjects()
     }
   }
@@ -121,6 +189,24 @@ function WorkspacePage() {
           </div>
 
           <div className="header-actions">
+            {/* 클라우드 동기화 상태 */}
+            {figmaToken && (
+              <div className="cloud-status" title={
+                cloudStatus.isSyncing || isMerging ? '동기화 중...' :
+                cloudStatus.isEnabled ? '클라우드 동기화 활성화' :
+                cloudStatus.error ? `오류: ${cloudStatus.error}` :
+                '클라우드 동기화 비활성화'
+              }>
+                {cloudStatus.isSyncing || isMerging ? (
+                  <CircleNotch size={20} className="spinning" />
+                ) : cloudStatus.isEnabled ? (
+                  <CloudCheck size={20} color="var(--green-500)" />
+                ) : (
+                  <CloudSlash size={20} color="var(--grey-500)" />
+                )}
+              </div>
+            )}
+
             {figmaToken ? (
               <button className="figma-status connected" onClick={handleFigmaLogout}>
                 <span className="status-dot"></span>

@@ -40,7 +40,30 @@
 
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 12px;
+}
+
+.cloud-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  cursor: default;
+}
+
+.cloud-status .spinning {
+  animation: spin 1s linear infinite;
+  color: var(--blue-500, #667eea);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .figma-login-btn {
