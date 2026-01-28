@@ -3,6 +3,7 @@ import LandingPage from './pages/LandingPage'
 import WorkspacePage from './pages/WorkspacePage'
 import FlowPage from './pages/FlowPage'
 import AuthCallbackPage from './pages/AuthCallbackPage'
+import AdminPage from './pages/AdminPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import './styles/App.css'
 
@@ -28,6 +29,7 @@ function App() {
           }
         />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
