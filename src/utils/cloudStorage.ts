@@ -160,3 +160,89 @@ export async function deleteProjectFromCloud(
  * Firebase 사용 가능 여부 확인
  */
 export { isFirebaseEnabled };
+
+// ============================================
+// Admin 통계 함수
+// ============================================
+
+export interface AdminStats {
+  totalUsers: number;
+  totalProjects: number;
+  totalNodes: number;
+  totalEdges: number;
+  users: Array<{
+    id: string;
+    handle: string;
+    email: string;
+    img_url: string;
+    projectCount: number;
+    nodeCount: number;
+    updatedAt: number;
+  }>;
+}
+
+/**
+ * 어드민 통계 조회 (모든 사용자, 프로젝트, 노드 수)
+ */
+export async function getAdminStats(): Promise<AdminStats> {
+  if (!isFirebaseEnabled() || !db) {
+    throw new Error('Firebase not enabled');
+  }
+
+  try {
+    // 1. 모든 사용자 조회
+    const usersRef = collection(db, 'users');
+    const usersSnapshot = await getDocs(usersRef);
+
+    const users: AdminStats['users'] = [];
+    let totalProjects = 0;
+    let totalNodes = 0;
+    let totalEdges = 0;
+
+    // 2. 각 사용자의 프로젝트 조회
+    for (const userDoc of usersSnapshot.docs) {
+      const userData = userDoc.data();
+      const projectsRef = collection(db, 'users', userDoc.id, 'projects');
+      const projectsSnapshot = await getDocs(projectsRef);
+
+      let userNodeCount = 0;
+      let userEdgeCount = 0;
+
+      projectsSnapshot.forEach((projectDoc) => {
+        const projectData = projectDoc.data();
+        const nodeCount = projectData.nodes?.length || 0;
+        const edgeCount = projectData.edges?.length || 0;
+        userNodeCount += nodeCount;
+        userEdgeCount += edgeCount;
+      });
+
+      totalProjects += projectsSnapshot.size;
+      totalNodes += userNodeCount;
+      totalEdges += userEdgeCount;
+
+      users.push({
+        id: userDoc.id,
+        handle: userData.handle || 'Unknown',
+        email: userData.email || '',
+        img_url: userData.img_url || '',
+        projectCount: projectsSnapshot.size,
+        nodeCount: userNodeCount,
+        updatedAt: userData.updatedAt?.toMillis?.() || 0,
+      });
+    }
+
+    // 최근 활동순으로 정렬
+    users.sort((a, b) => b.updatedAt - a.updatedAt);
+
+    return {
+      totalUsers: usersSnapshot.size,
+      totalProjects,
+      totalNodes,
+      totalEdges,
+      users,
+    };
+  } catch (error) {
+    console.error('Failed to get admin stats:', error);
+    throw error;
+  }
+}
