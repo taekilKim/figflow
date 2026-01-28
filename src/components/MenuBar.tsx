@@ -24,7 +24,7 @@ interface MenuItem {
 
 function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSyncing }: MenuBarProps) {
   const navigate = useNavigate()
-  const { fitView, zoomIn, zoomOut, setViewport } = useReactFlow()
+  const { fitView, zoomIn, zoomOut, setViewport, getViewport } = useReactFlow()
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const menuBarRef = useRef<HTMLDivElement>(null)
 
@@ -41,10 +41,24 @@ function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSync
 
   const handleExport = async (format: ExportFormat) => {
     setActiveMenu(null)
-    const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
-    if (!viewport) return
+    const flowContainer = document.querySelector('.react-flow') as HTMLElement
+    if (!flowContainer) return
+
     try {
-      await exportCanvas(viewport, format, { filename: projectName || 'figflow-export', scale: 2 })
+      // 1. 현재 뷰포트 상태 저장
+      const currentViewport = getViewport()
+
+      // 2. 모든 노드가 보이도록 fitView 호출
+      fitView({ padding: 0.1, duration: 0 })
+
+      // 3. fitView 완료 대기
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // 4. 캡처
+      await exportCanvas(flowContainer, format, { filename: projectName || 'figflow-export', scale: 2 })
+
+      // 5. 원래 뷰포트로 복원
+      setViewport(currentViewport, { duration: 0 })
     } catch (error) {
       console.error('Export failed:', error)
     }

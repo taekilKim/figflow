@@ -304,7 +304,7 @@ const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPan
 
 function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }: FlowCanvasProps) {
   // React Flow 훅 (단축키용)
-  const { zoomTo, fitView, getNodes } = useReactFlow()
+  const { zoomTo, fitView, getNodes, getViewport, setViewport } = useReactFlow()
 
   // 🔥 클라우드 동기화
   const { status: cloudStatus, syncToCloud } = useCloudSync()
@@ -704,24 +704,37 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
   const handleExport = useCallback(async (format: ExportFormat) => {
     setShowExportMenu(false)
 
-    // ReactFlow 뷰포트 요소 찾기
-    const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
-    if (!viewport) {
+    // ReactFlow 컨테이너 찾기
+    const flowContainer = document.querySelector('.react-flow') as HTMLElement
+    if (!flowContainer) {
       alert('내보낼 캔버스를 찾을 수 없습니다.')
       return
     }
 
     setIsExporting(true)
     try {
+      // 1. 현재 뷰포트 상태 저장
+      const currentViewport = getViewport()
+
+      // 2. 모든 노드가 보이도록 fitView 호출
+      fitView({ padding: 0.1, duration: 0 })
+
+      // 3. fitView 애니메이션 완료 대기
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // 4. 캡처
       const filename = loadedProject?.name || 'figflow-export'
-      await exportCanvas(viewport, format, { filename, scale: 2 })
+      await exportCanvas(flowContainer, format, { filename, scale: 2 })
+
+      // 5. 원래 뷰포트로 복원
+      setViewport(currentViewport, { duration: 0 })
     } catch (error) {
       console.error('Export failed:', error)
       alert('내보내기에 실패했습니다.')
     } finally {
       setIsExporting(false)
     }
-  }, [loadedProject?.name])
+  }, [loadedProject?.name, getViewport, setViewport, fitView])
 
   const onConnect = useCallback(
     (connection: Connection) => {
