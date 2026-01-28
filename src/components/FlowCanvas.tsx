@@ -1600,10 +1600,10 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
 
-        {/* 🔥 [Fix 6, 7] TDSControls: left 312px, bottom 16px */}
-        <TDSControls style={{ left: 312, bottom: 16 }} />
+        {/* TDSControls: 좌측 하단 */}
+        <TDSControls style={{ left: 16, bottom: 16 }} />
 
-        {/* 🔥 [Fix 3, 4, 5] MiniMap: 모바일에서 숨김 (메모리 절약) */}
+        {/* MiniMap: 모바일에서 숨김 */}
         {deviceType !== 'mobile' && (
         <MiniMap
           nodeColor="#e2e2e2"
@@ -1626,16 +1626,17 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId }
         />
         )}
 
-        {/* 🔥 [Fix 3] ZoomIndicator를 MiniMap 밖으로 독립 배치 (렌더링 보장) */}
+        {/* ZoomIndicator: MiniMap 우상단 모서리 */}
+        {deviceType !== 'mobile' && (
         <div style={{
           position: 'absolute',
-          top: 'auto',
-          bottom: 16 + 120 - 8 - 20,  // MiniMap bottom + height - top offset - indicator height
-          right: 352 + 8,  // MiniMap right + right offset
-          zIndex: 6,  // MiniMap보다 위
+          bottom: 16 + 120 - 6 - 24,  // MiniMap 상단에서 6px 아래
+          right: 352 + 6,  // MiniMap 우측에서 6px 안쪽
+          zIndex: 6,
         }}>
           <ZoomIndicator />
         </div>
+        )}
         <AlignmentToolbar selectedNodeIds={selectedNodeIds} />
       </ReactFlow>
       </FlowWrapper>
