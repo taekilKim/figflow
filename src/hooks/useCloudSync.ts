@@ -43,22 +43,30 @@ export function useCloudSync(): UseCloudSyncReturn {
   // 초기화: Figma 사용자 정보 가져오기
   useEffect(() => {
     const initCloudSync = async () => {
+      console.log('[CloudSync] Starting initialization...');
+      console.log('[CloudSync] Firebase enabled:', isFirebaseEnabled());
+
       if (!isFirebaseEnabled()) {
-        console.warn('Firebase not enabled, cloud sync disabled');
+        console.warn('[CloudSync] Firebase not enabled, cloud sync disabled');
         return;
       }
 
       const token = getFigmaToken();
+      console.log('[CloudSync] Figma token exists:', !!token);
+
       if (!token) {
-        console.log('No Figma token found, cloud sync disabled');
+        console.log('[CloudSync] No Figma token found, cloud sync disabled');
         return;
       }
 
       try {
+        console.log('[CloudSync] Fetching Figma user info...');
         const user = await getFigmaUser(token);
+        console.log('[CloudSync] Figma user result:', user ? user.handle : 'null');
+
         if (!user) {
           // 토큰이 유효하지 않음 (이미 figma.ts에서 토큰 삭제됨)
-          console.warn('Figma token invalid, cloud sync disabled');
+          console.warn('[CloudSync] Figma token invalid, cloud sync disabled');
           setStatus((prev) => ({
             ...prev,
             isEnabled: false,
@@ -69,7 +77,9 @@ export function useCloudSync(): UseCloudSyncReturn {
         }
 
         // 사용자 프로필 동기화
+        console.log('[CloudSync] Syncing user profile to Firebase...');
         await syncUserProfile(user);
+        console.log('[CloudSync] User profile synced successfully');
 
         setStatus((prev) => ({
           ...prev,
@@ -78,9 +88,9 @@ export function useCloudSync(): UseCloudSyncReturn {
           error: null,
         }));
 
-        console.log('Cloud sync initialized for user:', user.handle);
+        console.log('[CloudSync] ✅ Cloud sync initialized for user:', user.handle);
       } catch (error) {
-        console.error('Failed to initialize cloud sync:', error);
+        console.error('[CloudSync] ❌ Failed to initialize:', error);
         setStatus((prev) => ({
           ...prev,
           isEnabled: false,
