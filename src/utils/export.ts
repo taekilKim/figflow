@@ -5,6 +5,8 @@ export interface ExportOptions {
   filename?: string
   scale?: number // 이미지 품질 배수 (기본 4x)
   backgroundColor?: string
+  imageWidth?: number // 캡처할 영역 너비
+  imageHeight?: number // 캡처할 영역 높이
 }
 
 /**
@@ -18,7 +20,6 @@ function isFigmaImage(url: string): boolean {
 
 /**
  * 이미지 URL을 fetch로 다운로드하여 base64로 변환
- * Figma 이미지는 프록시를 통해 가져옴 (CORS 우회)
  */
 async function fetchImageAsBase64(url: string): Promise<string | null> {
   try {
@@ -43,7 +44,7 @@ async function fetchImageAsBase64(url: string): Promise<string | null> {
 }
 
 /**
- * 외부 이미지를 base64 데이터 URL로 변환 (CORS 우회)
+ * 외부 이미지를 base64로 변환 (CORS 우회)
  */
 async function convertImagesToBase64(element: HTMLElement): Promise<() => void> {
   const images = element.querySelectorAll('img')
@@ -100,17 +101,34 @@ export async function exportToPNG(
   element: HTMLElement,
   options: ExportOptions = {}
 ): Promise<void> {
-  const { filename = 'figflow-export', scale = 4, backgroundColor = '#ffffff' } = options
+  const {
+    filename = 'figflow-export',
+    scale = 4,
+    backgroundColor = '#ffffff',
+    imageWidth,
+    imageHeight
+  } = options
 
   try {
     const restoreImages = await convertImagesToBase64(element)
 
-    const dataUrl = await toPng(element, {
+    const exportOptions: Parameters<typeof toPng>[1] = {
       backgroundColor,
-      pixelRatio: scale,
       filter: filterElements,
-    })
+      pixelRatio: scale,
+    }
 
+    // 정확한 크기가 지정된 경우 해당 크기로 캡처
+    if (imageWidth && imageHeight) {
+      exportOptions.width = imageWidth
+      exportOptions.height = imageHeight
+      exportOptions.style = {
+        width: `${imageWidth}px`,
+        height: `${imageHeight}px`,
+      }
+    }
+
+    const dataUrl = await toPng(element, exportOptions)
     restoreImages()
 
     const link = document.createElement('a')
@@ -130,18 +148,34 @@ export async function exportToJPG(
   element: HTMLElement,
   options: ExportOptions = {}
 ): Promise<void> {
-  const { filename = 'figflow-export', scale = 4, backgroundColor = '#ffffff' } = options
+  const {
+    filename = 'figflow-export',
+    scale = 4,
+    backgroundColor = '#ffffff',
+    imageWidth,
+    imageHeight
+  } = options
 
   try {
     const restoreImages = await convertImagesToBase64(element)
 
-    const dataUrl = await toJpeg(element, {
+    const exportOptions: Parameters<typeof toJpeg>[1] = {
       backgroundColor,
-      pixelRatio: scale,
-      quality: 0.95,
       filter: filterElements,
-    })
+      quality: 0.95,
+      pixelRatio: scale,
+    }
 
+    if (imageWidth && imageHeight) {
+      exportOptions.width = imageWidth
+      exportOptions.height = imageHeight
+      exportOptions.style = {
+        width: `${imageWidth}px`,
+        height: `${imageHeight}px`,
+      }
+    }
+
+    const dataUrl = await toJpeg(element, exportOptions)
     restoreImages()
 
     const link = document.createElement('a')
@@ -161,17 +195,33 @@ export async function exportToPDF(
   element: HTMLElement,
   options: ExportOptions = {}
 ): Promise<void> {
-  const { filename = 'figflow-export', scale = 4, backgroundColor = '#ffffff' } = options
+  const {
+    filename = 'figflow-export',
+    scale = 4,
+    backgroundColor = '#ffffff',
+    imageWidth,
+    imageHeight
+  } = options
 
   try {
     const restoreImages = await convertImagesToBase64(element)
 
-    const dataUrl = await toPng(element, {
+    const exportOptions: Parameters<typeof toPng>[1] = {
       backgroundColor,
-      pixelRatio: scale,
       filter: filterElements,
-    })
+      pixelRatio: scale,
+    }
 
+    if (imageWidth && imageHeight) {
+      exportOptions.width = imageWidth
+      exportOptions.height = imageHeight
+      exportOptions.style = {
+        width: `${imageWidth}px`,
+        height: `${imageHeight}px`,
+      }
+    }
+
+    const dataUrl = await toPng(element, exportOptions)
     restoreImages()
 
     // 이미지 크기 계산

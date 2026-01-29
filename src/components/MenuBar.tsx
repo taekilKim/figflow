@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useReactFlow } from '@xyflow/react'
+import { useReactFlow, getNodesBounds } from '@xyflow/react'
 import { exportCanvas, ExportFormat } from '../utils/export'
 import '../styles/MenuBar.css'
 
@@ -64,26 +64,41 @@ function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSync
 
   const handleExport = async (format: ExportFormat) => {
     setActiveMenu(null)
-    const flowContainer = document.querySelector('.react-flow') as HTMLElement
-    if (!flowContainer) return
+    const viewportElement = document.querySelector('.react-flow__viewport') as HTMLElement
+    if (!viewportElement) return
 
     try {
+      const nodes = getNodes()
+      if (nodes.length === 0) return
+
       // 1. 현재 뷰포트 저장
       const currentViewport = getViewport()
 
-      // 2. 전체 노드에 맞춰 fitView (minZoom 0.5로 품질 유지)
-      fitView({ padding: 0.1, duration: 0, minZoom: 0.5, maxZoom: 1 })
+      // 2. 노드 바운딩 박스 계산 (패딩 포함)
+      const bounds = getNodesBounds(nodes)
+      const padding = 50
+      const imageWidth = bounds.width + padding * 2
+      const imageHeight = bounds.height + padding * 2
 
-      // 3. 렌더링 대기
+      // 3. 100% 줌으로 노드 영역만 보이도록 뷰포트 설정
+      setViewport({
+        x: -bounds.x + padding,
+        y: -bounds.y + padding,
+        zoom: 1
+      }, { duration: 0 })
+
+      // 4. 렌더링 대기
       await new Promise(resolve => setTimeout(resolve, 500))
 
-      // 4. 캡처 (4x 스케일)
-      await exportCanvas(flowContainer, format, {
+      // 5. 정확한 크기로 캡처 (4x 스케일)
+      await exportCanvas(viewportElement, format, {
         filename: projectName || 'figflow-export',
         scale: 4,
+        imageWidth,
+        imageHeight,
       })
 
-      // 5. 원래 뷰포트 복원
+      // 6. 원래 뷰포트 복원
       setViewport(currentViewport, { duration: 0 })
     } catch (error) {
       console.error('Export failed:', error)
