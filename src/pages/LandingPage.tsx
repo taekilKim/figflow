@@ -83,9 +83,11 @@ function LandingPage() {
               <div className="demo-dot green" />
               <div className="demo-url">figflow.app/flow/my-project</div>
             </div>
-            <div className="demo-placeholder">
-              스크린샷 또는 데모 영상 영역
-            </div>
+            <img
+              src="/demo-screenshot.png"
+              alt="FigFlow 데모 스크린샷"
+              className="demo-image"
+            />
           </div>
         </div>
       </section>
