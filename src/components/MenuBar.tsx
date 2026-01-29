@@ -29,7 +29,7 @@ interface MenuItem {
 
 function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSyncing, showSidePanels = true, showMinimap = true, onToggleSidePanels, onToggleMinimap }: MenuBarProps) {
   const navigate = useNavigate()
-  const { fitView, zoomIn, zoomOut, setViewport, getViewport, getNodes, zoomTo } = useReactFlow()
+  const { fitView, zoomIn, zoomOut, getNodes, zoomTo } = useReactFlow()
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const menuBarRef = useRef<HTMLDivElement>(null)
 
@@ -64,24 +64,24 @@ function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSync
 
   const handleExport = async (format: ExportFormat) => {
     setActiveMenu(null)
-    const flowContainer = document.querySelector('.react-flow') as HTMLElement
+    const flowContainer = document.querySelector('.react-flow__viewport') as HTMLElement
     if (!flowContainer) return
 
     try {
-      // 1. 현재 뷰포트 상태 저장
-      const currentViewport = getViewport()
+      const nodes = getNodes()
+      const { width, height } = flowContainer.getBoundingClientRect()
 
-      // 2. 모든 노드가 보이도록 fitView 호출
-      fitView({ padding: 0.1, duration: 0 })
+      // 이미지 변환 대기
+      await new Promise(resolve => setTimeout(resolve, 100))
 
-      // 3. fitView 완료 및 이미지 렌더링 대기
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      // 4. 캡처
-      await exportCanvas(flowContainer, format, { filename: projectName || 'figflow-export', scale: 4 })
-
-      // 5. 원래 뷰포트로 복원
-      setViewport(currentViewport, { duration: 0 })
+      // 노드 정보와 뷰포트 크기를 전달하여 고해상도 캡처
+      await exportCanvas(flowContainer, format, {
+        filename: projectName || 'figflow-export',
+        scale: 4,
+        nodes,
+        width,
+        height
+      })
     } catch (error) {
       console.error('Export failed:', error)
     }
