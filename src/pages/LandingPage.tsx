@@ -53,7 +53,7 @@ function LandingPage() {
         <div className="hero-content">
           <div className="hero-badge">
             <Sparkle size={16} weight="fill" />
-            <span>Figma 프로토타입 시각화</span>
+            <span>Figma 플로우차트 빌더</span>
           </div>
           <h1 className="hero-title">
             복잡한 화면 흐름을
@@ -61,7 +61,7 @@ function LandingPage() {
             <span className="highlight">한눈에</span> 파악하세요
           </h1>
           <p className="hero-description">
-            Figma 프로토타입을 자동으로 플로우차트로 변환합니다.
+            Figma 프레임을 불러와 플로우차트를 쉽게 만들 수 있습니다.
             디자인 핸드오프와 팀 커뮤니케이션이 쉬워집니다.
           </p>
           <div className="hero-cta">
@@ -96,7 +96,7 @@ function LandingPage() {
           <p className="section-label">Features</p>
           <h2 className="section-title">디자인 워크플로우를 개선하세요</h2>
           <p className="section-description">
-            FigFlow는 Figma 프로토타입을 분석하여 직관적인 플로우차트로 변환합니다.
+            FigFlow는 Figma 프레임을 불러와 직관적인 플로우차트를 만들 수 있게 도와줍니다.
           </p>
         </div>
 
@@ -105,9 +105,9 @@ function LandingPage() {
             <div className="feature-icon">
               <Lightning size={28} weight="fill" />
             </div>
-            <h3 className="feature-title">자동 변환</h3>
+            <h3 className="feature-title">프레임 자동 불러오기</h3>
             <p className="feature-description">
-              Figma 파일 URL만 입력하면 프레임과 연결 관계가 자동으로 플로우차트로 변환됩니다.
+              Figma 파일 URL만 입력하면 모든 프레임이 썸네일과 함께 자동으로 캔버스에 배치됩니다.
             </p>
           </div>
 
@@ -224,7 +224,7 @@ function LandingPage() {
               </li>
               <li className="comparison-item positive">
                 <Check size={20} weight="bold" />
-                프로토타입 연결선 자동 생성
+                드래그로 쉽게 연결선 생성
               </li>
               <li className="comparison-item positive">
                 <Check size={20} weight="bold" />
