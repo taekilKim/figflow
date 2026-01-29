@@ -216,7 +216,7 @@
 }
 
 .demo-placeholder {
-  height: 400px;
+  aspect-ratio: 16 / 9;
   display: flex;
   align-items: center;
   justify-content: center;
