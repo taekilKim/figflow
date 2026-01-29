@@ -67,7 +67,37 @@ export async function syncUserProfile(figmaUser: FigmaUser): Promise<void> {
 }
 
 /**
+ * 민감한 Figma 데이터 제거 (개인정보 보호)
+ * - fileKey, nodeId, nodeUrl: Figma 파일 접근 정보
+ * - thumbnailUrl: 디자인 이미지
+ */
+function stripSensitiveData(project: ProjectData): ProjectData {
+  return {
+    ...project,
+    nodes: project.nodes.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        // Figma 참조 정보 제거 (빈 값으로 대체)
+        figma: {
+          fileKey: '',
+          nodeId: '',
+          nodeUrl: '',
+        },
+        meta: {
+          ...node.data.meta,
+          // 썸네일 URL 제거
+          thumbnailUrl: undefined,
+          thumbnailUrlLowRes: undefined,
+        },
+      },
+    })),
+  };
+}
+
+/**
  * Firebase에 프로젝트 저장
+ * 주의: 개인정보 보호를 위해 Figma 참조 정보와 썸네일은 저장하지 않음
  */
 export async function saveProjectToCloud(
   figmaUserId: string,
@@ -80,15 +110,18 @@ export async function saveProjectToCloud(
   try {
     const projectRef = doc(db, 'users', figmaUserId, 'projects', project.id);
 
+    // 민감한 정보 제거
+    const safeProject = stripSensitiveData(project);
+
     // undefined 값 제거 (Firebase는 undefined 허용 안 함)
-    const cleanedProject = removeUndefined(project);
+    const cleanedProject = removeUndefined(safeProject);
 
     await setDoc(projectRef, {
       ...cleanedProject,
       updatedAt: serverTimestamp(),
     });
 
-    console.log('Project saved to cloud:', project.id);
+    console.log('Project saved to cloud (sensitive data stripped):', project.id);
   } catch (error) {
     console.error('Failed to save project to cloud:', error);
     throw error;

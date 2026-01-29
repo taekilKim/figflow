@@ -477,9 +477,20 @@
 }
 
 .footer-text {
-  margin: 0;
+  margin: 0 0 8px 0;
   font-size: 14px;
   color: var(--grey-500);
+}
+
+.footer-link {
+  font-size: 13px;
+  color: var(--grey-400);
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  color: var(--grey-600);
+  text-decoration: underline;
 }
 
 /* Responsive */

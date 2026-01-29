@@ -5,6 +5,7 @@ import WorkspacePage from './pages/WorkspacePage'
 import FlowPage from './pages/FlowPage'
 import AuthCallbackPage from './pages/AuthCallbackPage'
 import AdminPage from './pages/AdminPage'
+import PrivacyPage from './pages/PrivacyPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import { ToastProvider } from './components/Toast'
 import { DialogProvider } from './components/Dialog'
@@ -74,6 +75,7 @@ function App() {
             />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

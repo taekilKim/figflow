@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   Lightning,
   GitBranch,
@@ -275,6 +275,7 @@ function LandingPage() {
         <p className="footer-text">
           Built with React Flow & Figma API
         </p>
+        <Link to="/privacy" className="footer-link">개인정보처리방침</Link>
       </footer>
     </div>
   )
