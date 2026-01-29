@@ -105,6 +105,17 @@ function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSync
     }
   }
 
+  // 대시보드로 돌아가기 (저장 후 이동)
+  const handleGoToDashboard = async () => {
+    setActiveMenu(null)
+    if (onSave) {
+      onSave()
+      // 저장 완료 대기
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    navigate('/workspace')
+  }
+
   // Cmd+0: 100%로 줌
   const handleZoomReset = () => {
     zoomTo(1, { duration: 800 })
@@ -122,7 +133,7 @@ function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSync
 
   const menus: Record<string, MenuItem[]> = {
     파일: [
-      { label: '대시보드로 돌아가기', action: () => navigate('/workspace') },
+      { label: '대시보드로 돌아가기', action: handleGoToDashboard },
       { label: '', divider: true },
       { label: '새 프로젝트', disabled: true },
       { label: '피그마 파일 불러오기', action: onImportFile },
