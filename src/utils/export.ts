@@ -8,11 +8,26 @@ export interface ExportOptions {
 }
 
 /**
+ * Figma 이미지인지 확인
+ */
+function isFigmaImage(url: string): boolean {
+  return url.includes('figma-alpha-api.s3') ||
+         url.includes('s3-alpha-sig.figma.com') ||
+         url.includes('figma.com')
+}
+
+/**
  * 이미지 URL을 fetch로 다운로드하여 base64로 변환
+ * Figma 이미지는 프록시를 통해 가져옴 (CORS 우회)
  */
 async function fetchImageAsBase64(url: string): Promise<string | null> {
   try {
-    const response = await fetch(url, { mode: 'cors' })
+    // Figma 이미지는 프록시를 통해 가져옴
+    const fetchUrl = isFigmaImage(url)
+      ? `/api/image-proxy?url=${encodeURIComponent(url)}`
+      : url
+
+    const response = await fetch(fetchUrl, { mode: 'cors' })
     if (!response.ok) return null
 
     const blob = await response.blob()
@@ -22,7 +37,8 @@ async function fetchImageAsBase64(url: string): Promise<string | null> {
       reader.onerror = () => resolve(null)
       reader.readAsDataURL(blob)
     })
-  } catch {
+  } catch (error) {
+    console.warn('Failed to fetch image via proxy:', error)
     return null
   }
 }
