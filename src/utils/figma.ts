@@ -356,6 +356,7 @@ export async function getFigmaFileStructure(
  * Figma access token을 localStorage에 저장/불러오기
  */
 const FIGMA_TOKEN_KEY = 'figflow_figma_token'
+const FIGMA_USER_CACHE_KEY = 'figflow_figma_user_cache'
 
 export function saveFigmaToken(token: string): void {
   console.log('[FigFlow] Saving Figma token:', token ? `${token.substring(0, 10)}...` : 'empty')
@@ -369,6 +370,39 @@ export function getFigmaToken(): string | null {
 
 export function clearFigmaToken(): void {
   localStorage.removeItem(FIGMA_TOKEN_KEY)
+  localStorage.removeItem(FIGMA_USER_CACHE_KEY)
+}
+
+/**
+ * Figma 유저 정보를 캐시에 저장
+ */
+export function cacheFigmaUser(user: FigmaUser): void {
+  localStorage.setItem(FIGMA_USER_CACHE_KEY, JSON.stringify({
+    user,
+    cachedAt: Date.now()
+  }))
+}
+
+/**
+ * 캐시된 Figma 유저 정보 가져오기 (24시간 유효)
+ */
+export function getCachedFigmaUser(): FigmaUser | null {
+  try {
+    const cached = localStorage.getItem(FIGMA_USER_CACHE_KEY)
+    if (!cached) return null
+
+    const { user, cachedAt } = JSON.parse(cached)
+    const CACHE_TTL = 24 * 60 * 60 * 1000 // 24시간
+
+    if (Date.now() - cachedAt > CACHE_TTL) {
+      localStorage.removeItem(FIGMA_USER_CACHE_KEY)
+      return null
+    }
+
+    return user
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -384,32 +418,82 @@ export interface FigmaUser {
 /**
  * 현재 인증된 Figma 사용자 정보를 가져옵니다
  * https://www.figma.com/developers/api#users-endpoints
+ *
+ * 개선사항:
+ * - 재시도 로직 (최대 3회)
+ * - 실패 시 캐시된 유저 정보 반환
+ * - 성공 시 캐시 업데이트
  */
-export async function getFigmaUser(accessToken: string): Promise<FigmaUser | null> {
-  try {
-    const url = 'https://api.figma.com/v1/me'
+export async function getFigmaUser(accessToken: string, options?: {
+  useCache?: boolean
+  maxRetries?: number
+}): Promise<FigmaUser | null> {
+  const { useCache = true, maxRetries = 3 } = options || {}
 
-    const response = await fetch(url, {
-      headers: {
-        ...getAuthHeaders(accessToken),
-      },
-    })
+  let lastError: Error | null = null
 
-    if (!response.ok) {
-      console.error('Failed to fetch Figma user:', response.status)
-      return null
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const url = 'https://api.figma.com/v1/me'
+
+      const response = await fetch(url, {
+        headers: {
+          ...getAuthHeaders(accessToken),
+        },
+      })
+
+      if (!response.ok) {
+        // 401/403은 토큰 문제 - 재시도 무의미
+        if (response.status === 401 || response.status === 403) {
+          console.error(`[FigmaUser] Auth error (${response.status}), token may be invalid`)
+          break
+        }
+
+        // 다른 에러는 재시도
+        console.warn(`[FigmaUser] Attempt ${attempt}/${maxRetries} failed:`, response.status)
+        lastError = new Error(`HTTP ${response.status}`)
+
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 1000 * attempt)) // 점진적 대기
+          continue
+        }
+        break
+      }
+
+      const data = await response.json()
+
+      const user: FigmaUser = {
+        id: data.id,
+        handle: data.handle,
+        img_url: data.img_url,
+        email: data.email,
+      }
+
+      // 성공 시 캐시 업데이트
+      cacheFigmaUser(user)
+      console.log('[FigmaUser] Fetched and cached:', user.handle)
+
+      return user
+    } catch (error) {
+      console.warn(`[FigmaUser] Attempt ${attempt}/${maxRetries} error:`, error)
+      lastError = error instanceof Error ? error : new Error('Unknown error')
+
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 1000 * attempt))
+        continue
+      }
     }
-
-    const data = await response.json()
-
-    return {
-      id: data.id,
-      handle: data.handle,
-      img_url: data.img_url,
-      email: data.email,
-    }
-  } catch (error) {
-    console.error('Failed to fetch Figma user:', error)
-    return null
   }
+
+  // 모든 재시도 실패 - 캐시 사용
+  if (useCache) {
+    const cachedUser = getCachedFigmaUser()
+    if (cachedUser) {
+      console.log('[FigmaUser] API failed, using cached user:', cachedUser.handle)
+      return cachedUser
+    }
+  }
+
+  console.error('[FigmaUser] All attempts failed:', lastError)
+  return null
 }

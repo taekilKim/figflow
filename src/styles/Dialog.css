@@ -1,0 +1,110 @@
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  animation: dialog-fade-in 0.2s ease-out;
+}
+
+@keyframes dialog-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dialog {
+  background: #fff;
+  border-radius: 16px;
+  min-width: 320px;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: dialog-slide-up 0.2s ease-out;
+}
+
+@keyframes dialog-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dialog-header {
+  padding: 20px 24px 0;
+}
+
+.dialog-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #191F28;
+}
+
+.dialog-body {
+  padding: 16px 24px;
+}
+
+.dialog-body p {
+  margin: 0;
+  font-size: 14px;
+  color: #4E5968;
+  line-height: 1.6;
+}
+
+.dialog-input {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border: 1px solid #E5E8EB;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.dialog-input:focus {
+  border-color: #3182F6;
+}
+
+.dialog-footer {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px 20px;
+  justify-content: flex-end;
+}
+
+.dialog-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+
+.dialog-btn-cancel {
+  background: #F2F4F6;
+  color: #4E5968;
+}
+
+.dialog-btn-cancel:hover {
+  background: #E5E8EB;
+}
+
+.dialog-btn-confirm {
+  background: #3182F6;
+  color: #fff;
+}
+
+.dialog-btn-confirm:hover {
+  background: #1B64DA;
+}

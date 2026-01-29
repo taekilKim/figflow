@@ -150,7 +150,37 @@ function RightPanel({ selectedNodeId, selectedEdgeId, projectId }: RightPanelPro
     if (!project) return
 
     const edgeIndex = project.edges.findIndex((e) => e.id === selectedEdgeId)
-    if (edgeIndex === -1) return
+
+    // 엣지가 storage에 없으면 새로 추가 (새로 생성된 엣지)
+    if (edgeIndex === -1) {
+      const newEdge = {
+        id: selectedEdgeId,
+        source: '',  // FlowCanvas에서 storage 이벤트로 동기화될 때 채워짐
+        target: '',
+        type: 'step',
+        label: 'label' in updates ? updates.label : edgeLabel,
+        data: 'label' in updates
+          ? (edgeData || { sourceType: 'manual', arrowType: 'forward', style: 'solid' })
+          : { ...(edgeData || { sourceType: 'manual', arrowType: 'forward', style: 'solid' }), ...updates },
+      }
+
+      const updatedEdges = [...project.edges, newEdge]
+
+      if ('label' in updates) {
+        setEdgeLabel(updates.label || '')
+      } else {
+        setEdgeData({ ...(edgeData || { sourceType: 'manual' }), ...updates })
+      }
+
+      if (projectId) {
+        updateProject(projectId, { edges: updatedEdges })
+      } else {
+        saveProject({ ...project, edges: updatedEdges, updatedAt: Date.now() })
+      }
+
+      window.dispatchEvent(new Event('storage'))
+      return
+    }
 
     const updatedEdges = [...project.edges]
     const edge = updatedEdges[edgeIndex]

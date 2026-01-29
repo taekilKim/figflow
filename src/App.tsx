@@ -5,34 +5,40 @@ import FlowPage from './pages/FlowPage'
 import AuthCallbackPage from './pages/AuthCallbackPage'
 import AdminPage from './pages/AdminPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import { ToastProvider } from './components/Toast'
+import { DialogProvider } from './components/Dialog'
 import './styles/App.css'
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route
-          path="/workspace"
-          element={
-            <ProtectedRoute>
-              <WorkspacePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/flow/:id"
-          element={
-            <ProtectedRoute>
-              <FlowPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <ToastProvider>
+      <DialogProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route
+              path="/workspace"
+              element={
+                <ProtectedRoute>
+                  <WorkspacePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/flow/:id"
+              element={
+                <ProtectedRoute>
+                  <FlowPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </DialogProvider>
+    </ToastProvider>
   )
 }
 

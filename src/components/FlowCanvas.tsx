@@ -38,6 +38,8 @@ import { loadProjectFromCloud } from '../utils/cloudStorage'
 import { exportCanvas, ExportFormat } from '../utils/export'
 import MenuBar from './MenuBar'
 import { getFigmaImages, getFigmaToken } from '../utils/figma'
+import { useToast } from './Toast'
+import { useDialog } from './Dialog'
 import '../styles/FlowCanvas.css'
 
 // 🔥 Pivot: Native Step Edge 사용 (Smart Routing 제거)
@@ -309,6 +311,10 @@ const FlowWrapper = ({ children, isPanning }: { children: React.ReactNode, isPan
 function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId, showMinimap = true, showSidePanels = true, onToggleSidePanels, onToggleMinimap }: FlowCanvasProps) {
   // React Flow 훅 (단축키용)
   const { zoomTo, fitView, getNodes, getViewport, setViewport } = useReactFlow()
+
+  // Toast & Dialog
+  const { showToast } = useToast()
+  const { prompt: showPrompt } = useDialog()
 
   // 🔥 클라우드 동기화
   const { status: cloudStatus, syncToCloud } = useCloudSync()
@@ -711,7 +717,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId, 
     // ReactFlow 컨테이너 찾기
     const flowContainer = document.querySelector('.react-flow') as HTMLElement
     if (!flowContainer) {
-      alert('내보낼 캔버스를 찾을 수 없습니다.')
+      showToast('내보낼 캔버스를 찾을 수 없습니다.', 'error')
       return
     }
 
@@ -734,7 +740,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId, 
       setViewport(currentViewport, { duration: 0 })
     } catch (error) {
       console.error('Export failed:', error)
-      alert('내보내기에 실패했습니다.')
+      showToast('내보내기에 실패했습니다.', 'error')
     } finally {
       setIsExporting(false)
     }
@@ -753,10 +759,32 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId, 
           style: 'solid',
         },
       }
-      setEdges((eds) => addEdge(newEdge, eds))
+      setEdges((eds) => {
+        const updatedEdges = addEdge(newEdge, eds)
+        // 즉시 storage에 저장 (RightPanel에서 바로 편집 가능하도록)
+        const project = projectId ? getProjectById(projectId) : loadProject()
+        if (project) {
+          const edgesToSave = updatedEdges.map(e => ({
+            id: e.id,
+            source: e.source,
+            target: e.target,
+            sourceHandle: e.sourceHandle,
+            targetHandle: e.targetHandle,
+            type: e.type,
+            label: typeof e.label === 'string' ? e.label : undefined,
+            data: e.data || { sourceType: 'manual' as const, arrowType: 'forward' as const, style: 'solid' as const },
+          }))
+          if (projectId) {
+            updateProject(projectId, { edges: edgesToSave })
+          } else {
+            saveProject({ ...project, edges: edgesToSave, updatedAt: Date.now() })
+          }
+        }
+        return updatedEdges
+      })
       connectingNodeId.current = null
     },
-    [setEdges]
+    [setEdges, projectId]
   )
 
   const onConnectStart: OnConnectStart = useCallback((_event, params) => {
@@ -859,13 +887,35 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId, 
               style: 'solid',
             },
           }
-          setEdges((eds) => addEdge(newEdge, eds))
+          setEdges((eds) => {
+            const updatedEdges = addEdge(newEdge, eds)
+            // 즉시 storage에 저장
+            const project = projectId ? getProjectById(projectId) : loadProject()
+            if (project) {
+              const edgesToSave = updatedEdges.map(e => ({
+                id: e.id,
+                source: e.source,
+                target: e.target,
+                sourceHandle: e.sourceHandle,
+                targetHandle: e.targetHandle,
+                type: e.type,
+                label: typeof e.label === 'string' ? e.label : undefined,
+                data: e.data || { sourceType: 'manual' as const, arrowType: 'forward' as const, style: 'solid' as const },
+              }))
+              if (projectId) {
+                updateProject(projectId, { edges: edgesToSave })
+              } else {
+                saveProject({ ...project, edges: edgesToSave, updatedAt: Date.now() })
+              }
+            }
+            return updatedEdges
+          })
         }
       }
 
       connectingNodeId.current = null
     },
-    [nodes, setEdges, getClosestHandles]
+    [nodes, setEdges, getClosestHandles, projectId]
   )
 
   // 🔥 재연결 추적 (onConnectEnd와 onReconnect 충돌 방지)
@@ -1182,14 +1232,14 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId, 
 
   const handleSave = useCallback(() => {
     saveNow() // 자동 저장 훅의 즉시 저장 함수 호출
-    alert('프로젝트가 저장되었습니다!')
+    showToast('프로젝트가 저장되었습니다!', 'success')
   }, [saveNow])
 
   const handleSync = useCallback(async () => {
     const token = getFigmaToken()
 
     if (!token) {
-      const userToken = prompt('Figma Personal Access Token을 입력하세요:')
+      const userToken = await showPrompt('Figma Personal Access Token을 입력하세요:', '', 'Figma 토큰 입력')
       if (!userToken) return
 
       // 간단한 검증 후 저장
@@ -1265,13 +1315,13 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId, 
           }
         })
         setNodes(updatedNodes)
-        alert(`${updates.length}개의 썸네일이 업데이트되었습니다!`)
+        showToast(`${updates.length}개의 썸네일이 업데이트되었습니다!`, 'success')
       } else {
-        alert('업데이트된 썸네일이 없습니다.')
+        showToast('업데이트된 썸네일이 없습니다.', 'info')
       }
     } catch (error) {
       console.error('Sync failed:', error)
-      alert('싱크 실패: ' + (error instanceof Error ? error.message : '알 수 없는 오류'))
+      showToast('싱크 실패: ' + (error instanceof Error ? error.message : '알 수 없는 오류'), 'error')
     } finally {
       setIsSyncing(false)
     }
@@ -1320,7 +1370,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId, 
     // 🔥 중요 액션: 노드 추가 후 즉시 저장
     saveNow()
 
-    alert(`"${frameData.title}" 프레임이 추가되었습니다! 썸네일과 함께 캔버스에 표시됩니다.`)
+    showToast(`"${frameData.title}" 프레임이 추가되었습니다!`, 'success')
   }, [setNodes, saveNow])
 
   // 배치 프레임 가져오기 (파일 전체 import)
@@ -1337,7 +1387,7 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId, 
 
     const accessToken = getFigmaToken()
     if (!accessToken) {
-      alert('Figma Access Token이 설정되지 않았습니다.')
+      showToast('Figma Access Token이 설정되지 않았습니다.', 'error')
       return
     }
 
@@ -1439,11 +1489,11 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId, 
       // 🔥 중요 액션: 파일 import 완료 후 즉시 저장
       saveNow()
 
-      alert(`${selectedFrames.length}개의 프레임이 추가되었습니다!`)
+      showToast(`${selectedFrames.length}개의 프레임이 추가되었습니다!`, 'success')
     } catch (error) {
       console.error('Batch import failed:', error)
       setImportProgress(null)
-      alert('프레임 가져오기 실패: ' + (error instanceof Error ? error.message : '알 수 없는 오류'))
+      showToast('프레임 가져오기 실패: ' + (error instanceof Error ? error.message : '알 수 없는 오류'), 'error')
     }
   }, [setNodes, saveNow])
 
@@ -1608,8 +1658,8 @@ function FlowCanvas({ onNodeSelect, onEdgeSelect, onSelectionChange, projectId, 
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
 
-        {/* TDSControls: 좌측 하단 */}
-        <TDSControls style={{ left: 16, bottom: 16 }} />
+        {/* TDSControls: 좌측 하단 (사이드패널 상태에 따라 위치 조정) */}
+        <TDSControls style={{ left: showSidePanels ? 272 : 16, bottom: 16 }} />
 
         {/* MiniMap: 모바일에서 숨김, showMinimap 토글 */}
         {deviceType !== 'mobile' && showMinimap && (
