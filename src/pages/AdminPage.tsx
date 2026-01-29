@@ -20,33 +20,47 @@ function AdminPage() {
   useEffect(() => {
     const checkAuth = async () => {
       const token = getFigmaToken()
+      console.log('[Admin] Token exists:', !!token)
+
       if (!token) {
+        setError('Figma 토큰이 없습니다. 먼저 로그인해주세요.')
         setIsAuthorized(false)
         setLoading(false)
         return
       }
 
-      const user = await getFigmaUser(token)
-      if (!user) {
-        setIsAuthorized(false)
-        setLoading(false)
-        return
-      }
+      try {
+        const user = await getFigmaUser(token)
+        console.log('[Admin] User fetched:', user)
 
-      setCurrentUser(user)
-
-      // 어드민 ID 목록에 포함되어 있는지 확인
-      const isAdmin = ADMIN_FIGMA_IDS.includes(user.id)
-      setIsAuthorized(isAdmin)
-
-      if (isAdmin) {
-        // 통계 로드
-        try {
-          const adminStats = await getAdminStats()
-          setStats(adminStats)
-        } catch (err) {
-          setError(err instanceof Error ? err.message : 'Failed to load stats')
+        if (!user) {
+          setError('Figma 사용자 정보를 가져올 수 없습니다. 토큰을 확인해주세요.')
+          setIsAuthorized(false)
+          setLoading(false)
+          return
         }
+
+        setCurrentUser(user)
+
+        // 어드민 ID 목록에 포함되어 있는지 확인
+        console.log('[Admin] Admin IDs:', ADMIN_FIGMA_IDS)
+        console.log('[Admin] Current user ID:', user.id)
+        const isAdmin = ADMIN_FIGMA_IDS.includes(user.id)
+        setIsAuthorized(isAdmin)
+
+        if (isAdmin) {
+          // 통계 로드
+          try {
+            const adminStats = await getAdminStats()
+            setStats(adminStats)
+          } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load stats')
+          }
+        }
+      } catch (err) {
+        console.error('[Admin] Auth check failed:', err)
+        setError('인증 확인 중 오류: ' + (err instanceof Error ? err.message : String(err)))
+        setIsAuthorized(false)
       }
 
       setLoading(false)
@@ -74,8 +88,14 @@ function AdminPage() {
         <div className="admin-unauthorized">
           <h1>접근 권한 없음</h1>
           <p>이 페이지는 관리자만 접근할 수 있습니다.</p>
+          {error && <p className="user-info" style={{ color: '#dc2626' }}>{error}</p>}
           {currentUser && (
             <p className="user-info">현재 로그인: {currentUser.handle} ({currentUser.id})</p>
+          )}
+          {currentUser && (
+            <p className="user-info" style={{ fontSize: '12px', marginTop: '8px' }}>
+              이 ID를 VITE_ADMIN_FIGMA_IDS에 추가하세요
+            </p>
           )}
           <button onClick={() => navigate('/workspace')}>대시보드로 돌아가기</button>
         </div>
