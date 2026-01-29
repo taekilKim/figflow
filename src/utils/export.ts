@@ -104,6 +104,7 @@ function getHtml2CanvasOptions(scale: number, backgroundColor: string) {
     useCORS: true,
     allowTaint: false, // taint된 캔버스는 export 불가하므로 false
     logging: false,
+    foreignObjectRendering: true, // SVG(연결선) 캡처를 위해 필요
     // UI 요소 제외 (MiniMap, Controls, Toolbar 등)
     ignoreElements: (element: Element) => {
       const className = element.className?.toString() || ''
