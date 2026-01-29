@@ -12,6 +12,32 @@ import { ProjectData } from '../types';
 import { FigmaUser } from './figma';
 
 /**
+ * Firebase에 저장하기 전에 undefined 값을 재귀적으로 제거
+ * Firebase Firestore는 undefined 값을 허용하지 않음
+ */
+function removeUndefined<T>(obj: T): T {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => removeUndefined(item)) as T;
+  }
+
+  if (typeof obj === 'object') {
+    const cleaned: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        cleaned[key] = removeUndefined(value);
+      }
+    }
+    return cleaned as T;
+  }
+
+  return obj;
+}
+
+/**
  * Firebase에 사용자 프로필 동기화
  */
 export async function syncUserProfile(figmaUser: FigmaUser): Promise<void> {
@@ -53,8 +79,12 @@ export async function saveProjectToCloud(
 
   try {
     const projectRef = doc(db, 'users', figmaUserId, 'projects', project.id);
+
+    // undefined 값 제거 (Firebase는 undefined 허용 안 함)
+    const cleanedProject = removeUndefined(project);
+
     await setDoc(projectRef, {
-      ...project,
+      ...cleanedProject,
       updatedAt: serverTimestamp(),
     });
 
