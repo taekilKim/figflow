@@ -10,13 +10,9 @@ function FrameNode({ data, selected }: NodeProps) {
   const { zoom } = useViewport()
   const showDetails = zoom > 0.5  // 50% 이하로 줌 아웃하면 노트/링크 숨김 (성능 향상)
 
-  // 🔥 Thumbnail LOD: 줌 레벨에 따라 저해상도/고해상도 썸네일 선택
-  // 75% 이하로 줌 아웃하면 저해상도, 그 이상이면 고해상도
-  // Fallback: 고해상도 없으면 저해상도, 둘 다 없으면 null
-  const useLowResThumbnail = zoom <= 0.75
-  const thumbnailUrl = useLowResThumbnail
-    ? (meta.thumbnailUrlLowRes || meta.thumbnailUrl)  // 줌아웃: 저해상도 우선, 없으면 고해상도
-    : (meta.thumbnailUrl || meta.thumbnailUrlLowRes)  // 줌인: 고해상도 우선, 없으면 저해상도
+  // 🔥 썸네일: 단일 URL 사용 (LOD 전환 제거 - 크기 점프 문제 해결)
+  // 고해상도 우선, 없으면 저해상도 사용
+  const thumbnailUrl = meta.thumbnailUrl || meta.thumbnailUrlLowRes
 
   return (
     <div
