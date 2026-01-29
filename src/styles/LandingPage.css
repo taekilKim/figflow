@@ -5,6 +5,8 @@
   background: var(--bg-white);
   color: var(--grey-900);
   overflow-x: hidden;
+  overflow-y: auto;
+  height: 100vh;
 }
 
 /* Navigation */
