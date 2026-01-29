@@ -10,25 +10,37 @@ import {
   ArrowsOutSimple,
   PencilSimple
 } from '@phosphor-icons/react'
-import { startFigmaOAuth, isOAuthAvailable } from '../utils/figmaAuth'
+// OAuth 승인 후 사용 예정
+// import { startFigmaOAuth, isOAuthAvailable } from '../utils/figmaAuth'
 import { saveFigmaToken } from '../utils/figma'
 import '../styles/LandingPage.css'
 
 function LandingPage() {
   const navigate = useNavigate()
 
-  const handleGetStarted = () => {
-    if (isOAuthAvailable()) {
-      startFigmaOAuth()
-    } else {
-      const token = prompt(
-        'Figma Personal Access Token을 입력하세요:\n\n' +
-        '토큰 발급: Figma → Settings → Personal Access Tokens'
-      )
-      if (token) {
-        saveFigmaToken(token)
-        navigate('/workspace')
-      }
+  // OAuth 승인 후 사용할 함수 (현재 베타 기간에는 토큰 방식 사용)
+  // const handleOAuthLogin = () => {
+  //   if (isOAuthAvailable()) {
+  //     startFigmaOAuth()
+  //   } else {
+  //     handleTokenLogin()
+  //   }
+  // }
+
+  const handleTokenLogin = () => {
+    const token = prompt(
+      'Figma Personal Access Token을 입력하세요:\n\n' +
+      '📋 토큰 발급 방법:\n' +
+      '1. Figma.com → 우측 상단 프로필 클릭\n' +
+      '2. Settings → Security 탭\n' +
+      '3. Personal Access Tokens → Generate new token\n\n' +
+      '🔐 필요한 권한 (Scopes):\n' +
+      '• File content (Read-only)\n\n' +
+      '토큰 생성 후 아래에 붙여넣기 하세요:'
+    )
+    if (token) {
+      saveFigmaToken(token)
+      navigate('/workspace')
     }
   }
 
@@ -41,7 +53,7 @@ function LandingPage() {
             <Lightning size={24} weight="fill" />
             <span>FigFlow</span>
           </div>
-          <button className="nav-cta" onClick={handleGetStarted}>
+          <button className="nav-cta" onClick={handleTokenLogin}>
             <FigmaLogo size={18} weight="bold" />
             시작하기
           </button>
@@ -65,11 +77,14 @@ function LandingPage() {
             디자인 핸드오프와 팀 커뮤니케이션이 쉬워집니다.
           </p>
           <div className="hero-cta">
-            <button className="cta-button primary" onClick={handleGetStarted}>
+            <button className="cta-button primary" onClick={handleTokenLogin}>
               <FigmaLogo size={20} weight="bold" />
-              Figma로 시작하기
+              Figma 토큰으로 시작하기
             </button>
           </div>
+          <p className="hero-notice">
+            베타 기간 중에는 Personal Access Token으로 로그인합니다
+          </p>
         </div>
       </header>
 
@@ -248,9 +263,9 @@ function LandingPage() {
           <p className="cta-description">
             무료로 사용할 수 있습니다. 설치 없이 브라우저에서 바로 시작하세요.
           </p>
-          <button className="cta-button" onClick={handleGetStarted}>
+          <button className="cta-button" onClick={handleTokenLogin}>
             <FigmaLogo size={20} weight="bold" />
-            Figma로 시작하기
+            Figma 토큰으로 시작하기
           </button>
         </div>
       </section>

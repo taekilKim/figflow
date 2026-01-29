@@ -538,3 +538,11 @@
 .hero-title { animation-delay: 0.1s; }
 .hero-description { animation-delay: 0.2s; }
 .hero-cta { animation-delay: 0.3s; }
+
+.hero-notice {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--grey-500);
+  animation: fadeInUp 0.6s ease-out backwards;
+  animation-delay: 0.4s;
+}
