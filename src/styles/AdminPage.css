@@ -215,3 +215,35 @@
   font-size: 12px;
   color: var(--grey-400, #9ca3af);
 }
+
+/* Sentry Test */
+.sentry-test {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.sentry-test h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: var(--grey-900, #111827);
+}
+
+.sentry-test-btn {
+  padding: 10px 20px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sentry-test-btn:hover {
+  background: #b91c1c;
+}

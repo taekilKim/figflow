@@ -153,6 +153,19 @@ function AdminPage() {
           </div>
         </section>
 
+        {/* Sentry 테스트 */}
+        <section className="sentry-test">
+          <h2>Sentry 에러 추적 테스트</h2>
+          <button
+            className="sentry-test-btn"
+            onClick={() => {
+              throw new Error('Sentry 테스트 에러입니다!')
+            }}
+          >
+            테스트 에러 발생시키기
+          </button>
+        </section>
+
         {/* 사용자 목록 */}
         <section className="users-section">
           <h2>사용자 목록</h2>
