@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Lightning, Trash, FolderOpen, Export, FileArrowUp, CloudCheck, CloudSlash, CircleNotch } from '@phosphor-icons/react'
+import { Plus, Lightning, Trash, FolderOpen, Export, FileArrowUp, CloudCheck, CloudSlash, CircleNotch, SignOut } from '@phosphor-icons/react'
 import {
   getAllProjects,
   createProject,
@@ -228,10 +228,23 @@ function WorkspacePage() {
             )}
 
             {figmaToken ? (
-              <button className="figma-status connected" onClick={handleFigmaLogout}>
-                <span className="status-dot"></span>
-                Figma 연결됨
-              </button>
+              <div className="user-profile">
+                {cloudStatus.figmaUser?.img_url ? (
+                  <img
+                    src={cloudStatus.figmaUser.img_url}
+                    alt={cloudStatus.figmaUser.handle || 'Profile'}
+                    className="profile-avatar"
+                    title={cloudStatus.figmaUser.handle || cloudStatus.figmaUser.email}
+                  />
+                ) : (
+                  <div className="profile-avatar-placeholder" title="프로필">
+                    {cloudStatus.figmaUser?.handle?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                )}
+                <button className="logout-btn" onClick={handleFigmaLogout} title="로그아웃">
+                  <SignOut size={18} />
+                </button>
+              </div>
             ) : (
               <button className="figma-login-btn" onClick={handleFigmaLogin}>
                 Figma 로그인
