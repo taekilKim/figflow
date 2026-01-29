@@ -3,7 +3,7 @@ import { jsPDF } from 'jspdf'
 
 export interface ExportOptions {
   filename?: string
-  scale?: number // 이미지 품질 (기본 2x)
+  scale?: number // 이미지 품질 (기본 4x)
   backgroundColor?: string
 }
 
@@ -133,7 +133,7 @@ export async function exportToPNG(
   element: HTMLElement,
   options: ExportOptions = {}
 ): Promise<void> {
-  const { filename = 'figflow-export', scale = 2, backgroundColor = '#ffffff' } = options
+  const { filename = 'figflow-export', scale = 4, backgroundColor = '#ffffff' } = options
 
   try {
     // 이미지를 base64로 변환 (CORS 우회)
@@ -162,7 +162,7 @@ export async function exportToJPG(
   element: HTMLElement,
   options: ExportOptions = {}
 ): Promise<void> {
-  const { filename = 'figflow-export', scale = 2, backgroundColor = '#ffffff' } = options
+  const { filename = 'figflow-export', scale = 4, backgroundColor = '#ffffff' } = options
 
   try {
     // 이미지를 base64로 변환 (CORS 우회)
@@ -191,7 +191,7 @@ export async function exportToPDF(
   element: HTMLElement,
   options: ExportOptions = {}
 ): Promise<void> {
-  const { filename = 'figflow-export', scale = 2, backgroundColor = '#ffffff' } = options
+  const { filename = 'figflow-export', scale = 4, backgroundColor = '#ffffff' } = options
 
   try {
     // 이미지를 base64로 변환 (CORS 우회)

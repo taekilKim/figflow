@@ -78,7 +78,7 @@ function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSync
       await new Promise(resolve => setTimeout(resolve, 500))
 
       // 4. 캡처
-      await exportCanvas(flowContainer, format, { filename: projectName || 'figflow-export', scale: 2 })
+      await exportCanvas(flowContainer, format, { filename: projectName || 'figflow-export', scale: 4 })
 
       // 5. 원래 뷰포트로 복원
       setViewport(currentViewport, { duration: 0 })
