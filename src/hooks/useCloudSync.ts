@@ -9,6 +9,7 @@ import {
 } from '../utils/cloudStorage';
 import { ProjectData } from '../types';
 import { getAllProjects } from '../utils/storage';
+import { logCloudSyncSuccess, logCloudSyncFailed, logUserLogin, logUserLoginFailed } from '../utils/logger';
 
 export interface CloudSyncStatus {
   isEnabled: boolean;
@@ -112,6 +113,7 @@ export function useCloudSync(): UseCloudSyncReturn {
 
     if (!token) {
       console.log('[CloudSync] No Figma token found, cloud sync disabled');
+      logUserLoginFailed('pat', 'No token found');
       return false;
     }
 
@@ -123,6 +125,7 @@ export function useCloudSync(): UseCloudSyncReturn {
       if (!user) {
         // API 완전 실패 - 캐시도 없음
         console.warn('[CloudSync] Figma user unavailable, trying cached...');
+        logUserLoginFailed('pat', 'Failed to fetch user info from Figma API');
 
         // 마지막 시도: 직접 캐시 확인
         const cachedUser = getCachedFigmaUser();
@@ -151,8 +154,11 @@ export function useCloudSync(): UseCloudSyncReturn {
         console.log('[CloudSync] Syncing user profile to Firebase...');
         await syncUserProfile(user);
         console.log('[CloudSync] User profile synced successfully');
+        logUserLogin('pat', user.id, user.handle);
+        logCloudSyncSuccess(user.id, user.handle);
       } catch (profileError) {
         console.warn('[CloudSync] Profile sync failed, continuing anyway:', profileError);
+        logCloudSyncFailed(String(profileError), user.id);
       }
 
       setStatus((prev) => ({
