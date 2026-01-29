@@ -176,7 +176,7 @@ function MenuBar({ onSave, onSync, onAddFrame, onImportFile, projectName, isSync
       { label: '현재 버전: v0.1.1', disabled: true },
       { label: '업데이트 노트', disabled: true },
       { label: '', divider: true },
-      { label: '버그 제보 및 문의, 제안', action: () => { window.open('https://github.com/taekilKim/figflow/issues', '_blank'); setActiveMenu(null) } },
+      { label: '버그 제보 및 문의, 제안', action: () => { window.open('https://open.kakao.com/o/gBug0Qdi', '_blank'); setActiveMenu(null) } },
     ],
   }
 
