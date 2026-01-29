@@ -61,7 +61,8 @@ function FrameNode({ data, selected }: NodeProps) {
             alt={meta.title}
             loading="lazy"
             decoding="async"
-            crossOrigin="anonymous"
+            // 🔥 crossOrigin 제거: Figma S3 이미지가 CORS를 지원하지 않아 로딩 실패함
+            // export 시에만 필요하므로 일반 표시에서는 제거
             style={{
               backgroundColor: '#f5f5f5',
               // 🔥 줌 아웃 시 이미지 렌더링 최적화 (브라우저가 자동으로 저해상도로 렌더링)
