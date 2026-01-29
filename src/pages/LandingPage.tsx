@@ -1,5 +1,15 @@
 import { useNavigate } from 'react-router-dom'
-import { Lightning, GitBranch, Sparkle, Check, Palette, FigmaLogo } from '@phosphor-icons/react'
+import {
+  Lightning,
+  GitBranch,
+  Sparkle,
+  Check,
+  FigmaLogo,
+  CloudArrowUp,
+  Export,
+  ArrowsOutSimple,
+  PencilSimple
+} from '@phosphor-icons/react'
 import { startFigmaOAuth, isOAuthAvailable } from '../utils/figmaAuth'
 import { saveFigmaToken } from '../utils/figma'
 import '../styles/LandingPage.css'
@@ -8,11 +18,9 @@ function LandingPage() {
   const navigate = useNavigate()
 
   const handleGetStarted = () => {
-    // OAuth가 사용 가능하면 OAuth 사용, 아니면 토큰 입력
     if (isOAuthAvailable()) {
       startFigmaOAuth()
     } else {
-      // OAuth 미설정 시 토큰 입력 후 워크스페이스로
       const token = prompt(
         'Figma Personal Access Token을 입력하세요:\n\n' +
         '토큰 발급: Figma → Settings → Personal Access Tokens'
@@ -26,65 +34,164 @@ function LandingPage() {
 
   return (
     <div className="landing-page">
+      {/* Navigation */}
+      <nav className="landing-nav">
+        <div className="nav-content">
+          <div className="nav-logo">
+            <Lightning size={24} weight="fill" />
+            <span>FigFlow</span>
+          </div>
+          <button className="nav-cta" onClick={handleGetStarted}>
+            <FigmaLogo size={18} weight="bold" />
+            시작하기
+          </button>
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <header className="hero-section">
         <div className="hero-content">
           <div className="hero-badge">
             <Sparkle size={16} weight="fill" />
-            <span>Design Systems, Visualized</span>
+            <span>Figma 프로토타입 시각화</span>
           </div>
           <h1 className="hero-title">
-            Figma 프로토타입을
+            복잡한 화면 흐름을
             <br />
-            <span className="gradient-text">플로우차트로</span>
-            <br />
-            자동 변환
+            <span className="highlight">한눈에</span> 파악하세요
           </h1>
           <p className="hero-description">
-            복잡한 화면 흐름을 한눈에 파악하세요.
-            <br />
-            Figma 프로토타입 링크를 시각적인 플로우차트로 자동 변환합니다.
+            Figma 프로토타입을 자동으로 플로우차트로 변환합니다.
+            디자인 핸드오프와 팀 커뮤니케이션이 쉬워집니다.
           </p>
           <div className="hero-cta">
             <button className="cta-button primary" onClick={handleGetStarted}>
-              <FigmaLogo size={24} weight="bold" />
-              Continue with Figma
+              <FigmaLogo size={20} weight="bold" />
+              Figma로 시작하기
             </button>
           </div>
         </div>
       </header>
 
+      {/* Demo Section */}
+      <section className="demo-section">
+        <div className="demo-container">
+          <div className="demo-browser">
+            <div className="demo-browser-bar">
+              <div className="demo-dot red" />
+              <div className="demo-dot yellow" />
+              <div className="demo-dot green" />
+              <div className="demo-url">figflow.app/flow/my-project</div>
+            </div>
+            <div className="demo-placeholder">
+              스크린샷 또는 데모 영상 영역
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="features-section">
-        <h3 className="section-title">주요 기능</h3>
+        <div className="section-header">
+          <p className="section-label">Features</p>
+          <h2 className="section-title">디자인 워크플로우를 개선하세요</h2>
+          <p className="section-description">
+            FigFlow는 Figma 프로토타입을 분석하여 직관적인 플로우차트로 변환합니다.
+          </p>
+        </div>
+
         <div className="features-grid">
           <div className="feature-card">
             <div className="feature-icon">
-              <Lightning size={32} weight="fill" />
+              <Lightning size={28} weight="fill" />
             </div>
-            <h4 className="feature-title">자동 변환</h4>
+            <h3 className="feature-title">자동 변환</h3>
             <p className="feature-description">
-              Figma 프로토타입 링크만 입력하면 자동으로 플로우차트를 생성합니다.
+              Figma 파일 URL만 입력하면 프레임과 연결 관계가 자동으로 플로우차트로 변환됩니다.
             </p>
           </div>
 
           <div className="feature-card">
             <div className="feature-icon">
-              <GitBranch size={32} weight="fill" />
+              <PencilSimple size={28} weight="fill" />
             </div>
-            <h4 className="feature-title">직관적인 연결선</h4>
+            <h3 className="feature-title">자유로운 편집</h3>
             <p className="feature-description">
-              색상, 스타일, 화살표 방향을 자유롭게 커스터마이징할 수 있습니다.
+              연결선 색상, 스타일, 라벨을 자유롭게 수정하고 프레임 위치를 드래그로 조정하세요.
             </p>
           </div>
 
           <div className="feature-card">
             <div className="feature-icon">
-              <Palette size={32} weight="fill" />
+              <GitBranch size={28} weight="fill" />
             </div>
-            <h4 className="feature-title">프리셋 시스템</h4>
+            <h3 className="feature-title">프리셋 시스템</h3>
             <p className="feature-description">
-              자주 사용하는 연결선 스타일을 프리셋으로 저장하고 재사용하세요.
+              자주 사용하는 연결선 스타일을 프리셋으로 저장하고 팀과 공유하세요.
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <div className="feature-icon">
+              <CloudArrowUp size={28} weight="fill" />
+            </div>
+            <h3 className="feature-title">클라우드 동기화</h3>
+            <p className="feature-description">
+              Figma 계정으로 로그인하면 모든 기기에서 프로젝트에 접근할 수 있습니다.
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <div className="feature-icon">
+              <Export size={28} weight="fill" />
+            </div>
+            <h3 className="feature-title">다양한 내보내기</h3>
+            <p className="feature-description">
+              PNG, JPG, PDF 형식으로 고해상도 이미지를 내보내 문서에 활용하세요.
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <div className="feature-icon">
+              <ArrowsOutSimple size={28} weight="fill" />
+            </div>
+            <h3 className="feature-title">무한 캔버스</h3>
+            <p className="feature-description">
+              확대/축소, 미니맵으로 복잡한 플로우도 쉽게 탐색하고 관리하세요.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="how-section">
+        <div className="section-header">
+          <p className="section-label">How it works</p>
+          <h2 className="section-title">3단계로 시작하세요</h2>
+        </div>
+
+        <div className="steps-grid">
+          <div className="step-item">
+            <div className="step-number">1</div>
+            <h3 className="step-title">Figma 연결</h3>
+            <p className="step-description">
+              Figma 계정으로 로그인하여 프로젝트에 접근 권한을 부여하세요.
+            </p>
+          </div>
+
+          <div className="step-item">
+            <div className="step-number">2</div>
+            <h3 className="step-title">파일 불러오기</h3>
+            <p className="step-description">
+              Figma 파일 URL을 붙여넣으면 프레임이 자동으로 불러와집니다.
+            </p>
+          </div>
+
+          <div className="step-item">
+            <div className="step-number">3</div>
+            <h3 className="step-title">편집 및 공유</h3>
+            <p className="step-description">
+              연결선을 추가/수정하고 완성된 플로우를 팀과 공유하세요.
             </p>
           </div>
         </div>
@@ -92,36 +199,40 @@ function LandingPage() {
 
       {/* Comparison Section */}
       <section className="comparison-section">
-        <h3 className="section-title">기존 플러그인과의 차이점</h3>
+        <div className="section-header">
+          <p className="section-label">Why FigFlow</p>
+          <h2 className="section-title">기존 방식과 비교해보세요</h2>
+        </div>
+
         <div className="comparison-grid">
           <div className="comparison-card">
-            <h5 className="comparison-label other">기존 플로우차트 플러그인</h5>
+            <h4 className="comparison-label other">기존 플로우차트 작성</h4>
             <ul className="comparison-list">
               <li className="comparison-item negative">수동으로 화면 캡처 필요</li>
-              <li className="comparison-item negative">연결선 자동 생성 안됨</li>
-              <li className="comparison-item negative">Figma 내부에서만 사용 가능</li>
-              <li className="comparison-item negative">프로토타입 변경 시 수동 업데이트</li>
+              <li className="comparison-item negative">연결선 하나하나 직접 그리기</li>
+              <li className="comparison-item negative">디자인 변경 시 처음부터 다시</li>
+              <li className="comparison-item negative">별도 툴 학습 필요</li>
             </ul>
           </div>
 
           <div className="comparison-card highlight">
-            <h5 className="comparison-label figflow">FigFlow</h5>
+            <h4 className="comparison-label figflow">FigFlow</h4>
             <ul className="comparison-list">
               <li className="comparison-item positive">
                 <Check size={20} weight="bold" />
-                Figma 프로토타입 자동 추출
+                Figma에서 프레임 자동 추출
               </li>
               <li className="comparison-item positive">
                 <Check size={20} weight="bold" />
-                연결선 자동 생성 + 수동 편집
+                프로토타입 연결선 자동 생성
               </li>
               <li className="comparison-item positive">
                 <Check size={20} weight="bold" />
-                웹 브라우저에서 바로 사용
+                동기화로 항상 최신 상태 유지
               </li>
               <li className="comparison-item positive">
                 <Check size={20} weight="bold" />
-                프로젝트 저장 및 버전 관리
+                직관적인 UI, 학습 불필요
               </li>
             </ul>
           </div>
@@ -130,20 +241,22 @@ function LandingPage() {
 
       {/* CTA Section */}
       <section className="cta-section">
-        <h3 className="cta-title">지금 바로 시작하세요</h3>
-        <p className="cta-description">
-          별도의 설치 없이 웹 브라우저에서 바로 사용할 수 있습니다.
-        </p>
-        <button className="cta-button" onClick={handleGetStarted}>
-          <FigmaLogo size={24} weight="bold" />
-          Continue with Figma
-        </button>
+        <div className="cta-content">
+          <h2 className="cta-title">지금 바로 시작하세요</h2>
+          <p className="cta-description">
+            무료로 사용할 수 있습니다. 설치 없이 브라우저에서 바로 시작하세요.
+          </p>
+          <button className="cta-button" onClick={handleGetStarted}>
+            <FigmaLogo size={20} weight="bold" />
+            Figma로 시작하기
+          </button>
+        </div>
       </section>
 
       {/* Footer */}
       <footer className="landing-footer">
         <p className="footer-text">
-          Made with React Flow & Figma API
+          Built with React Flow & Figma API
         </p>
       </footer>
     </div>

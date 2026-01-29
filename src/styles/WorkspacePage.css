@@ -1,19 +1,21 @@
+/* Workspace Page - TDS (Toss Design System) Based */
+
 .workspace-page {
   min-height: 100vh;
-  background: #f8f9fa;
+  background: var(--bg-base);
 }
 
 /* Header */
 .workspace-header {
-  background: white;
-  border-bottom: 1px solid #E5E8EB;
+  background: var(--bg-white);
+  border-bottom: 1px solid var(--grey-200);
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
 .header-content {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 16px 24px;
   display: flex;
@@ -24,18 +26,18 @@
 .logo-section {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .logo-icon {
-  color: #667eea;
+  color: var(--blue-500);
 }
 
 .workspace-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   margin: 0;
-  color: #191F28;
+  color: var(--grey-900);
 }
 
 .header-actions {
@@ -54,24 +56,23 @@
 
 .cloud-status .spinning {
   animation: spin 1s linear infinite;
-  color: var(--blue-500, #667eea);
+  color: var(--blue-500);
 }
 
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .figma-login-btn {
-  padding: 8px 16px;
-  background: #667eea;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--blue-500);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -79,18 +80,18 @@
 }
 
 .figma-login-btn:hover {
-  background: #5568d3;
+  background: #2563eb;
 }
 
 .figma-status {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  background: #f0f9ff;
-  color: #0369a1;
-  border: 1px solid #bae6fd;
-  border-radius: 8px;
+  padding: 10px 16px;
+  background: var(--blue-100);
+  color: var(--blue-500);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -98,7 +99,7 @@
 }
 
 .figma-status:hover {
-  background: #e0f2fe;
+  background: #dbeafe;
 }
 
 .status-dot {
@@ -110,12 +111,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 /* Main Content */
@@ -124,7 +121,7 @@
 }
 
 .workspace-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -137,10 +134,10 @@
 }
 
 .page-title {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 700;
   margin: 0;
-  color: #191F28;
+  color: var(--grey-900);
 }
 
 .actions-group {
@@ -153,10 +150,10 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: white;
-  color: #191F28;
-  border: 1px solid #E5E8EB;
-  border-radius: 8px;
+  background: var(--bg-white);
+  color: var(--grey-700);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -164,8 +161,8 @@
 }
 
 .import-btn:hover {
-  background: #f8f9fa;
-  border-color: #d1d5db;
+  background: var(--grey-100);
+  border-color: var(--grey-300);
 }
 
 .create-btn {
@@ -173,10 +170,10 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: #667eea;
+  background: var(--blue-500);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -184,31 +181,32 @@
 }
 
 .create-btn:hover {
-  background: #5568d3;
+  background: #2563eb;
 }
 
 /* Empty State */
 .empty-state {
   text-align: center;
   padding: 80px 24px;
-  color: #6B7684;
+  color: var(--grey-600);
 }
 
 .empty-state svg {
   margin-bottom: 24px;
-  opacity: 0.5;
+  color: var(--grey-400);
 }
 
 .empty-state h3 {
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   margin: 0 0 8px 0;
-  color: #191F28;
+  color: var(--grey-900);
 }
 
 .empty-state p {
-  font-size: 16px;
+  font-size: 14px;
   margin: 0 0 32px 0;
+  color: var(--grey-600);
 }
 
 .create-btn-large {
@@ -216,10 +214,10 @@
   align-items: center;
   gap: 8px;
   padding: 14px 28px;
-  background: #667eea;
+  background: var(--blue-500);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
@@ -227,23 +225,23 @@
 }
 
 .create-btn-large:hover {
-  background: #5568d3;
+  background: #2563eb;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(49, 130, 246, 0.3);
 }
 
 /* Projects Grid */
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
 }
 
 .project-card {
-  background: white;
-  border-radius: 12px;
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid #E5E8EB;
+  border: 1px solid var(--grey-200);
   transition: all 0.2s;
   display: flex;
   flex-direction: column;
@@ -251,8 +249,8 @@
 
 .project-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  border-color: #667eea;
+  box-shadow: var(--shadow-float);
+  border-color: var(--blue-500);
 }
 
 .project-card-content {
@@ -261,8 +259,8 @@
 }
 
 .project-preview {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  height: 160px;
+  background: linear-gradient(135deg, var(--blue-500) 0%, #6366f1 100%);
+  height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -278,11 +276,10 @@
   padding: 6px 12px;
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
-  border-radius: 20px;
+  border-radius: 100px;
   color: white;
   font-size: 13px;
   font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .project-info {
@@ -290,15 +287,15 @@
 }
 
 .project-name {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: #191F28;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  color: var(--grey-900);
 }
 
 .project-date {
-  font-size: 14px;
-  color: #6B7684;
+  font-size: 13px;
+  color: var(--grey-500);
   margin: 0;
 }
 
@@ -306,8 +303,8 @@
   display: flex;
   gap: 4px;
   padding: 12px;
-  border-top: 1px solid #E5E8EB;
-  background: #f8f9fa;
+  border-top: 1px solid var(--grey-200);
+  background: var(--grey-100);
 }
 
 .action-btn {
@@ -318,19 +315,19 @@
   padding: 8px;
   background: transparent;
   border: none;
-  border-radius: 6px;
-  color: #6B7684;
+  border-radius: 8px;
+  color: var(--grey-600);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .action-btn:hover {
-  background: white;
-  color: #191F28;
+  background: var(--bg-white);
+  color: var(--grey-900);
 }
 
 .action-btn.delete:hover {
-  background: #fee;
+  background: #fef2f2;
   color: #dc2626;
 }
 
@@ -341,7 +338,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -350,27 +348,23 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .dialog-content {
-  background: white;
-  border-radius: 16px;
+  background: var(--bg-white);
+  border-radius: var(--radius-xl);
   padding: 32px;
   width: 90%;
-  max-width: 480px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 440px;
+  box-shadow: var(--shadow-float);
   animation: slideUp 0.3s;
 }
 
 @keyframes slideUp {
   from {
-    transform: translateY(20px);
+    transform: translateY(16px);
     opacity: 0;
   }
   to {
@@ -380,27 +374,28 @@
 }
 
 .dialog-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   margin: 0 0 24px 0;
-  color: #191F28;
+  color: var(--grey-900);
 }
 
 .dialog-input {
   width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #E5E8EB;
-  border-radius: 8px;
-  font-size: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius-md);
+  font-size: 15px;
   margin-bottom: 24px;
-  font-family: inherit;
   transition: all 0.2s;
+  background: var(--bg-element);
 }
 
 .dialog-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--blue-500);
+  background: var(--bg-white);
+  box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.1);
 }
 
 .dialog-actions {
@@ -410,9 +405,9 @@
 }
 
 .dialog-btn {
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -420,21 +415,21 @@
 }
 
 .dialog-btn.cancel {
-  background: #f3f4f6;
-  color: #6B7684;
+  background: var(--grey-100);
+  color: var(--grey-600);
 }
 
 .dialog-btn.cancel:hover {
-  background: #e5e7eb;
+  background: var(--grey-200);
 }
 
 .dialog-btn.confirm {
-  background: #667eea;
+  background: var(--blue-500);
   color: white;
 }
 
 .dialog-btn.confirm:hover {
-  background: #5568d3;
+  background: #2563eb;
 }
 
 .dialog-btn:disabled {
@@ -444,10 +439,22 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .header-content {
+    padding: 12px 16px;
+  }
+
+  .workspace-main {
+    padding: 24px 16px;
+  }
+
   .actions-bar {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+  }
+
+  .page-title {
+    font-size: 24px;
   }
 
   .projects-grid {
@@ -455,6 +462,7 @@
   }
 
   .dialog-content {
-    margin: 20px;
+    margin: 16px;
+    padding: 24px;
   }
 }
